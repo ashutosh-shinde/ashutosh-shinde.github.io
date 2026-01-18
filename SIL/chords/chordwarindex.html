@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chord War</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    background: #111;
+    color: #eee;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    width: 250px;
+    background: #1a1a1a;
+    padding: 15px;
+    border: 1px solid #444;
+    border-radius: 5px;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .sidebar h3 {
+    margin-top: 0;
+    color: #FFD700;
+    font-size: 16px;
+  }
+
+  .sidebar p {
+    margin: 8px 0;
+    color: #aaa;
+  }
+
+  .sidebar strong {
+    color: #4CAF50;
+  }
+
+  .game-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  h2 { 
+    margin: 10px 0;
+    color: #FFD700;
+  }
+
+  canvas {
+    background: #000;
+    border: 1px solid #444;
+    margin-top: 10px;
+  }
+
+  .panel {
+    margin-top: 10px;
+    color: #FFD700;
+  }
+
+  input {
+    width: 60px;
+    padding: 4px;
+    font-size: 14px;
+    text-align: center;
+    background: #222;
+    color: #fff;
+    border: 1px solid #444;
+  }
+
+  button {
+    padding: 6px 12px;
+    margin-left: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+  }
+
+  button:hover {
+    background: #45a049;
+  }
+
+  .info {
+    margin-top: 10px;
+    font-size: 16px;
+    color: #FF5722;
+    font-weight: bold;
+  }
+
+  .right-sidebar {
+    width: 280px;
+    background: #1a1a1a;
+    padding: 15px;
+    border: 1px solid #444;
+    border-radius: 5px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .right-sidebar h3 {
+    margin-top: 0;
+    color: #FF9800;
+    font-size: 16px;
+  }
+
+  .right-sidebar p {
+    margin: 10px 0;
+    color: #aaa;
+  }
+
+  .right-sidebar strong {
+    color: #FFB74D;
+  }
+
+  .question {
+    margin: 12px 0;
+    padding: 8px;
+    background: #222;
+    border-left: 3px solid #FF9800;
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h3>How to Play?</h3>
+  <p><strong>Rules:</strong></p>
+  <p>• Players alternate turns<br>
+  • Click 2 points to draw a chord<br>
+  • No chord can cross another<br>
+  •The player with no legal move left loses</p>
+  
+  <p><strong>Setup:</strong></p>
+  <p>• Set N (3-30 points)<br>
+  • Click "Start Game"<br>
+  • Select points by clicking</p>
+</div>
+
+<div class="game-wrapper">
+<h2>Chord War</h2>
+
+<div class="panel">
+  Points (N): 
+  <input id="nInput" type="number" min="3" max="30" value="20">
+  <button onclick="startGame()">Start Game</button>
+  <button onclick="resetGame()">Reset</button>
+</div>
+
+<canvas id="board" width="520" height="520"></canvas>
+
+<div class="info" id="status">Set N and start the game</div>
+
+</div>
+
+<div class="right-sidebar">
+  <h3>THINK BEFORE MOVE!</h3>
+  
+  <div class="question">
+    <strong>What happens to the game when you draw a single chord?
+</strong>
+    <p>→ It splits the circle into independent subgames.</p>
+  </div>
+  
+  <div class="question">
+    <strong>Which positions give your opponent fewer choices: balanced or unbalanced splits? </strong>
+    </div>
+
+  <div class="question">
+    <strong>What about symmetric moves i.e. mirror your opponent's move?</strong>
+    <p>→ Sometimes good, sometimes bad. Analyze the resulting subgames!</p>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById("board");
+const ctx = canvas.getContext("2d");
+
+const CENTER = 260;
+const RADIUS = 220;
+
+let N = 20;
+let points = [];
+let chords = [];
+let selected = null;
+let currentPlayer = 1;
+let gameActive = false;
+
+// ---------- Geometry ----------
+function initPoints() {
+  points = [];
+  for (let i = 0; i < N; i++) {
+    const angle = (2 * Math.PI * i) / N - Math.PI / 2;
+    points.push({
+      x: CENTER + RADIUS * Math.cos(angle),
+      y: CENTER + RADIUS * Math.sin(angle)
+    });
+  }
+}
+
+function intersects(a, b, c, d) {
+  if (a > b) [a, b] = [b, a];
+  if (c > d) [c, d] = [d, c];
+  return (a < c && c < b && b < d) ||
+         (c < a && a < d && d < b);
+}
+
+function chordExists(a, b) {
+  return chords.some(ch =>
+    (ch.a === a && ch.b === b) || (ch.a === b && ch.b === a)
+  );
+}
+
+function isLegal(a, b) {
+  if (a === b) return false;
+  if (chordExists(a, b)) return false;
+
+  for (const ch of chords) {
+    if (a === ch.a || a === ch.b || b === ch.a || b === ch.b) continue;
+    if (intersects(a, b, ch.a, ch.b)) return false;
+  }
+  return true;
+}
+
+function canPlay() {
+  for (let i = 0; i < N; i++) {
+    for (let j = i + 1; j < N; j++) {
+      if (isLegal(i, j)) return true;
+    }
+  }
+  return false;
+}
+
+// ---------- Drawing ----------
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Circle
+  ctx.strokeStyle = "#555";
+  ctx.beginPath();
+  ctx.arc(CENTER, CENTER, RADIUS, 0, 2 * Math.PI);
+  ctx.stroke();
+
+  // Chords
+  for (const ch of chords) {
+    ctx.strokeStyle = ch.player === 1 ? "#4CAF50" : "#FF5722";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(points[ch.a].x, points[ch.a].y);
+    ctx.lineTo(points[ch.b].x, points[ch.b].y);
+    ctx.stroke();
+  }
+
+  // Points
+  for (let i = 0; i < N; i++) {
+    ctx.fillStyle = (i === selected) ? "#FFD700" : "#fff";
+    ctx.beginPath();
+    ctx.arc(points[i].x, points[i].y, 5, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+}
+
+// ---------- Input ----------
+canvas.addEventListener("click", e => {
+  if (!gameActive) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  points.forEach((p, i) => {
+    const dx = mx - p.x;
+    const dy = my - p.y;
+    if (dx * dx + dy * dy < 100) {
+      handlePointClick(i);
+    }
+  });
+});
+
+function handlePointClick(i) {
+  if (selected === null) {
+    selected = i;
+  } else {
+    if (isLegal(selected, i)) {
+      chords.push({ a: selected, b: i, player: currentPlayer });
+      currentPlayer = currentPlayer === 1 ? 2 : 1;
+      updateStatus();
+    }
+    selected = null;
+  }
+  draw();
+}
+
+// ---------- Game control ----------
+function startGame() {
+  const val = parseInt(document.getElementById("nInput").value);
+  if (val < 3 || val > 30) return;
+
+  N = val;
+  chords = [];
+  selected = null;
+  currentPlayer = 1;
+  gameActive = true;
+
+  initPoints();
+  updateStatus();
+  draw();
+}
+
+function resetGame() {
+  chords = [];
+  selected = null;
+  currentPlayer = 1;
+  gameActive = false;
+  document.getElementById("status").textContent = "Set N and start the game";
+  draw();
+}
+
+function updateStatus() {
+  const status = document.getElementById("status");
+  if (!canPlay()) {
+    status.textContent = `Player ${currentPlayer} loses!`;
+    gameActive = false;
+  } else {
+    status.textContent = `Player ${currentPlayer}'s turn (N = ${N})`;
+  }
+}
+
+// Initial draw
+draw();
+</script>
+
+</div>
+</body>
+</html>
