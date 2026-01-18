@@ -2,8 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chord War</title>
 <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
   body {
     font-family: system-ui, sans-serif;
     background: #111;
@@ -51,17 +58,26 @@
   h2 { 
     margin: 10px 0;
     color: #FFD700;
+    font-size: 24px;
   }
 
   canvas {
     background: #000;
     border: 1px solid #444;
     margin-top: 10px;
+    width: 100%;
+    max-width: 520px;
+    height: auto;
   }
 
   .panel {
     margin-top: 10px;
     color: #FFD700;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
   }
 
   input {
@@ -72,17 +88,18 @@
     background: #222;
     color: #fff;
     border: 1px solid #444;
+    border-radius: 3px;
   }
 
   button {
     padding: 6px 12px;
-    margin-left: 6px;
     font-size: 14px;
     cursor: pointer;
     background: #4CAF50;
     color: #fff;
     border: none;
     border-radius: 3px;
+    transition: background 0.2s;
   }
 
   button:hover {
@@ -94,6 +111,7 @@
     font-size: 16px;
     color: #FF5722;
     font-weight: bold;
+    text-align: center;
   }
 
   .right-sidebar {
@@ -128,7 +146,305 @@
     border-left: 3px solid #FF9800;
     border-radius: 3px;
   }
+
+  /* ==================== RESPONSIVE DESIGN ==================== */
+
+  /* Large tablets and desktops landscape */
+  @media (max-width: 1024px) {
+    body {
+      gap: 15px;
+      padding: 15px;
+    }
+    
+    .sidebar {
+      width: 220px;
+      padding: 12px;
+      font-size: 13px;
+    }
+    
+    .right-sidebar {
+      width: 250px;
+      padding: 12px;
+      font-size: 12px;
+    }
+  }
+
+  /* Medium tablets */
+  @media (max-width: 768px) {
+    body {
+      flex-direction: column;
+      gap: 15px;
+      padding: 10px;
+    }
+
+    .sidebar {
+      width: 90%;
+      max-width: 400px;
+      padding: 12px;
+      font-size: 13px;
+    }
+
+    .right-sidebar {
+      width: 90%;
+      max-width: 400px;
+      padding: 12px;
+      font-size: 12px;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin: 8px 0;
+    }
+
+    canvas {
+      width: 90%;
+      max-width: 450px;
+      margin-top: 8px;
+    }
+
+    .panel {
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    input {
+      width: 55px;
+      padding: 3px;
+      font-size: 13px;
+    }
+
+    button {
+      padding: 5px 10px;
+      font-size: 13px;
+    }
+
+    .info {
+      font-size: 14px;
+      margin-top: 8px;
+    }
+  }
+
+  /* Small tablets and landscape phones */
+  @media (max-width: 600px) {
+    body {
+      gap: 12px;
+      padding: 8px;
+    }
+
+    .sidebar {
+      width: 95%;
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .sidebar h3, .right-sidebar h3 {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .right-sidebar {
+      width: 95%;
+      padding: 10px;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin: 6px 0;
+    }
+
+    canvas {
+      width: 95%;
+      max-width: 400px;
+      margin-top: 6px;
+    }
+
+    .panel {
+      gap: 5px;
+      margin-top: 6px;
+      flex-direction: column;
+    }
+
+    input {
+      width: 50px;
+      padding: 3px;
+      font-size: 12px;
+    }
+
+    button {
+      padding: 4px 8px;
+      font-size: 12px;
+      width: auto;
+      min-width: 70px;
+    }
+
+    .info {
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    .question {
+      padding: 6px;
+      margin: 8px 0;
+    }
+  }
+
+  /* Small phones */
+  @media (max-width: 480px) {
+    body {
+      gap: 10px;
+      padding: 6px;
+    }
+
+    .sidebar, .right-sidebar {
+      width: 98%;
+      padding: 8px;
+      font-size: 11px;
+      line-height: 1.5;
+      border-radius: 4px;
+    }
+
+    .sidebar h3, .right-sidebar h3 {
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar p, .right-sidebar p {
+      margin: 6px 0;
+    }
+
+    h2 {
+      font-size: 16px;
+      margin: 4px 0;
+    }
+
+    canvas {
+      width: 98%;
+      max-width: 360px;
+      margin-top: 4px;
+    }
+
+    .panel {
+      gap: 4px;
+      margin-top: 4px;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    input {
+      width: 48px;
+      padding: 2px;
+      font-size: 11px;
+    }
+
+    button {
+      padding: 3px 6px;
+      font-size: 11px;
+      min-width: 60px;
+    }
+
+    .info {
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .question {
+      padding: 5px;
+      margin: 6px 0;
+      font-size: 10px;
+    }
+
+    .question strong {
+      font-size: 10px;
+    }
+  }
+
+  /* Very small phones */
+  @media (max-width: 360px) {
+    body {
+      gap: 8px;
+      padding: 4px;
+    }
+
+    .sidebar, .right-sidebar {
+      width: 99%;
+      padding: 6px;
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    .sidebar h3, .right-sidebar h3 {
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    h2 {
+      font-size: 14px;
+    }
+
+    canvas {
+      width: 99%;
+      max-width: 320px;
+    }
+
+    input {
+      width: 45px;
+      padding: 2px;
+      font-size: 10px;
+    }
+
+    button {
+      padding: 2px 4px;
+      font-size: 10px;
+      min-width: 55px;
+    }
+
+    .info {
+      font-size: 11px;
+    }
+  }
+
+  /* Landscape orientation adjustments */
+  @media (orientation: landscape) and (max-height: 500px) {
+    body {
+      padding: 6px;
+      gap: 8px;
+    }
+
+    .sidebar, .right-sidebar {
+      max-height: 85vh;
+      overflow-y: auto;
+      font-size: 11px;
+    }
+
+    h2 {
+      font-size: 16px;
+      margin: 4px 0;
+    }
+
+    canvas {
+      max-height: 90vh;
+      max-width: 350px;
+    }
+  }
+
+  /* Touch-friendly adjustments */
+  @media (hover: none) and (pointer: coarse) {
+    button {
+      padding: 8px 14px;
+      min-height: 44px;
+      font-size: 14px;
+    }
+
+    input {
+      min-height: 44px;
+      font-size: 14px;
+    }
+  }
 </style>
+</head>
 </head>
 <body>
 
