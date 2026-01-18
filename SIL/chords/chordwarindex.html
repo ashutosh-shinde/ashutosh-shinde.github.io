@@ -68,13 +68,8 @@
     width: 100%;
     max-width: 520px;
     height: auto;
-    touch-action: none;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-
-  .panel {
+      display: block;
+      aspect-ratio: 1;
     margin-top: 10px;
     color: #FFD700;
     display: flex;
@@ -594,13 +589,19 @@ function handleCanvasInteraction(clientX, clientY) {
   if (!gameActive) return;
 
   const rect = canvas.getBoundingClientRect();
-  const mx = clientX - rect.left;
-  const my = clientY - rect.top;
+  
+  // Calculate scale factor - account for CSS scaling
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  
+  // Get coordinates relative to canvas and scale them to actual canvas coordinates
+  const mx = (clientX - rect.left) * scaleX;
+  const my = (clientY - rect.top) * scaleY;
 
   points.forEach((p, i) => {
     const dx = mx - p.x;
     const dy = my - p.y;
-    if (dx * dx + dy * dy < 100) {
+    if (dx * dx + dy * dy < 400) { // Increased hitbox radius for mobile
       handlePointClick(i);
     }
   });
