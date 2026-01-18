@@ -68,6 +68,10 @@
     width: 100%;
     max-width: 520px;
     height: auto;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   .panel {
@@ -586,12 +590,12 @@ function draw() {
 }
 
 // ---------- Input ----------
-canvas.addEventListener("click", e => {
+function handleCanvasInteraction(clientX, clientY) {
   if (!gameActive) return;
 
   const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
+  const mx = clientX - rect.left;
+  const my = clientY - rect.top;
 
   points.forEach((p, i) => {
     const dx = mx - p.x;
@@ -600,6 +604,20 @@ canvas.addEventListener("click", e => {
       handlePointClick(i);
     }
   });
+}
+
+// Mouse click support
+canvas.addEventListener("click", e => {
+  handleCanvasInteraction(e.clientX, e.clientY);
+});
+
+// Touch support for mobile devices
+canvas.addEventListener("touchstart", e => {
+  e.preventDefault();
+  if (e.touches.length > 0) {
+    const touch = e.touches[0];
+    handleCanvasInteraction(touch.clientX, touch.clientY);
+  }
 });
 
 function handlePointClick(i) {
