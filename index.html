@@ -1,995 +1,147 @@
-<html>
-  <head>
-    <title>WildQuant</title>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <link
-      href="https://fonts.googleapis.com/css?family=Alegreya Sans SC"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css?family=Handlee"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css?family=McLaren"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css?family=Dosis"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css?family=KoHo"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css?family=Calibri:400,700,400italic,700italic"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css?family=Raleway:900&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://use.fontawesome.com/releases/v5.8.2/css/all.css"
-      integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay"
-      crossorigin="anonymous"
-    />
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>WildQuant — Ashutosh Shinde</title>
+  <meta name="description" content="Some curious explorations in mathematics and wildlife by Ashutosh Shinde: mathematical simulations, elementary mathematics, strategy games, and climbing and field stories.">
+  <meta name="author" content="Ashutosh Shinde">
+  <meta name="theme-color" content="#0d0f0f">
+  <meta property="og:title" content="WildQuant — Ashutosh Shinde">
+  <meta property="og:description" content="Some curious explorations in mathematics and wildlife.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0f0f'/%3E%3Cpath d='M16 16m-9 0a9 9 0 1 0 18 0a7 7 0 1 0-14 0a5 5 0 1 0 10 0a3 3 0 1 0-6 0' fill='none' stroke='%23f6f4ec' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preload" href="fonts/lm-roman-bold.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="css/site.css">
+  <!-- before the first paint: hide the title so the intro can write it (only with JS and motion allowed) -->
+  <script>
+    (function (e) { e.classList.add("js");
+      try { if (!matchMedia("(prefers-reduced-motion: reduce)").matches && !/[?&]still=1/.test(location.search)) e.classList.add("intro"); } catch (x) {}
+    })(document.documentElement);
+  </script>
 
-    <meta name="Referrer" content="origin" />
+  <!-- Drawing code (order matters). Everything is plain JavaScript, no libraries. -->
+  <script defer src="js/data/equations.js"></script>
+  <script defer src="js/lib/core.js"></script>
+  <script defer src="js/lib/chalk.js"></script>
+  <script defer src="js/lib/creatures.js"></script>
+  <script defer src="js/lib/explorer.js"></script>
+  <script defer src="js/engine/engine.js"></script>
+  <script defer src="js/scenes/home.js"></script>
+  <script defer src="js/scenes/simulations.js"></script>
+  <script defer src="js/scenes/elementary.js"></script>
+  <script defer src="js/scenes/lab.js"></script>
+  <script defer src="js/scenes/blog.js"></script>
+  <script defer src="js/scenes/feedback.js"></script>
+  <script defer src="js/comments.js"></script>
+  <script defer src="js/site.js"></script>
+</head>
+<body class="home">
+  <!-- the blackboard: texture + living drawings (see js/engine/engine.js) -->
+  <canvas id="board-tex" aria-hidden="true"></canvas>
+  <canvas id="board-fx" aria-hidden="true"></canvas>
 
-    <link rel="icon" href="media/Wildquant.jpg" />
+  <main>
+    <!-- ===================================================== 1 · HOME
+         HOW TO EDIT: title, subtitle and your name below; links in .social -->
+    <section id="home" class="panel panel--home" data-scene="home" aria-label="WildQuant">
+      <nav class="social" aria-label="Contact and profiles">
+        <a href="mailto:ashu0x@gmail.com" aria-label="Email" title="Email: ashu0x@gmail.com">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.8 6.8 12 13l8.2-6.2"/></svg>
+        </a>
+        <a href="https://www.linkedin.com/in/ashutosh-shinde-600162222/" target="_blank" rel="noopener" aria-label="LinkedIn" title="LinkedIn">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M9 7.5V5.6c0-.6.4-1 1-1h4c.6 0 1 .4 1 1v1.9M3 12.6h18M10.6 12.6v1.6h2.8v-1.6"/></svg>
+        </a>
+        <a href="https://github.com/ashutosh-shinde" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 7.5 4 12l4.5 4.5M15.5 7.5 20 12l-4.5 4.5M13.4 5.5l-2.8 13"/></svg>
+        </a>
+        <a href="https://www.instagram.com/ashutoshpshinde" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5c0-.8.7-1.5 1.5-1.5h2.3l1.4-2h5.6l1.4 2h2.3c.8 0 1.5.7 1.5 1.5v9c0 .8-.7 1.5-1.5 1.5h-13c-.8 0-1.5-.7-1.5-1.5z"/><circle cx="12" cy="12.8" r="3.6"/><path d="M17.2 9.6h.01"/></svg>
+        </a>
+      </nav>
 
-    <style type="text/css">
-      a {
-        cursor: pointer;
-      }
-    </style>
-    <!-- Google Analytics Code -->
-    <!-- <script>
-		  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-		  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-		  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-		  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      <div class="hero" data-calm>
+        <h1 class="hero__title"><span class="chalk-text">WildQuant</span><span class="chalk-tip" aria-hidden="true"></span></h1>
+        <p class="hero__subtitle">Some curious explorations in mathematics and wildlife</p>
+        <p class="hero__by">by Ashutosh Shinde</p>
+        <a class="about-card" href="about/" data-collapse>
+          <span class="about-card__title">About me</span>
+          <span class="about-card__sub">Curriculum vitae</span>
+          <span class="about-card__arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+      <a class="scroll-hint" href="#simulations" aria-label="Scroll to the sections">
+        <span>scroll</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </a>
+    </section>
 
-		  ga('create', 'UA-103589215-2', 'auto');
-		  ga('send', 'pageview');
+    <!-- ===================================================== 2 · SIMULATIONS -->
+    <section id="simulations" class="panel panel--sims" data-scene="simulations" aria-labelledby="h-sims">
+      <div class="panel__text" data-calm>
+        <h2 id="h-sims">Mathematical Simulations</h2>
+        <p>Interactive models born in ecology and collective behaviour: predators and prey, flocks and herds. From there they wander into markets and competition.</p>
+        <a class="btn" href="simulations/" data-collapse>Open the simulations <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
 
-		</script> -->
+    <!-- ===================================================== 3 · ELEMENTARY MATHEMATICS -->
+    <section id="elementary-mathematics" class="panel panel--elementary" data-scene="elementary" aria-labelledby="h-elem">
+      <div class="panel__text panel__text--center" data-calm>
+        <h2 id="h-elem">Elementary Mathematics</h2>
+        <blockquote class="quote">
+          <p>“…But <b>elementary does not mean easy to understand</b>. Elementary means that <b>very little</b> is required to know ahead of time in order to understand it, except to have an <b>infinite amount of intelligence</b>.”</p>
+          <footer>— Richard Feynman</footer>
+        </blockquote>
+        <a class="btn" href="elementary-mathematics/" data-collapse>Explore the ideas <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
 
-    <!-- <script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js"></script>
-		<script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-database.js"></script> 
-		 -->
+    <!-- ===================================================== 4 · STRATEGIC INTELLIGENCE LAB (no links yet) -->
+    <section id="strategic-lab" class="panel panel--lab" data-scene="lab" aria-labelledby="h-lab">
+      <div class="panel__text" data-calm>
+        <h2 id="h-lab">Strategic Intelligence Lab</h2>
+        <p class="badge">Under development</p>
+        <p>Competition and warfare games built on mathematics and computation.</p>
+      </div>
+    </section>
 
-    <!-- <script type="text/javascript" src="eurekafiles/biowords.json"></script>
-		<script type="text/javascript" src="eurekafiles/economicswords.json"></script>
-		 -->
+    <!-- ===================================================== 5 · BLOGS -->
+    <section id="blogs" class="panel panel--blogs" data-scene="blog" aria-labelledby="h-blogs">
+      <div class="panel__text panel__text--top" data-calm>
+        <h2 id="h-blogs">Blogs with an Irrational Logic</h2>
+        <p>Climbing, expeditions and field stories.</p>
+        <a class="btn" href="blogs/" data-collapse>Read the blogs <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
 
-    <!-- <script type="application/ld+json">
-			{
-			  "@type": "Projects and litarature",
-			  "name": "ashutosh shinde Projects Page",
-			  "author": "ashutosh shinde",
-			  "description": "All web projects related to Machine Learning, Math Visualizations and some other stuff"
-			  }
-		</script> -->
-    <meta charset="UTF-8" />
-    <meta
-      name="description"
-      content="A collection projects and blogs related to mathematics, wildlife conservation and computer science"
-    />
-    <meta
-      name="keywords"
-      content="Machine Learning, Python, learning, wildlife conservation"
-    />
-    <meta name="author" content="ashutosh shinde" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-      #diveInTextM1:hover {
-        color: cyan;
-      }
-      #diveInTextM2:hover {
-        color: cyan;
-      }
-      #diveInTextM3:hover {
-        color: cyan;
-      }
-    </style>
-    <style>
-      /* Responsive tweaks for small screens: override inline styles with !important */
-      @media (max-width: 600px) {
-        #DescriptionText { width: 92% !important; }
-        #DescriptionText h1 {
-          font-size: 10vw !important;
-          line-height: 1.12 !important;
-          margin: 0 0 1.0vmin 0 !important;
-          letter-spacing: 0.01em !important;
-        }
-        #DescriptionText h2 {
-          font-size: 4.6vw !important;
-          line-height: 1.2 !important;
-          margin-top: 1.0vmin !important;
-        }
-        #DescriptionText p {
-          font-size: 3.4vw !important;
-          line-height: 1.4 !important;
-          margin-top: 1.2vmin !important;
-        }
-        #contactdetails { font-size: 3.6vw !important; top: 64% !important; }
-      }
-      @media (max-width: 400px) {
-        #DescriptionText h1 { font-size: 12.5vw !important; }
-        #DescriptionText h2 { font-size: 6.0vw !important; }
-        #DescriptionText p  { font-size: 4.6vw !important; }
-        #contactdetails { font-size: 4.2vw !important; top: 66% !important; }
-      }
-    </style>
-  </head>
-  <body style="margin: 0px; display: block">
-    <div
-      id="containAll"
-      style="margin: 0px; width: 100%; height: 100%; font-size: 0"
-    >
-      <div
-        id="maintitle"
-        height="100%"
-        width="100%"
-        style="
-          z-index: 1;
-          position: relative;
-          box-shadow: 0px 40px 100px rgba(0, 0, 0, 0.5);
-          overflow: hidden;
-          height: 80%;
-          background-color: black;
-        "
-      >
-        <div id="video">
-          <video
-            src="media/math background22.mp4"
-            muted
-            loop
-            autoplay
-            style="
-              height: 100%;
-              width: 100%;
-              z-index: 1;
-              object-fit: cover;
-              opacity: 0.6;
-            "
-          ></video>
-        </div>
-        <div
-          id="containIntro"
-          style="
-            margin: 0px;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: hsla(300, 100%, 0%, 0.6);
-            cursor: auto;
-            position: absolute;
-            top: 0;
-            right: 0;
-            z-index: 7;
-            opacity: 1;
-          "
-        >
-          <div
-            id="menuholder"
-            style="
-              margin: 0px;
-              width: 40%;
-              height: 5%;
-              overflow: hidden;
-              background: hsla(300, 100%, 0%, 0);
-              cursor: auto;
-              position: relative;
-              z-index: 7;
-              opacity: 1;
-              transform: translate(-100%, -5%);
-              left: 100%;
-              top: 5%;
-            "
-          >
-            <div
-              id="diveInM1"
-              onclick="window.open('https://www.facebook.com/AshutoshShinde111/')"
-              style="
-                margin: 0px;
-                overflow: hidden;
-                position: relative;
-                transition: background 0.5s;
-                background: hsla(250, 100%, 50%, 0);
-                width: 30%;
-                height: 100%;
-                border-color: hsla(260, 100%, 50%, 0);
-                cursor: pointer;
-                display: inline-block;
-              "
-            >
-              <div
-                id="diveInTextM1"
-                style="
-                  margin: 0px;
-                  overflow: hidden;
-                  text-align: center;
-                  font-family: Calibri;
-                  font-size: 1.3vmin;
-                  transform: translate(-50%, -50%);
-                  left: 50%;
-                  top: 50%;
-                  position: relative;
-                  color: hsla(185, 100%, 100%, 1);
-                "
-              >
-                <h2>Facebook</h2>
-              </div>
-            </div>
-            <div
-              id="diveInM2"
-              onclick="window.open('https://www.instagram.com/ashutoshpshinde?igsh=MTZieDZjZDFrZ2Jrdw==')"
-              style="
-                margin: 0px;
-                overflow: hidden;
-                position: relative;
-                transition: background 0.5s;
-                background: hsla(250, 100%, 50%, 0);
-                width: 30%;
-                height: 100%;
-                border-color: hsla(260, 100%, 50%, 0);
-                cursor: pointer;
-                display: inline-block;
-              "
-            >
-              <div
-                id="diveInTextM2"
-                style="
-                  margin: 0px;
-                  overflow: hidden;
-                  text-align: center;
-                  font-family: Calibri;
-                  font-size:  1.3vmin;
-                  transform: translate(-50%, -50%);
-                  left: 50%;
-                  top: 50%;
-                  position: relative;
-                  color: hsla(185, 100%, 100%, 1);
-                "
-              >
-                <h2>Instagram</h2>
-              </div>
-            </div>
-            <div
-              id="diveInM3"
-              onclick="window.open('https://github.com/ashutosh-shinde')"
-              style="
-                margin: 0px;
-                overflow: hidden;
-                position: relative;
-                transition: background 0.5s;
-                background: hsla(250, 100%, 50%, 0);
-                width: 30%;
-                height: 100%;
-                border-color: hsla(260, 100%, 50%, 0);
-                cursor: pointer;
-                display: inline-block;
-              "
-            >
-              <div
-                id="diveInTextM3"
-                style="
-                  margin: 0px;
-                  overflow: hidden;
-                  text-align: center;
-                  font-family: Calibri;
-                  font-size: 1.3vmin;
-                  transform: translate(-50%, -50%);
-                  left: 50%;
-                  top: 50%;
-                  position: relative;
-                  color: hsla(185, 100%, 100%, 1);
-                "
-              >
-                <h2>Github</h2>
-              </div>
-            </div>
+    <!-- ===================================================== 6 · FEEDBACK
+         Comments are stored in a Google Sheet: see js/comments.js -->
+    <section id="feedback" class="panel panel--feedback" data-scene="feedback" aria-labelledby="h-feedback">
+      <div class="panel__text feedback" data-calm>
+        <h2 id="h-feedback">Feedback</h2>
+        <p>Tell me what you think: about the site, an idea, a story.</p>
+        <form class="comment-form" id="comment-form" novalidate>
+          <label class="visually-hidden" for="comment">Your comment</label>
+          <textarea id="comment" name="comment" rows="4" maxlength="2000" placeholder="Write your comment…" required></textarea>
+          <!-- spam trap: real visitors never see or fill this field -->
+          <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <div class="comment-form__row">
+            <button class="btn btn--solid" type="submit">Send</button>
+            <a class="btn" href="comments/" data-collapse>Read the comments <span aria-hidden="true">→</span></a>
           </div>
-          <!-- Title removed per request -->
-
-          <div
-            id="DescriptionText"
-            style="
-              margin: 0px;
-              overflow: hidden;
-              text-align: center;
-              width: 68%;
-              font-family: McLaren;
-              font-size: 2.8vmin;
-              transform: translate(-50%, -50%);
-              left: 50%;
-              top: 50%;
-              position: relative;
-              color: hsla(185, 100%, 100%, 1);
-            "
-          >
-            <div style="text-align: center;">
-              <h1 style="margin: 0 0 1.2vmin 0; font-family: McLaren; font-size: 7vmin; line-height: 1.25; letter-spacing: 0.02em;">Some Curious Explorations</h1>
-              <h2 style="margin: 0; font-family: KoHo; font-weight: 400; font-size: 3.6vmin; line-height: 1.3; margin-top: 1.2vmin;">in Mathematics and Wildlife</h2>
-              <p style="margin-top: 1.6vmin; font-family: Calibri; font-size: 2.4vmin; line-height: 1.6; opacity: 0.95;">by Ashutosh Shinde</p>
-            </div>
-          </div>
-          <div
-            id="contactdetails"
-            style="
-              margin: 0px;
-              overflow: hidden;
-              text-align: center;
-              font-family: Calibri;
-              font-size: 2.3vmin;
-              transform: translate(-50%, -80%);
-              left: 50%;
-              top: 55%;
-              position: relative;
-              color: hsla(185, 10%, 100%, 1);
-            "
-          >
-            <i class="fas fa-envelope"></i> ashu0x@gmail.com &nbsp &nbsp &nbsp
-            &nbsp<i class="fas fa-map-marker-alt"></i> India
-          </div>
-        </div>
+          <p class="comment-form__status" role="status" aria-live="polite"></p>
+        </form>
       </div>
-      <div
-        id="slide1"
-        style="
-          z-index: 1;
-          position: relative;
-          box-shadow: 0px 40px 100px rgba(0, 0, 0, 0.5);
-        "
-      >
-        <div id="vide1">
-          <video
-            src="media/graph.mp4 "
-            muted
-            loop
-            autoplay
-            style="
-              height: 100%;
-              width: 100%;
-              z-index: 1;
-              object-fit: cover;
-              opacity: 0.6;
-            "
-          ></video>
-        </div>
-        <div
-          id="slide1Texts"
-          style="
-            margin: 0px;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: rgba(255, 222, 222, 0.761);
-            cursor: auto;
-            position: absolute;
-            top: 0px;
-            z-index: 7;
-            opacity: 1;
-          "
-        >
-          <div
-            id="TitleText1"
-            style="
-              margin: 0px;
-              overflow: hidden;
-              text-align: center;
-              width: 80%;
-              font-family: Calibri;
-              font-weight: lighter;
-              font-size: 8vmin;
-              transform: translate(-50%, -40%);
-              left: 50%;
-              top: 39%;
-              position: relative;
-              color: hsla(190, 100%, 0%, 1);
-            "
-          >
-            <p>Mathematical Simulations</p>
-          </div>
-          <div
-            id="DescriptionText1"
-            style="
-              margin: 0px;
-              overflow: hidden;
-              text-align: center;
-              width: 75%;
-              cursor: pointer;
-              font-family: KoHo;
-              font-size: 3.4vmin;
-              transform: translate(-50%, -40%);
-              left: 50%;
-              top:  33%;
-              position: relative;
-              color: #06c;
-            "
-          >
-            Fourier-Transform-Visualization, Flocking Simulation , Spider Web
-            Simulation, Binary-Classification and so on...
-          </div>
-          <div
-            id="diveIn1"
-            viewButton="buttonhover(event,250,9)"
-            viewButton="buttonout(event,250,9)"
-            onclick="window.open('https://ashutosh-shinde.github.io/')"
-            style="
-              margin: 0px;
-              overflow: hidden;
-              transform: translate(-50%, -50%);
-              left: 50%;
-              top: 40%;
-              position: relative;
-              transition: background 0.5s;
-              background: rgba(9, 143, 158, 0.623);
-              width: 10vmax;
-              height: 5.5vh;
-              border-color: rgb(0, 0, 0);
-              cursor: pointer;
-            "
-          >
-            <div
-              id="diveInText1"
-              style="
-                margin: 0px;
-                overflow: hidden;
-                text-align: center;
-                font-family: KoHo;
-                font-size: 2.5vh;
-                transform: translate(-50%, -50%);
-                left: 50%;
-                top: 50%;
-                position: relative;
-                color: hsla(185, 100%, 100%, 1);
-              "
-            >
-              VIEW
-            </div>
-          </div>
-        </div>
-      </div>
-      <div
-        id="slide2"
-        style="
-          z-index: 1;
-          position: relative;
-          box-shadow: 0px 40px 100px rgb(0, 0, 0);
-        "
-      >
-        <div id="video1">
-          <video
-            src="media/math background.mp4 "
-            muted
-            loop
-            autoplay
-            style="
-              height: 100%;
-              width: 100%;
-              z-index: 1;
-              object-fit: cover;
-              opacity: 0.5;
-            "
-          ></video>
-          <div
-            id="overlay"
-            style="
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background-color: rgb(0, 0, 0);
-              mix-blend-mode: overlay;
-            "
-          ></div>
-        </div>
-        <div
-          id="slide1Texts"
-          style="
-            margin: 0px;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: rgba(0, 0, 0, 0);
-            cursor: auto;
-            position: absolute;
-            top: 0px;
-            z-index: 7;
-            opacity: 1;
-          "
-        >
-          <div
-            id="TitleText2"
-            style="
-              margin: 0px;
-              overflow: hidden;
-              text-align: center;
-              width: 80%;
-              font-family: Calibri;
-              font-weight: lighter;
-              font-size: 8vmin;
-              transform: translate(-50%, -90%);
-              left: 50%;
-              top: 40%;
-              position: relative;
-              color: hsla(185, 100%, 100%, 1);
-            "
-          >
-            Elementary Mathematics
-          </div>
-          <div
-            id="DescriptionText2"
-            style="
-              margin: 0px;
-              overflow: hidden;
-              text-align: center;
-              cursor: pointer;
-              font-family: KoHo;
-              font-size: 3.4vmin;
-              transform: translate(-50%, -30%);
-              left: 50%;
-              top: 40%;
-              position: relative;
-              color: #2997ff;
-            "
-          >
-            "...But <b>elemementary does not mean easy to understand</b>.<br />
-            Elementary means that <b>very little </b> is required to know <br />
-            ahead of time in order to understand it, except to have <br />an
-            <b>infinite amount of intelligence.</b>" <br />
-            &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp
-            &nbsp -Feynman
-          </div>
-          <div
-            id="diveIn2"
-            viewButton="buttonhover(event,250,9)"
-            viewButton="buttonout(event,250,9)"
-            onclick="window.open('EM/EM.html')"
-            style="
-              margin: 0px;
-              overflow: hidden;
-              transform: translate(-50%, -50%);
-              left: 50%;
-              top: 50%;
-              position: relative;
-              transition: background 0.5s;
-              background: rgba(9, 143, 158, 0.529);
-              width: 10vmax;
-              height: 5.5vh;
-              border-color: rgb(0, 0, 0);
-              cursor: pointer;
-              z-index: 10;
-            "
-          >
-            <div
-              id="diveInText2"
-              style="
-                margin: 0px;
-                overflow: hidden;
-                text-align: center;
-                font-family: KoHo;
-                font-size: 2.5vh;
-                transform: translate(-50%, -50%);
-                left: 50%;
-                top: 50%;
-                position: relative;
-                color: hsla(185, 100%, 100%, 1);
-              "
-            >
-              VIEW
-            </div>
-          </div>
-        </div>
-      </div>
-      <div
-        id="slide6"
-        style="
-          z-index: 1;
-          position: relative;
-          box-shadow: 0px 0px 0px rgb(0, 0, 0);
-        "
-      >
-        <div
-          id="maintitle"
-          height="100%"
-          width="100%"
-          style="
-            z-index: 1;
-            position: relative;
-            overflow: hidden;
-            height: 20%;
-            background-color: black;
-          "
-        ></div>
-      </div>
-      <div
-        id="slide7"
-        style="
-          z-index: 1;
-          position: relative;
-          box-shadow: 0px 0px 0px rgb(0, 0, 0);
-        "
-      >
-        <div
-          id="maintitle"
-          height="90%"
-          width="100%"
-          style="
-            z-index: 1;
-            position: relative;
-            overflow: hidden;
-            height: 70%;
-            background-color: black;
-          "
-        >
-          <div
-            id="slide1Texts"
-            style="
-              margin: 0px;
-              width: 100%;
-              height: 100%;
-              overflow: hidden;
-              background: rgba(0, 0, 0, 0);
-              cursor: auto;
-              position: absolute;
-              top: 0px;
-              z-index: 7;
-              opacity: 1;
-            "
-          >
-            <div
-              id="TitleText3"
-              style="
-                margin: 0px;
-                overflow: hidden;
-                text-align: center;
-                
-                font-family: Calibri;
-                font-weight: lighter;
-                font-size: 8vmin;
-                transform: translate(-50%, -90%);
-                left: 50%;
-                top: 50%;
-                position: relative;
-                color: rgb(255, 255, 255);
-              "
-            >
-              Strategic Intelligence Lab
-            </div>
-            <div
-              id="DescriptionText3"
-              style="
-                margin: 0px;
-                overflow: hidden;
-                text-align: center;
-                width: 75%;
-                cursor: pointer;
-                font-family: KoHo;
-                font-size: 3.4vmin;
-                transform: translate(-50%, -50%);
-                left: 50%;
-                top: 50%;
-                position: relative;
-                color: #2997ff;
-              "
-            >
-              Nim Game, TickTackToe, The Game of Hex, Probability Paradoxes and
-              so on..
-            </div>
-            <div
-              id="diveIn3"
-              viewButton="buttonhover(event,250,9)"
-              viewButton="buttonout(event,250,9)"
-              onclick="window.open('SIL/SILindex01.html')"
-              style="
-                margin: 0px;
-                overflow: hidden;
-                transform: translate(-50%, -65%);
-                left: 50%;
-                top: 70%;
-                position: relative;
-                transition: background 0.5s;
-                background: rgba(9, 143, 158, 0.529);
-                width: 10vmax;
-                height: 5.5vh;
-                border-color: rgb(0, 0, 0);
-                cursor: pointer;
-                z-index: 10;
-              "
-            >
-              <div
-                id="diveInText3"
-                style="
-                  margin: 0px;
-                  overflow: hidden;
-                  text-align: center;
-                  font-family: KoHo;
-                  font-size: 2.5vh;
-                  transform: translate(-50%, -50%);
-                  left: 50%;
-                  top: 50%;
-                  position: relative;
-                  color: hsla(185, 100%, 100%, 1);
-                "
-              >
-                VIEW
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div
-        id="slide3"
-        style="
-          z-index: 1;
-          position: relative;
-          height: 70%;
-          box-shadow: 0px 0px 0px rgb(0, 0, 0);
-        "
-      >
-        <div id="wall2" style="position: relative; top:0px">
-          <img
-            src="media/card wallpaper.jpg"
-            alt=""
-            style="
-              height: 100%;
-              width: 100%;
-              overflow: hidden;
-              margin-right: 0px;
-              z-index: 1;
-              object-fit: contain;
-              opacity: 0.4;
-            "
-          />
-        </div>
-        <div
-          id="overlay"
-          style="
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgb(0, 0, 0);
-            mix-blend-mode: overlay;
-          "
-        ></div>
-      </div>
-      <div
-        id="slide4"
-        style="
-          z-index: 1;
-          position: relative;
-          box-shadow: 0px 20px 100px rgb(0, 0, 0);
-        "
-      >
-        <div id="wall4">
-          <img
-            src="media/maths backgroung signs.jpg"
-            alt=""
-            style="
-              height: 90%;
-              width: 100%;
-              z-index: 1;
-              object-fit: contain;
-              object-position: bottom;
-              opacity: 0.7;
-            "
-          />
-        </div>
-        <div id="overlay"style=" position: absolute;top: 0;left: 0;width: 100%;height: 100%;background-color: rgb(255, 255, 255); mix-blend-mode: overlay;">
-				</div>
-        <div
-          id="slide1Texts"
-          style="
-            margin: 0px;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: rgba(255, 255, 255, 0);
-            cursor: auto;
-            position: absolute;
-            top: 0px;
-            z-index: 7;
-            opacity: 1;
-          "
-        >
-          <div
-            id="TitleText4"
-            style="
-              margin: 0px;
-              overflow: hidden;
-              text-align: center;
-              width: 85%;
-              font-family: Calibri;
-              font-weight: lighter;
-              font-size: 8vmin;
-              transform: translate(-50%, -90%);
-              left: 50%;
-              top: 40%;
-              position: relative;
-              color: #1d1d1f;
-            "
-          >
-            Math Blogs With An Irrational Logic
-          </div>
-          <div
-            id="DescriptionText4"
-            style="
-              margin: 0px;
-              overflow: hidden;
-              text-align: center;
-              cursor: pointer;
-              font-family: KoHo;
-              font-size: 3.4vmin;
-              transform: translate(-50%, -30%);
-              left: 50%;
-              top: 35%;
-              position: relative;
-              color: #06c;
-            "
-          >
-            A description is left to reader as an exercise.
-          </div>
-          <div
-            id="diveIn4"
-            viewButton="buttonhover(event,250,9)"
-            viewButton="buttonout(event,250,9)"
-            onclick="window.open('https://ashutosh-shinde.github.io/')"
-            style="
-              margin: 0px;
-              overflow: hidden;
-              transform: translate(-50%, -50%);
-              left: 50%;
-              top: 45%;
-              position: relative;
-              transition: background 0.5s;
-              background: rgba(9, 143, 158, 0.529);
-              width: 10vmax;
-              height: 5.5vh;
-              border-color: rgb(0, 0, 0);
-              cursor: pointer;
-              z-index: 10;
-            "
-          >
-            <div
-              id="diveInText4"
-              style="
-                margin: 0px;
-                overflow: hidden;
-                text-align: center;
-                font-family: KoHo;
-                font-size: 2.5vh;
-                transform: translate(-50%, -50%);
-                left: 50%;
-                top: 50%;
-                position: relative;
-                color: hsla(185, 100%, 100%, 1);
-              "
-            >
-              VIEW
-            </div>
-          </div>
-        </div>
-      </div>
-      <div
-        id="slide6"
-        style="
-          z-index: 1;
-          position: relative;
-          box-shadow: 0px 0px 0px rgb(0, 0, 0);
-        "
-      >
-        <div id="wallend">
-          <img
-            src="media/image_share_1622223285266.jpg"
-            alt=""
-            style="
-              height: 100%;
-              width: 100%;
-              z-index: 1;
-              object-fit: cover;
-              opacity: 0.9;
-            "
-          />
-          <div
-            id="overlay"
-            style="
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background-color: rgba(49, 11, 11, 0.672);
-              mix-blend-mode: overlay;
-            "
-          ></div>
-          <div
-            id="slide1Texts"
-            style="
-              margin: 0px;
-              width: 100%;
-              height: 100%;
-              overflow: hidden;
-              background: rgba(0, 0, 0, 0);
-              cursor: auto;
-              position: absolute;
-              top: 0px;
-              z-index: 7;
-              opacity: 1;
-            "
-          >
-            <div
-              id="TitleText3"
-              style="
-                margin: 0px;
-                overflow: hidden;
-                text-align: center;
-                font-family: Calibri;
-                font-weight: lighter;
-                font-size: 8vmin;
-                transform: translate(-50%, -90%);
-                left: 50%;
-                top: 60%;
-                position: relative;
-                color: #f5f5f7;
-              "
-            >
-              Thats it!
-            </div>
-          </div>
-        </div>
-      </div>
-      <div
-        id="emailsubmissiondetails"
-        height="100%"
-        width="100%"
-        style="
-          z-index: 1;
-          position: relative;
-          box-shadow: 0px 20px 100px rgba(0, 0, 0, 1);
-          overflow: hidden;
-          height: 95%;
-          background-color: hsla(0, 0%, 0%, 1);
-        "
-      >
-        <table
-          width="100%"
-          height="100%"
-          style="
-            border: 0px solid black;
-            border-collapse: collapse;
-            table-layout: fixed;
-          "
-        >
-          <tr style="height: 10%"></tr>
-          <tr>
-            <td style="text-align: center; vertical-align: middle">
-              <iframe
-                src="https://docs.google.com/forms/d/e/1FAIpQLSfwgGRCi_rHoli--nypGxWeG3V9YFflF2kQ4iTmZ8Vvk4PrVQ/viewform?usp=sf_link"
-                width="100%"
-                height="100%"
-                frameborder="0"
-                marginheight="0"
-                marginwidth="0"
-              >
-              </iframe>
-            </td>
-          </tr>
-        </table>
-      </div>
-    </div>
-  </body>
+      <footer class="site-footer" data-calm="0.7" data-calm-only>
+        <span>© <span data-year>2026</span> Ashutosh Shinde</span>
+        <span class="site-footer__links">
+          <a href="mailto:ashu0x@gmail.com">Email</a>
+          <a href="https://www.linkedin.com/in/ashutosh-shinde-600162222/" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="https://github.com/ashutosh-shinde" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://www.instagram.com/ashutoshpshinde" target="_blank" rel="noopener">Instagram</a>
+        </span>
+      </footer>
+    </section>
+  </main>
+</body>
 </html>
-
-<!-- &#947; &#943; 
-&Rho; 	&Alpha; 	&Upsilon; 	&#945;	&#951;
-&#960;  &#947; &#943;  -->
