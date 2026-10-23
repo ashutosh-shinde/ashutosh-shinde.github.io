@@ -109,7 +109,7 @@
     /* ---------------------------------------------------------- boids */
     function stepBirds(dt, tt) {
       const fb = flockBox, cx = lerp(fb.x0, fb.x1, 0.5 + 0.28 * Math.sin(tt * 0.17)), cy = lerp(fb.y0, fb.y1, 0.5 + 0.2 * Math.sin(tt * 0.29 + 1));
-      const Rn = 60 * Math.max(0.7, S), Rs = 9 * Math.max(0.7, S), maxV = 150 * Math.max(0.7, S), minV = 55 * Math.max(0.7, S), n = birds.length;
+      const Rn = 60 * Math.max(0.7, S), Rs = 12 * Math.max(0.7, S), maxV = 150 * Math.max(0.7, S), minV = 55 * Math.max(0.7, S), n = birds.length;
       for (let i = 0; i < n; i++) {
         const b = birds[i];
         let ax = 0, ay = 0, cxs = 0, cys = 0, vxs = 0, vys = 0, sx = 0, sy = 0, k = 0;

@@ -22,7 +22,7 @@
 
   (G.WQ.scenes = G.WQ.scenes || {}).feedback = function (env0, opts = {}) {
     let env = env0, W = 0, H = 0, S = 1, portrait = false, mobile = false, box = null, built = false;
-    let t = 0, off = opts.final ? T.final : 0, GY, SC, slope = [], xSit, stage = null, flakes = [];
+    let t = 0, off = opts.final ? T.final : 0, GY, SC, slope = [], slopeLeft = true, xSit, stage = null, flakes = [];
     const rLeo = new Rig(), rHead = new Rig(), rIbex = new Rig();
     let leo = null, ibex = null, turnK = 0, faceAt = null;
 
@@ -33,13 +33,13 @@
       SC = portrait ? W * 0.0033 : Math.min(W / 900, H / 520) * 0.95;
       const formLeft = box ? box.x : W * 0.6, onRight = !box || box.x > W * 0.45;
       if (portrait) {
-        slope = rocky([[0, H * 0.7], [W * 0.5, GY]]);
+        slope = rocky([[0, H * 0.7], [W * 0.5, GY]]); slopeLeft = true;
         xSit = W * 0.72;
       } else if (onRight) { // home page: the form is on the right
-        slope = rocky([[0, H * 0.5], [W * 0.44, GY]]);
+        slope = rocky([[0, H * 0.5], [W * 0.44, GY]]); slopeLeft = true;
         xSit = Math.min(W * 0.55, formLeft - 70 * SC);
       } else { // comments page: the list is on the left, so the cat sits on the right
-        slope = rocky([[W, H * 0.55], [W * 0.66, GY]]);
+        slope = rocky([[W, H * 0.55], [W * 0.66, GY]]); slopeLeft = false;
         xSit = W * 0.55;
       }
     }
@@ -64,15 +64,15 @@
       line(peaks, 0.16, 1, false);
       // ground (from the foot of the slope to the far side)
       const foot = slope[slope.length - 1];
-      line(foot[0] < W / 2 ? [[foot[0], GY], [W + 10, GY]] : [[-10, GY], [foot[0], GY]], 0.55, 1.2);
+      line(slopeLeft ? [[foot[0], GY], [W + 10, GY]] : [[-10, GY], [foot[0], GY]], 0.55, 1.2);
       // the slope: dark mountain body under a chalk outline, rock cracks, snow hatching
-      const body = foot[0] < W / 2 ? [...slope, [foot[0], H + 10], [-10, H + 10]] : [...slope, [foot[0], H + 10], [W + 10, H + 10]];
+      const body = slopeLeft ? [...slope, [foot[0], H + 10], [-10, H + 10]] : [...slope, [foot[0], H + 10], [W + 10, H + 10]];
       c.beginPath(); body.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.closePath(); c.fillStyle = "rgba(9,11,11,0.75)"; c.fill();
       line(slope, 0.85, 1.5);
       for (let i = 0; i < 22; i++) { const u = r(), p = slopeAt(u), d = 20 + r() * 90 * S; line([[p.x + Math.sin(p.ang) * d * 0.3, p.y + d * 0.6], [p.x + Math.sin(p.ang) * d * 0.3 + (r() - 0.5) * 26 * S, p.y + d * 0.6 + 10 * S * r()]], 0.16, 1); }
       for (let i = 0; i < 16; i++) { const u = r() * 0.95, p = slopeAt(u), len = (8 + r() * 14) * S; line([[p.x - len * Math.cos(p.ang) * 0.5, p.y + 4 * S - len * Math.sin(p.ang) * 0.5], [p.x + len * Math.cos(p.ang) * 0.5, p.y + 4 * S + len * Math.sin(p.ang) * 0.5]], 0.32, 1, false); }
       // grass tufts on the flat ground
-      for (let i = 0; i < 26; i++) { const x = foot[0] < W / 2 ? lerp(foot[0] + 20, W, r()) : lerp(0, foot[0] - 20, r()), h = (3 + r() * 6) * S; line([[x, GY], [x - 2, GY - h]], 0.3, 1, false); line([[x + 3, GY], [x + 4, GY - h * 0.7]], 0.26, 1, false); }
+      for (let i = 0; i < 26; i++) { const x = slopeLeft ? lerp(foot[0] + 20, W, r()) : lerp(0, foot[0] - 20, r()), h = (3 + r() * 6) * S; line([[x, GY], [x - 2, GY - h]], 0.3, 1, false); line([[x + 3, GY], [x + 4, GY - h * 0.7]], 0.26, 1, false); }
       return cv;
     }
 
@@ -80,7 +80,7 @@
     function leopardState(tl) {
       if (tl < T.leoIn) return null;
       // it comes in from the side away from the slope
-      const dir = slope[slope.length - 1][0] < W / 2 ? -1 : 1, x0 = dir < 0 ? W + 150 * SC : -150 * SC;
+      const dir = slopeLeft ? -1 : 1, x0 = dir < 0 ? W + 150 * SC : -150 * SC;
       const walkT = T.arrive - T.leoIn;
       if (tl < T.arrive) {
         const u = (tl - T.leoIn) / walkT, x = lerp(x0, xSit, u * (2 - u) * 0.15 + u * 0.85), ph = (tl - T.leoIn) / 1.15;
@@ -182,7 +182,7 @@
         if (leo) p.rig("fb-leo", rLeo, 0.38);
         if (ibex) p.rig("fb-ibex", rIbex, 0.22);
         p.poly("fb-slope", slope, ibex ? 0.25 : 0.4);
-        p.poly("fb-ground", [[slope[slope.length - 1][0], GY], [slope[slope.length - 1][0] < W / 2 ? W : 0, GY]], 0.12).end();
+        p.poly("fb-ground", [[slope[slope.length - 1][0], GY], [slopeLeft ? W : 0, GY]], 0.12).end();
       },
     };
   };
