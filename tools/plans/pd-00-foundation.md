@@ -342,10 +342,11 @@ every page at least:
 
 ## 8. The preview and the report
 
-- Build: `python3 tools/dev/build_preview.py /tmp/wq-preview`.
+- Build into the session's **scratchpad directory** (the Artifact tool only accepts files under the working
+  directory or the scratchpad, not `/tmp`): `python3 tools/dev/build_preview.py <scratchpad>/wq-preview`.
 - Publish with the Artifact tool to the existing preview
-  `url = https://claude.ai/artifact/5c61VgnZhfKyqGMjF6kFBo`, `file_path = /tmp/wq-preview/index.html`,
-  `root = /tmp/wq-preview`, and `files` listing every file this step added or changed (for example
+  `url = https://claude.ai/artifact/5c61VgnZhfKyqGMjF6kFBo`, `file_path = <scratchpad>/wq-preview/index.html`,
+  `root = <scratchpad>/wq-preview`, and `files` listing every file this step added or changed (for example
   `css/site.css`, `simulations/index.html`, `simulations/population-dynamics/<name>/index.html`,
   `js/lib/plot.js`, `js/lib/ode.js`, `js/lib/simkit.js`, `js/sims/<name>.js`). Files left out stay as published.
 - If the publish is refused because you have not seen the live version or some files: read exactly what it
