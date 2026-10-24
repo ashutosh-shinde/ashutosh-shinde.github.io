@@ -27,6 +27,9 @@ double-click blocks the fonts.
 | Simulations: the list of collections and their numbered cards | `simulations/index.html` |
 | A simulation page (one folder each), e.g. the discrete-time logistic model | `simulations/population-dynamics/discrete-logistic/index.html` |
 | Plots in chalk style (axes, lines, legends, log axes) | `js/lib/plot.js` |
+| ODE solvers: Dormand–Prince, ROS2 for stiff models, 2×2 eigenvalues | `js/lib/ode.js` (tested by `node tools/test-ode.mjs`) |
+| Shared page helpers for the simulations: sliders, boxes, runtime checks | `js/lib/simkit.js` |
+| Checking tools: screenshots, slider sweeps, error pass, page changes, preview | `tools/dev/` (see its README) |
 | A simulation's maths and controls (one file per simulation) | `js/sims/`, e.g. `js/sims/logistic.js` (tested by `node tools/test-logistic.mjs`) |
 | Elementary Mathematics: title, index and the list of chapters | `elementary-mathematics/index.html` |
 | A chapter (one folder each) | `elementary-mathematics/what-is-infinity/index.html` |

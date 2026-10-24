@@ -272,7 +272,7 @@ Add to the plot object created by `WQ.Plot.create` (keep every existing method a
 | Case | Expect |
 |---|---|
 | `solve`: y′ = −y, y(0) = 1, t ∈ [0, 5] | y(5) = e^(−5) = 0.006737947 within 1e-8 (rtol 1e-10, atol 1e-12) |
-| `solve`: logistic y′ = y(1 − y), y(0) = 0.1, t = 5 (rtol 1e-10, atol 1e-12) | 1/(1 + 9e^(−5)) = 0.942752 within 1e-7 |
+| `solve`: logistic y′ = y(1 − y), y(0) = 0.1, t = 5 (rtol 1e-10, atol 1e-12) | 1/(1 + 9e^(−5)) = 0.942826 within 1e-7 |
 | `solve`: harmonic x″ = −x (x, v) = (1, 0), t = 100 (rtol 1e-10, atol 1e-12, `nonneg: false`) | x² + v² = 1 within 1e-6; x(100) = cos 100 = 0.862319 within 1e-5 |
 | `solve`: Lotka–Volterra r = β = γ = δ = 1 from (0.5, 0.5), t = 50 | V = N − ln N + P − ln P stays 2.386294 within 1e-6 (rtol 1e-10) |
 | `solve`: `stop` when y < 0.5 on y′ = −y from 1 | status "stopped", tEnd = ln 2 = 0.693147 within 1e-3 |
