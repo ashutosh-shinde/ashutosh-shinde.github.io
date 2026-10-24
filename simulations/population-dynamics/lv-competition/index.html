@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lotka–Volterra competition — WildQuant</title>
+  <meta name="description" content="An interactive Lotka–Volterra competition model for two species: the phase plane with nullclines and your own starts, both populations over time, and a map of who wins for every pair of competition coefficients.">
+  <meta name="author" content="Ashutosh Shinde">
+  <meta name="theme-color" content="#0d0f0f">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0f0f'/%3E%3Cpath d='M16 16m-9 0a9 9 0 1 0 18 0a7 7 0 1 0-14 0a5 5 0 1 0 10 0a3 3 0 1 0-6 0' fill='none' stroke='%23f6f4ec' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preload" href="../../../fonts/lm-roman-bold.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="../../../css/site.css">
+  <!-- arriving from another page of the site: the quick flash starts with the first paint (.wq-arrive in
+       site.css), and the page opens in the right place: a back link (data-back) returns to where you left
+       this page; any other link opens it at the top, or at the #section it names -->
+  <script>
+    (function (e) {
+      var go = location.hash ? location.hash.slice(1) : null, n, p, k = location.pathname.replace(/index\.html$/, "");
+      try { var u = JSON.parse(sessionStorage.getItem("wq-unfold") || "null");
+        if (u && Date.now() - u.t < 6000 && !matchMedia("(prefers-reduced-motion: reduce)").matches) { e.classList.add("wq-arrive"); e.style.setProperty("--fx", (u.x * 100).toFixed(1) + "%"); e.style.setProperty("--fy", (u.y * 100).toFixed(1) + "%"); }
+        n = JSON.parse(sessionStorage.getItem("wq-nav") || "null");
+        if (n && n.to == k && Date.now() - n.t < 10000) { sessionStorage.removeItem("wq-nav"); p = n.back != null && JSON.parse(sessionStorage.getItem("wq-pos:" + k) || "null");
+          go = p && Math.abs(p.w - innerWidth) < 3 ? p.y : n.back != null ? n.back.slice(1) || 0 : go || 0; }
+      } catch (x) {}
+      if (go === null) return;
+      var user = false, fixes = 0, place = function () { try { if (typeof go == "number") scrollTo(0, go); else { var t = document.getElementById(decodeURIComponent(go)); if (t) t.scrollIntoView(); } } catch (x) {} };
+      e.style.scrollBehavior = "auto";
+      ["wheel", "touchstart", "keydown", "pointerdown"].forEach(function (v) { addEventListener(v, function () { user = true; }, { capture: true, passive: true }); });
+      document.addEventListener("readystatechange", function () { if (document.readyState == "interactive" && !user) place(); });
+      addEventListener("load", function () { if (!user) place(); var end = Date.now() + 1500; // and keep it there until the visitor moves
+        addEventListener("scroll", function hold() { if (user || Date.now() > end || ++fixes > 8) removeEventListener("scroll", hold); else place(); }, { passive: true });
+        setTimeout(function () { e.style.scrollBehavior = ""; }, 300); });
+    })(document.documentElement);
+  </script>
+  <script defer src="../../../js/lib/core.js"></script>
+  <script defer src="../../../js/lib/chalk.js"></script>
+  <script defer src="../../../js/engine/engine.js"></script>
+  <script defer src="../../../js/lib/plot.js"></script>
+  <script defer src="../../../js/lib/ode.js"></script>
+  <script defer src="../../../js/lib/simkit.js"></script>
+  <script defer src="../../../js/sims/lv-competition.js"></script>
+  <script defer src="../../../js/site.js"></script>
+</head>
+<body class="page page--sim">
+  <canvas id="board-tex" aria-hidden="true"></canvas>
+  <canvas id="board-fx" aria-hidden="true"></canvas>
+  <a class="back" href="../../" data-collapse data-back="#pd-4"><span aria-hidden="true">←</span> Simulations</a>
+  <main class="page__main sim">
+    <!-- ====================================================== LOTKA–VOLTERRA COMPETITION
+         HOW TO EDIT: texts below; the maths, the default values, the presets and the boxes' wording are
+         in js/sims/lv-competition.js; the plot style in js/lib/plot.js. -->
+    <header class="sim-head" data-calm>
+      <p class="article__kicker">Deterministic population dynamics · 4</p>
+      <h1 class="page__title sim__title"><span class="chalk-text">Lotka–Volterra competition</span></h1>
+      <div class="sim-eq">
+        <p class="sim-eq__formula math--lines"><span class="m"><i>dN</i><sub>1</sub>/<i>dt</i> = <i>r</i><sub>1</sub><i>N</i><sub>1</sub>(1 − (<i>N</i><sub>1</sub> + <i>α</i><sub>21</sub><i>N</i><sub>2</sub>)/<i>K</i><sub>1</sub>)</span><span class="m"><i>dN</i><sub>2</sub>/<i>dt</i> = <i>r</i><sub>2</sub><i>N</i><sub>2</sub>(1 − (<i>N</i><sub>2</sub> + <i>α</i><sub>12</sub><i>N</i><sub>1</sub>)/<i>K</i><sub>2</sub>)</span></p>
+        <dl class="sim-notation">
+          <div><dt><span class="m"><i>N</i><sub>1</sub>, <i>N</i><sub>2</sub></span></dt><dd>the two species (SP1, SP2)</dd></div>
+          <div><dt><span class="m"><i>r</i><sub>1</sub>, <i>r</i><sub>2</sub></span></dt><dd>growth rate per head when rare and alone</dd></div>
+          <div><dt><span class="m"><i>K</i><sub>1</sub>, <i>K</i><sub>2</sub></span></dt><dd>carrying capacity of each species alone</dd></div>
+          <div><dt><span class="m"><i>α</i><sub>21</sub>, <i>α</i><sub>12</sub></span></dt><dd><span class="m"><i>α</i><sub>21</sub></span> — the effect of one SP2 individual on SP1, counted in SP1 individuals; <span class="m"><i>α</i><sub>12</sub></span> — the effect of SP1 on SP2 (this is the owner's convention; many textbooks swap the indices)</dd></div>
+        </dl>
+      </div>
+    </header>
+
+    <!-- ---------------------------------------------------- the controls drive all three panels -->
+    <section class="sim-sec" id="phase-plane" aria-labelledby="h-phase">
+      <h2 class="sim-sec__title" id="h-phase" data-calm>Phase plane</h2>
+      <div class="sim-controls sim-controls--grid" data-calm>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>r</i><sub>1</sub></span></span><input type="range" id="r1" min="0.05" max="5" step="0.01" value="1"><output id="r1-out" for="r1">1.00</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>r</i><sub>2</sub></span></span><input type="range" id="r2" min="0.05" max="5" step="0.01" value="0.8"><output id="r2-out" for="r2">0.80</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>K</i><sub>1</sub></span></span><input type="range" id="K1" min="1" max="100" step="0.5" value="10"><output id="K1-out" for="K1">10.0</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>K</i><sub>2</sub></span></span><input type="range" id="K2" min="1" max="100" step="0.5" value="8"><output id="K2-out" for="K2">8.0</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>α</i><sub>12</sub></span></span><input type="range" id="a12" min="0" max="5" step="0.001" value="0.4"><output id="a12-out" for="a12">0.40</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>α</i><sub>21</sub></span></span><input type="range" id="a21" min="0" max="5" step="0.001" value="0.6"><output id="a21-out" for="a21">0.60</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>t</i><sub>max</sub></span></span><input type="range" id="tmax" min="10" max="500" step="10" value="50"><output id="tmax-out" for="tmax">50</output></label>
+      </div>
+      <div class="sim-presets" id="presets" data-calm></div>
+      <div class="sim-panel sim-panel--wideterm">
+        <div class="sim-stack">
+          <figure class="sim-plot sim-plot--phase"><canvas id="cv-phase" role="img" aria-label="Phase plane of the two species"></canvas><figcaption class="sim-cap">Each line is one possible history. Tap or click to start your own.</figcaption></figure>
+          <div class="sim-buttons" data-calm><button type="button" class="sim-btn" id="clear-taps">Clear my starts</button></div>
+        </div>
+        <div class="term" id="term-phase" aria-live="polite" aria-label="What the phase plane shows"></div>
+      </div>
+    </section>
+
+    <section class="sim-sec" id="time-series" aria-labelledby="h-time">
+      <div data-calm>
+        <h2 class="sim-sec__title" id="h-time">Time series</h2>
+        <p class="sim-sec__lead">Both populations from your last start in the phase plane, or from 10% of each carrying capacity.</p>
+      </div>
+      <div class="sim-panel sim-panel--wideterm">
+        <figure class="sim-plot"><canvas id="cv-time" role="img" aria-label="Both populations over time"></canvas><figcaption class="sim-cap">Both populations over time, from your last start.</figcaption></figure>
+        <div class="term" id="term-time" aria-live="polite" aria-label="What the time series shows"></div>
+      </div>
+    </section>
+
+    <section class="sim-sec" id="outcome-map" aria-labelledby="h-map">
+      <div data-calm>
+        <h2 class="sim-sec__title" id="h-map">Outcome map</h2>
+        <p class="sim-sec__lead">The two competition coefficients decide who wins; the carrying capacities set where the borders are.</p>
+      </div>
+      <div class="sim-panel sim-panel--wideterm">
+        <figure class="sim-plot sim-plot--phase"><canvas id="cv-map" role="img" aria-label="Outcome for every pair of competition coefficients"></canvas><figcaption class="sim-cap">Who wins, for every pair of <span class="m"><i>α</i></span>. Tap to move the dot.</figcaption></figure>
+        <div class="term" id="term-map" aria-live="polite" aria-label="What the outcome map shows"></div>
+      </div>
+    </section>
+
+    <section class="sim-sec sim-theory" id="theory" aria-labelledby="h-theory" data-calm>
+      <h2 class="sim-sec__title" id="h-theory">The theory, in short</h2>
+      <ul>
+        <li><b>Two logistic species.</b> Each grows logistically alone (<span class="m"><i>r</i><sub><i>i</i></sub></span>, <span class="m"><i>K</i><sub><i>i</i></sub></span>); the other species adds a linear drag.</li>
+        <li><b>Competition coefficients.</b> <span class="m"><i>α</i><sub>21</sub></span> converts SP2 into SP1-equivalents (<span class="m"><i>α</i><sub>21</sub> = 2</span>: one SP2 individual weighs on SP1 like two of its own); <span class="m">(<i>N</i><sub>1</sub> + <i>α</i><sub>21</sub><i>N</i><sub>2</sub>)</span> is the crowding SP1 feels.</li>
+        <li><b>Equilibria.</b> <span class="m"><i>e</i><sub>0</sub> = (0, 0)</span>, <span class="m"><i>e</i><sub>1</sub> = (<i>K</i><sub>1</sub>, 0)</span>, <span class="m"><i>e</i><sub>2</sub> = (0, <i>K</i><sub>2</sub>)</span>, and <span class="m"><i>e</i><sub>3</sub> = ((<i>K</i><sub>1</sub> − <i>α</i><sub>21</sub><i>K</i><sub>2</sub>)/(1 − <i>α</i><sub>12</sub><i>α</i><sub>21</sub>), (<i>K</i><sub>2</sub> − <i>α</i><sub>12</sub><i>K</i><sub>1</sub>)/(1 − <i>α</i><sub>12</sub><i>α</i><sub>21</sub>))</span> when it is positive.</li>
+        <li><b>Stability</b> comes from the Jacobian's eigenvalues at each equilibrium (the README's table: node, saddle, spiral, centre).</li>
+        <li><b>Invasion tests.</b> SP1 can grow when rare in SP2's world iff <span class="m"><i>K</i><sub>1</sub> &gt; <i>α</i><sub>21</sub><i>K</i><sub>2</sub></span>; SP2 iff <span class="m"><i>K</i><sub>2</sub> &gt; <i>α</i><sub>12</sub><i>K</i><sub>1</sub></span>. Both → coexistence; one → that species wins; neither → bistability (founder control).</li>
+        <li><b>Coexistence needs</b> each species to limit itself more than it limits the other.</li>
+        <li><b>No spirals.</b> In competition the Jacobian at <span class="m"><i>e</i><sub>3</sub></span> has real eigenvalues, so populations approach without oscillating.</li>
+        <li><b>Growth rates</b> set the speed and the shape of the paths, not the outcome.</li>
+        <li><b>Degenerate cases.</b> <span class="m"><i>α</i><sub>12</sub><i>α</i><sub>21</sub> = 1</span> with matching <span class="m"><i>K</i></span>'s gives a line of equilibria (neutral); near it the approach is extremely slow.</li>
+      </ul>
+    </section>
+
+    <section class="sim-more" data-calm>
+      <a class="btn" href="https://github.com/ashutosh-shinde/Population-Dynamics/blob/master/Two_species_population_models/README.md#1-lotka-volterra-competition-model" target="_blank" rel="noopener">Read the full write-up on GitHub <span aria-hidden="true">→</span></a>
+      <a class="btn" href="../../" data-collapse data-back="#pd-4"><span aria-hidden="true">←</span> Back to the simulations</a>
+    </section>
+  </main>
+</body>
+</html>

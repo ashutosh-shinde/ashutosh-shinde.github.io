@@ -378,6 +378,8 @@ a.project-card:hover { background: rgb(var(--ink) / 0.06); border-color: rgb(var
 .sim-btn--play { min-width: 5.5em; }
 .sim-sec > .sim-seg { margin-top: 14px; }
 .sim-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sim-panel--wideterm { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); } /* boxes with long table rows */
+@media (max-width: 900px) { .sim-panel--wideterm { grid-template-columns: minmax(0, 1fr); } }
 .sim-stack { display: grid; gap: 14px; min-width: 0; }
 .term__warn { color: #f0b27a; text-shadow: 0 0 6px rgb(240 178 122 / 0.35); }
 .term__why { color: #b4f7bb; opacity: 0.92; }

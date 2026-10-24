@@ -215,6 +215,14 @@ other than `-` and spaces, and turns spaces into `-`; if the heading changed, us
   bistable), or is marked "still moving" (allowed only when `t_max < 10·τ`).
 - The current dot on the map lies in the region named in box C.
 
+(Found while building, now in the code: the α sliders use step 0.001, because the Near-degenerate preset's
+0.999 cannot be set with 0.01 (it snapped to 1, the neutral case); the readouts show three decimals only when
+needed. The separatrix is integrated up to `t = 80·max(1, 1/min(r1, r2))`, and the point where it leaves the
+box is added, so it reaches the edge; the side test extends its last stretch if a start lies beyond it.
+Boxes and checks read one snapshot of the parameters taken when the runs are computed, never the live slider
+state (the boxes are throttled, so they could otherwise mix two states). The panels use
+`.sim-panel--wideterm` (a wider box column) so the equilibrium rows fit on one line on desktop.)
+
 ## 9. Screenshots to look at
 
 Every preset; `α_21 = 0`; `α_12 = 5, α_21 = 5` (strongly bistable); `K1 = 100, K2 = 1`; a tapped start in
