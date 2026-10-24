@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Mathematical Simulations — WildQuant</title>
-  <meta name="description" content="Interactive simulations from ecology, collective behaviour, markets and competition.">
+  <meta name="description" content="Interactive simulations by Ashutosh Shinde: move a slider and watch the model answer, starting with population dynamics.">
   <meta name="author" content="Ashutosh Shinde">
   <meta name="theme-color" content="#0d0f0f">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0f0f'/%3E%3Cpath d='M16 16m-9 0a9 9 0 1 0 18 0a7 7 0 1 0-14 0a5 5 0 1 0 10 0a3 3 0 1 0-6 0' fill='none' stroke='%23f6f4ec' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -37,16 +37,95 @@
   <script defer src="../js/engine/engine.js"></script>
   <script defer src="../js/site.js"></script>
 </head>
-<body class="page">
+<body class="page page--sims">
   <canvas id="board-tex" aria-hidden="true"></canvas>
   <canvas id="board-fx" aria-hidden="true"></canvas>
   <a class="back" href="../" data-collapse data-back="#simulations"><span aria-hidden="true">←</span> WildQuant</a>
   <main class="page__main">
     <!-- ====================================================== MATHEMATICAL SIMULATIONS
-         HOW TO EDIT: write this page's content below the title. -->
-    <div class="page__block" data-calm>
+         HOW TO EDIT: the lead text, the collections (index cards) and, for each
+         collection, its section of numbered cards (see "HOW TO ADD A SIMULATION" below). -->
+    <header class="page__block" data-calm>
       <h1 class="page__title"><span class="chalk-text">Mathematical Simulations</span></h1>
-    </div>
+      <p class="page__lead">Here you’ll find my simulations in a form you can play with: move a slider and watch the model answer. Each one comes with a short note on the theory and a link to the full write-up of the project. Choose a collection below to open it.</p>
+    </header>
+
+    <nav class="collections" aria-labelledby="collections-title" data-calm>
+      <h2 class="toc__title" id="collections-title">Collections</h2>
+      <ul class="collections__list">
+        <li>
+          <a class="collection-card" href="#deterministic-population-dynamics">
+            <span class="collection-card__title">Deterministic population dynamics</span>
+            <span class="collection-card__text">How populations grow, compete and collapse, from one-species growth to predators and prey.</span>
+            <span class="collection-card__meta">6 models <span aria-hidden="true">↓</span></span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <section class="collection" id="deterministic-population-dynamics" aria-labelledby="pd-title">
+      <div data-calm>
+        <h2 class="collection__title" id="pd-title">Deterministic population dynamics</h2>
+        <p class="collection__intro">Models from my <a href="https://github.com/ashutosh-shinde/Population-Dynamics" target="_blank" rel="noopener">Population Dynamics</a> project, from one species to two.</p>
+      </div>
+      <!-- HOW TO ADD A SIMULATION
+             1. Copy the folder population-dynamics/discrete-logistic/ to a new folder
+                (e.g. population-dynamics/continuous-logistic/) and write the page.
+             2. Put its maths and wiring in js/sims/<name>.js, drawing with WQ.Plot (js/lib/plot.js).
+             3. Turn its "coming soon" card below into a link:
+                <a class="project-card" id="pd-2" href="population-dynamics/<folder>/index.html" data-collapse> … </a>
+                with "Open →" instead of the badge, and data-back="#pd-2" on the new page's back links. -->
+      <ol class="project-grid" data-calm>
+        <li>
+          <a class="project-card" id="pd-1" href="population-dynamics/discrete-logistic/index.html" data-collapse>
+            <span class="project-card__no">1</span>
+            <span class="project-card__title">Discrete-time logistic model</span>
+            <span class="project-card__text">One equation, <span class="m"><i>X</i><sub><i>t</i>+1</sub> = <i>R</i><sub>m</sub><i>X</i><sub><i>t</i></sub>(1 − <i>X</i><sub><i>t</i></sub>)</span>: from a steady population to chaos.</span>
+            <span class="project-card__go">Open <span aria-hidden="true">→</span></span>
+          </a>
+        </li>
+        <li>
+          <div class="project-card project-card--soon" id="pd-2" aria-disabled="true">
+            <span class="project-card__no">2</span>
+            <span class="project-card__title">Continuous-time logistic model</span>
+            <span class="project-card__text">Growth in continuous time, and what too large a time step does to it.</span>
+            <span class="project-card__badge">Coming soon</span>
+          </div>
+        </li>
+        <li>
+          <div class="project-card project-card--soon" id="pd-3" aria-disabled="true">
+            <span class="project-card__no">3</span>
+            <span class="project-card__title">Harvesting with Holling responses</span>
+            <span class="project-card__text">Hunting or fishing a population: tipping points, collapse and recovery.</span>
+            <span class="project-card__badge">Coming soon</span>
+          </div>
+        </li>
+        <li>
+          <div class="project-card project-card--soon" id="pd-4" aria-disabled="true">
+            <span class="project-card__no">4</span>
+            <span class="project-card__title">Lotka–Volterra competition</span>
+            <span class="project-card__text">Two species sharing resources: who wins, and when can both survive?</span>
+            <span class="project-card__badge">Coming soon</span>
+          </div>
+        </li>
+        <li>
+          <div class="project-card project-card--soon" id="pd-5" aria-disabled="true">
+            <span class="project-card__no">5</span>
+            <span class="project-card__title">Consumer–resource model</span>
+            <span class="project-card__text">Species competing for one resource: the lowest <span class="m"><i>R</i>*</span> wins.</span>
+            <span class="project-card__badge">Coming soon</span>
+          </div>
+        </li>
+        <li>
+          <div class="project-card project-card--soon" id="pd-6" aria-disabled="true">
+            <span class="project-card__no">6</span>
+            <span class="project-card__title">Prey–predator models</span>
+            <span class="project-card__text">Predators and prey in cycles, from Lotka–Volterra to Holling responses.</span>
+            <span class="project-card__badge">Coming soon</span>
+          </div>
+        </li>
+      </ol>
+    </section>
   </main>
 </body>
 </html>

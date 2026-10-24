@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Discrete-time logistic model — WildQuant</title>
+  <meta name="description" content="An interactive discrete-time logistic model, X(t+1) = R·X(t)(1 − X(t)): trajectories, equilibria and their stability, predictability and the bifurcation diagram.">
+  <meta name="author" content="Ashutosh Shinde">
+  <meta name="theme-color" content="#0d0f0f">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0f0f'/%3E%3Cpath d='M16 16m-9 0a9 9 0 1 0 18 0a7 7 0 1 0-14 0a5 5 0 1 0 10 0a3 3 0 1 0-6 0' fill='none' stroke='%23f6f4ec' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preload" href="../../../fonts/lm-roman-bold.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="../../../css/site.css">
+  <!-- arriving from another page of the site: the quick flash starts with the first paint (.wq-arrive in
+       site.css), and the page opens in the right place: a back link (data-back) returns to where you left
+       this page; any other link opens it at the top, or at the #section it names -->
+  <script>
+    (function (e) {
+      var go = location.hash ? location.hash.slice(1) : null, n, p, k = location.pathname.replace(/index\.html$/, "");
+      try { var u = JSON.parse(sessionStorage.getItem("wq-unfold") || "null");
+        if (u && Date.now() - u.t < 6000 && !matchMedia("(prefers-reduced-motion: reduce)").matches) { e.classList.add("wq-arrive"); e.style.setProperty("--fx", (u.x * 100).toFixed(1) + "%"); e.style.setProperty("--fy", (u.y * 100).toFixed(1) + "%"); }
+        n = JSON.parse(sessionStorage.getItem("wq-nav") || "null");
+        if (n && n.to == k && Date.now() - n.t < 10000) { sessionStorage.removeItem("wq-nav"); p = n.back != null && JSON.parse(sessionStorage.getItem("wq-pos:" + k) || "null");
+          go = p && Math.abs(p.w - innerWidth) < 3 ? p.y : n.back != null ? n.back.slice(1) || 0 : go || 0; }
+      } catch (x) {}
+      if (go === null) return;
+      var user = false, fixes = 0, place = function () { try { if (typeof go == "number") scrollTo(0, go); else { var t = document.getElementById(decodeURIComponent(go)); if (t) t.scrollIntoView(); } } catch (x) {} };
+      e.style.scrollBehavior = "auto";
+      ["wheel", "touchstart", "keydown", "pointerdown"].forEach(function (v) { addEventListener(v, function () { user = true; }, { capture: true, passive: true }); });
+      document.addEventListener("readystatechange", function () { if (document.readyState == "interactive" && !user) place(); });
+      addEventListener("load", function () { if (!user) place(); var end = Date.now() + 1500; // and keep it there until the visitor moves
+        addEventListener("scroll", function hold() { if (user || Date.now() > end || ++fixes > 8) removeEventListener("scroll", hold); else place(); }, { passive: true });
+        setTimeout(function () { e.style.scrollBehavior = ""; }, 300); });
+    })(document.documentElement);
+  </script>
+  <script defer src="../../../js/lib/core.js"></script>
+  <script defer src="../../../js/lib/chalk.js"></script>
+  <script defer src="../../../js/engine/engine.js"></script>
+  <script defer src="../../../js/lib/plot.js"></script>
+  <script defer src="../../../js/sims/logistic.js"></script>
+  <script defer src="../../../js/site.js"></script>
+</head>
+<body class="page page--sim">
+  <canvas id="board-tex" aria-hidden="true"></canvas>
+  <canvas id="board-fx" aria-hidden="true"></canvas>
+  <a class="back" href="../../" data-collapse data-back="#pd-1"><span aria-hidden="true">←</span> Simulations</a>
+  <main class="page__main sim">
+    <!-- ====================================================== DISCRETE-TIME LOGISTIC MODEL
+         HOW TO EDIT: texts below; the maths, the default values and the boxes'
+         wording are in js/sims/logistic.js; the plot style in js/lib/plot.js. -->
+    <header class="sim-head" data-calm>
+      <p class="article__kicker">Deterministic population dynamics · 1</p>
+      <h1 class="page__title sim__title"><span class="chalk-text">Discrete-time logistic model</span></h1>
+      <div class="sim-eq">
+        <p class="sim-eq__formula"><span class="m"><i>X</i><sub><i>t</i>+1</sub> = <i>R</i><sub>m</sub> <i>X</i><sub><i>t</i></sub> (1 − <i>X</i><sub><i>t</i></sub>)</span></p>
+        <dl class="sim-notation">
+          <div><dt><span class="m"><i>X</i><sub><i>t</i></sub></span></dt><dd>population in generation <i>t</i>, as a share of the carrying capacity <i>K</i> (<span class="m"><i>X</i><sub><i>t</i></sub> = <i>N</i><sub><i>t</i></sub>/<i>K</i></span>, between 0 and 1)</dd></div>
+          <div><dt><span class="m"><i>R</i><sub>m</sub></span></dt><dd>the largest growth factor per generation (when the population is tiny), between 0 and 4</dd></div>
+          <div><dt><span class="m">(1 − <i>X</i><sub><i>t</i></sub>)</span></dt><dd>crowding: growth falls linearly as the habitat fills</dd></div>
+          <div><dt><span class="m"><i>t</i></span></dt><dd>generations, which do not overlap (parents breed, then die)</dd></div>
+        </dl>
+      </div>
+    </header>
+
+    <!-- ---------------------------------------------------- 1. trajectory -->
+    <section class="sim-sec" id="trajectory" aria-labelledby="h-traj">
+      <h2 class="sim-sec__title" id="h-traj" data-calm>Trajectory</h2>
+      <div class="sim-controls" data-calm>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>R</i><sub>m</sub></span></span><input type="range" id="rm" min="0" max="4" step="0.001" value="3.2"><output id="rm-out" for="rm">3.200</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>X</i><sub>0</sub></span></span><input type="range" id="x0" min="0" max="1" step="0.001" value="0.2"><output id="x0-out" for="x0">0.200</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name">steps</span><input type="range" id="steps" min="10" max="500" step="1" value="60"><output id="steps-out" for="steps">60</output></label>
+      </div>
+      <div class="sim-panel">
+        <figure class="sim-plot"><canvas id="cv-traj" role="img" aria-label="Trajectory"></canvas></figure>
+        <div class="term" id="term-traj" aria-live="polite" aria-label="What the trajectory shows"></div>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------------------- 2. predictability -->
+    <section class="sim-sec" id="predictability" aria-labelledby="h-pred">
+      <div data-calm>
+        <h2 class="sim-sec__title" id="h-pred">Predictability</h2>
+        <p class="sim-sec__lead">The same model started from <span class="m"><i>X</i><sub>0</sub></span> plus a small error 𝛿, <span id="pred-now"></span> (set above). Does the error die out, or does it take over?</p>
+      </div>
+      <div class="sim-controls" data-calm>
+        <label class="sim-ctl"><span class="sim-ctl__name">steps</span><input type="range" id="psteps" min="20" max="500" step="1" value="100"><output id="psteps-out" for="psteps">100</output></label>
+        <fieldset class="sim-errs">
+          <legend>errors 𝛿</legend>
+          <span class="sim-err sim-err--ref"><span class="swatch" style="--c:#f6f4ec"></span>0 (reference)</span>
+          <label class="sim-err"><input type="checkbox" id="err-0" checked><span class="swatch" style="--c:#f2d675"></span>0.1</label>
+          <label class="sim-err"><input type="checkbox" id="err-1" checked><span class="swatch" style="--c:#9cc9f0"></span>0.01</label>
+          <label class="sim-err"><input type="checkbox" id="err-2" checked><span class="swatch" style="--c:#f2a7c3"></span>0.00001</label>
+          <label class="sim-err"><span class="swatch" style="--c:#f0b27a"></span>your own <input type="number" id="err-custom" class="sim-num" min="0" max="0.5" step="any" placeholder="0.001" inputmode="decimal"></label>
+          <span class="sim-hint" id="err-hint" hidden>Use a number above 0 and at most 0.5.</span>
+        </fieldset>
+      </div>
+      <div class="sim-panel">
+        <figure class="sim-plot">
+          <canvas id="cv-runs" role="img" aria-label="Error trajectories"></canvas>
+          <figcaption class="sim-cap">Error trajectories: <span class="m"><i>X</i><sub><i>t</i></sub></span> for each start.</figcaption>
+          <p class="sim-note" id="note-runs" hidden></p>
+        </figure>
+        <div class="term" id="term-runs" aria-live="polite" aria-label="Where each run goes"></div>
+      </div>
+      <div class="sim-panel">
+        <figure class="sim-plot">
+          <div class="sim-toggle" role="group" aria-label="Axis of the divergence plot">
+            <button type="button" id="ax-log" aria-pressed="true">log</button><button type="button" id="ax-lin" aria-pressed="false">linear</button>
+          </div>
+          <canvas id="cv-div" role="img" aria-label="Divergence of the errors"></canvas>
+          <figcaption class="sim-cap">Divergence: <span class="m"><i>E</i><sub><i>t</i></sub> = <i>X</i><sub><i>t</i></sub>(𝛿) − <i>X</i><sub><i>t</i></sub>(0)</span>; the dashed line is the tolerance <span class="m">𝜀<sub>tol</sub></span> = 0.01.</figcaption>
+        </figure>
+        <div class="term" id="term-div" aria-live="polite" aria-label="How long the model stays predictable"></div>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------------------- 3. bifurcation diagram -->
+    <section class="sim-sec" id="bifurcation" aria-labelledby="h-bif">
+      <div data-calm>
+        <h2 class="sim-sec__title" id="h-bif">Bifurcation diagram</h2>
+        <p class="sim-sec__lead">For each <span class="m"><i>R</i><sub>m</sub></span> from 0 to 4 (steps of 0.01): run 1000 generations and plot the last 200 values of <span class="m"><i>X</i><sub><i>t</i></sub></span>. One dot per <span class="m"><i>R</i><sub>m</sub></span> is an equilibrium, two a 2-cycle, a smear is chaos. <span class="sim-hint--fine">Drag on the plot to zoom in; double-click to zoom out.</span><span class="sim-hint--coarse">Tap “Zoom”, then drag on the plot.</span></p>
+      </div>
+      <div class="sim-controls" data-calm>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>X</i><sub>0</sub></span></span><input type="range" id="bx0" min="0.1" max="0.9" step="0.1" value="0.1"><output id="bx0-out" for="bx0">0.1</output></label>
+        <button type="button" class="sim-btn sim-btn--zoom" id="bif-zoom" aria-pressed="false">Zoom</button>
+        <button type="button" class="sim-btn" id="bif-reset" hidden>Reset zoom</button>
+      </div>
+      <div class="sim-panel">
+        <figure class="sim-plot sim-plot--tall"><canvas id="cv-bif" role="img" aria-label="Bifurcation diagram"></canvas></figure>
+        <div class="term" id="term-bif" aria-live="polite" aria-label="Landmarks of the bifurcation diagram"></div>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------------------- 4. theory -->
+    <section class="sim-sec sim-theory" id="theory" aria-labelledby="h-theory" data-calm>
+      <h2 class="sim-sec__title" id="h-theory">The theory, in short</h2>
+      <ul>
+        <li><b>Assumptions.</b> Generations are discrete and do not overlap; the population is closed (no migration); growth falls linearly with crowding; and it is a mean field: a large, well-mixed population, so <span class="m"><i>X</i><sub><i>t</i></sub></span> is an expected value.</li>
+        <li><b>Equilibria.</b> <span class="m"><i>x</i>* = 0</span> always; <span class="m"><i>x</i>* = 1 − 1/<i>R</i><sub>m</sub></span> when <span class="m"><i>R</i><sub>m</sub></span> &gt; 1.</li>
+        <li><b>Linear stability.</b> <span class="m"><i>x</i>*</span> is stable if <span class="m">|<i>f</i> ′(<i>x</i>*)| &lt; 1</span>, with <span class="m"><i>f</i> ′(<i>x</i>) = <i>R</i><sub>m</sub>(1 − 2<i>x</i>)</span>. So <span class="m"><i>f</i> ′(0) = <i>R</i><sub>m</sub></span> and <span class="m"><i>f</i> ′(1 − 1/<i>R</i><sub>m</sub>) = 2 − <i>R</i><sub>m</sub></span>: extinction is stable for <span class="m"><i>R</i><sub>m</sub></span> &lt; 1, and the positive equilibrium for 1 &lt; <span class="m"><i>R</i><sub>m</sub></span> &lt; 3.</li>
+        <li><b>Extinction is unstable for every <span class="m"><i>R</i><sub>m</sub></span> &gt; 1:</b> a small population then always grows.</li>
+        <li><b>Period doubling.</b> At <span class="m"><i>R</i><sub>m</sub></span> = 3 a stable 2-cycle appears; more doublings follow at 3.4495 (period 4), 3.5441 (period 8), … and pile up at <span class="m"><i>R</i><sub>∞</sub></span> ≈ 3.5699. The gaps between them shrink by the Feigenbaum ratio ≈ 4.669.</li>
+        <li><b>Chaos</b> starts beyond <span class="m"><i>R</i><sub>∞</sub></span>: the population never settles, yet stays in [0, 1]. Windows of order appear inside it, the largest with period 3 from <span class="m">1 + √<span class="rt">8</span></span> ≈ 3.8284.</li>
+        <li><b>The Lyapunov exponent</b> <span class="m">λ = lim (1/<i>n</i>) Σ ln|<i>f</i> ′(<i>X</i><sub><i>t</i></sub>)|</span> measures how fast nearby runs separate: λ &lt; 0 on stable equilibria and stable cycles (including the whole 2-cycle range), λ &gt; 0 in chaos, and λ = 0 exactly at the bifurcation points.</li>
+        <li><b>Predictability.</b> An initial error grows like <span class="m">𝛿 e<sup>λ<i>t</i></sup></span>, so the horizon is about <span class="m">ln(𝜀<sub>tol</sub>/𝛿)/λ</span> steps. Measuring 1000 times more precisely buys only <span class="m">ln(1000)/λ</span> more steps.</li>
+        <li><b>The start does not matter</b> in the long run, except <span class="m"><i>X</i><sub>0</sub></span> = 0 or 1, which both die out.</li>
+      </ul>
+    </section>
+
+    <!-- ---------------------------------------------------- 5. more -->
+    <section class="sim-more" data-calm>
+      <a class="btn" href="https://github.com/ashutosh-shinde/Population-Dynamics/blob/master/Discrete_time_logistic_model/README.md" target="_blank" rel="noopener">Read the full write-up on GitHub <span aria-hidden="true">→</span></a>
+      <a class="btn" href="../../" data-collapse data-back="#pd-1"><span aria-hidden="true">←</span> Back to the simulations</a>
+    </section>
+  </main>
+</body>
+</html>

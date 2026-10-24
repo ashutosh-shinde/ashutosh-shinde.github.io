@@ -23,7 +23,11 @@ double-click blocks the fonts.
 | What | File |
 |---|---|
 | Home page text, links, section texts, the comment box | `index.html` |
-| Section pages (blank for now) | `about/`, `simulations/`, `blogs/` → each has an `index.html` |
+| Section pages (blank for now) | `about/`, `blogs/` → each has an `index.html` |
+| Simulations: the list of collections and their numbered cards | `simulations/index.html` |
+| A simulation page (one folder each), e.g. the discrete-time logistic model | `simulations/population-dynamics/discrete-logistic/index.html` |
+| Plots in chalk style (axes, lines, legends, log axes) | `js/lib/plot.js` |
+| A simulation's maths and controls (one file per simulation) | `js/sims/`, e.g. `js/sims/logistic.js` (tested by `node tools/test-logistic.mjs`) |
 | Elementary Mathematics: title, index and the list of chapters | `elementary-mathematics/index.html` |
 | A chapter (one folder each) | `elementary-mathematics/what-is-infinity/index.html` |
 | Comments page | `comments/index.html` |
@@ -69,6 +73,13 @@ Every file starts with a comment that explains what it does and has a
      to its intro.
   3. In `elementary-mathematics/index.html`, add a line to the index and copy
      a `<section class="chapter">` for it (a comment there shows how).
+- **Add a simulation:**
+  1. Copy the folder `simulations/population-dynamics/discrete-logistic/` to a
+     new folder and write the page.
+  2. Put its maths and wiring in `js/sims/<name>.js`, drawing with `WQ.Plot`
+     (`js/lib/plot.js`), and load both scripts in the page before `site.js`.
+  3. In `simulations/index.html`, turn its "coming soon" card into a link
+     (`<a class="project-card" … data-collapse>`; a comment there shows how).
 - **Write maths in a chapter** (it is set in Latin Modern, like LaTeX):
   - inline: `<span class="m"><i>f</i> : ℕ → ℝ</span>`, with letters in
     `<i>` and `<sub>` / `<sup>` for indices and powers
