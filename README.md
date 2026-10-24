@@ -104,7 +104,7 @@ build one from scratch, it needs all of these:
    `#` links within a page, do without.
 4. **`data-calm` on the text blocks**, so the drawings fade behind them.
 5. **A background (optional):** add `data-scene="…"` to `<body>` and load the
-   scene's script before `site.js`. `pure` (faint drifting maths, also needs
+   scene's script after `engine.js` and before `site.js`. `pure` (faint drifting maths, also needs
    `../js/data/pure.js` first) and `snowfield` (snow on grass, also needs
    `../js/lib/snowfall.js` first) are made for pages. Without a scene the page
    shows the plain blackboard.

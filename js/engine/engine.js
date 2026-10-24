@@ -399,7 +399,7 @@
       if (!a || ev.defaultPrevented || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || a.target === "_blank") return;
       ev.preventDefault();
       const r = a.getBoundingClientRect();
-      collapseStart(a.href, r.left + r.width / 2, r.top + r.height / 2);
+      try { collapseStart(a.href, r.left + r.width / 2, r.top + r.height / 2); } catch (e) { console.error(e); G.location.href = a.href; } // never leave a link dead
     });
     // back/forward cache: undo a finished collapse
     G.addEventListener("pageshow", (ev) => { if (ev.persisted) { CO = null; document.documentElement.classList.remove("wq-collapsing"); lastT = performance.now(); } });
