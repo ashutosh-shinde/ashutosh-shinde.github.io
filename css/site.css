@@ -52,6 +52,9 @@ body {
 #board-tex, #board-fx { position: fixed; inset: 0 auto auto 0; width: 100%; height: 100vh; height: 100lvh; display: block; pointer-events: none; }
 #board-tex { z-index: 0; }
 #board-fx { z-index: 1; }
+/* the board starts right after a page's first paint (site.js): its drawings fade in, so nothing pops */
+#board-tex, #board-fx { opacity: 0; transition: opacity .35s ease; }
+.wq-ready #board-tex, .wq-ready #board-fx { opacity: 1; }
 main, .page__main { position: relative; z-index: 2; }
 a { color: inherit; }
 ::selection { background: rgb(var(--ink) / 0.22); }

@@ -31,6 +31,7 @@
     const rW = PACK.map(() => new Rig()), rH = new Rig(), nz = makeNoise(13);
     let pack = PACK;
     let birds = [], falcon = { x: -999, y: -999, on: false }, flockBox, tufts = [], dust = [], slots = [], panels = {}, orbit = [], nest = [], period = 0, paths = [];
+    let settled = 0; // steps the flock has had to settle (see SETTLE)
     const nn = [0, 0];
 
     /* ---------------------------------------------------------- Lotka–Volterra data */
@@ -95,7 +96,7 @@
       const nb = mobile ? BIRDS.phone : BIRDS.desktop;
       birds = [];
       for (let i = 0; i < nb; i++) { const a = r() * TAU; birds.push({ x: lerp(flockBox.x0, flockBox.x1, 0.3 + 0.4 * r()), y: lerp(flockBox.y0, flockBox.y1, 0.3 + 0.4 * r()), vx: 60 * Math.cos(a), vy: 30 * Math.sin(a), f: r() * 6, r: r() }); }
-      for (let i = 0; i < 120; i++) stepBirds(1 / 30, i / 30 - 4); // let the flock settle before it is first seen
+      settled = 0; // the flock settles before it is first seen: a few steps at a time while the page idles (prepare)
       tufts = [];
       for (let i = 0; i < (mobile ? 50 : 90); i++) tufts.push({ wx: r() * W * 1.6, h: (3 + r() * 7) * S, n: 2 + ((r() * 3) | 0), y: r() * 22 * S, a: 0.15 + r() * 0.25 });
       // equation slots: each writes an equation, rests, fades, then reappears elsewhere
@@ -123,6 +124,8 @@
     const wolfS = (w) => SC * (1 - 0.12 * w.d);
 
     /* ---------------------------------------------------------- boids */
+    const SETTLE = 120; // steps (of 1/30 s) the flock flies before it is first seen
+    function settle(n) { while (settled < SETTLE && n-- > 0) { stepBirds(1 / 30, settled / 30 - 4); settled++; } return settled >= SETTLE; }
     function stepBirds(dt, tt) {
       const fb = flockBox, cx = lerp(fb.x0, fb.x1, 0.5 + 0.28 * Math.sin(tt * 0.17)), cy = lerp(fb.y0, fb.y1, 0.5 + 0.2 * Math.sin(tt * 0.29 + 1));
       const Rn = 60 * Math.max(0.7, S), Rs = 12 * Math.max(0.7, S), maxV = 150 * Math.max(0.7, S), minV = 55 * Math.max(0.7, S), n = birds.length;
@@ -198,8 +201,10 @@
     return {
       still: 14,
       resize(e, b) { env = e; W = e.W; H = e.H; portrait = e.portrait; mobile = e.mobile; box = b || box; layout(); if (!built || birds.length !== (mobile ? BIRDS.phone : BIRDS.desktop)) { buildLV(); buildPaths(); build(); } },
+      prepare() { return !built || settle(12); }, // background work, a little at a time: true when done
       update(dt, tt) {
         if (!built) return;
+        settle(SETTLE); // (already done, unless the scene came on screen very early)
         t = tt; camX += V * dt;
         stepBirds(Math.min(dt, 1 / 30), tt);
         const r = env.rand, hx = hareX(tt);

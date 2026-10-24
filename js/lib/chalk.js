@@ -120,26 +120,40 @@
   };
 
   /* the blackboard itself: base colour, soft smudges, old eraser sweeps and
-     chalk-dust specks. Drawn once per resize into the static background canvas. */
+     chalk-dust specks. Drawn once per resize into the static background canvas.
+     The smudges and sweeps are faint, wide gradients, so they are painted at
+     half size and scaled up: the same board for a quarter of the work. The
+     specks are filled in a few brightness steps, not one by one. */
   CH.BOARD = "#0d0f0f";
   CH.paintBoard = function (ctx, W, H, o = {}) {
     const r = mulberry32(o.seed || 21), S = Math.max(0.5, Math.min(W / 960, H / 540));
     ctx.fillStyle = CH.BOARD; ctx.fillRect(0, 0, W, H);
-    const nSm = Math.round(90 * (W * H) / (960 * 1080)) + 12;
-    for (let i = 0; i < nSm; i++) {
-      const x = r() * W, y = r() * H, rr = (40 + r() * 230) * S, a = 0.007 + r() * 0.013;
-      const g = ctx.createRadialGradient(x, y, 0, x, y, rr);
-      g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(1, "rgba(255,255,255,0)");
-      ctx.fillStyle = g; ctx.fillRect(x - rr, y - rr, 2 * rr, 2 * rr);
-    }
-    for (let i = 0; i < 7; i++) { // old eraser sweeps
-      const y = r() * H, h = (30 + r() * 60) * S, g = ctx.createLinearGradient(0, y, 0, y + h);
-      g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(0.5, `rgba(255,255,255,${0.008 + r() * 0.01})`); g.addColorStop(1, "rgba(255,255,255,0)");
-      ctx.fillStyle = g; ctx.fillRect(0, y, W, h);
-    }
-    const specks = Math.round(W * H * 0.011);
-    for (let i = 0; i < specks; i++) { ctx.fillStyle = `rgba(255,255,255,${0.02 + r() * 0.05})`; ctx.fillRect(r() * W, r() * H, 1, 1); }
-    // soft vignette so the edges of the board feel deeper
+    const Q = 2, lw = Math.ceil(W / Q) + 2, lh = Math.ceil(H / Q) + 2; // the small layer, with a margin of one cell
+    const layer = (paint) => {
+      const c = document.createElement("canvas"); c.width = lw; c.height = lh;
+      const g = c.getContext("2d"); g.translate(1, 1); g.scale(1 / Q, 1 / Q); paint(g);
+      // scaled up cell by cell: smoothing here would darken it a little, and the gradients are smooth anyway
+      ctx.save(); ctx.imageSmoothingEnabled = false; ctx.drawImage(c, -Q, -Q, lw * Q, lh * Q); ctx.restore();
+    };
+    layer((s) => {
+      s.fillStyle = CH.BOARD; s.fillRect(-Q, -Q, W + 2 * Q, H + 2 * Q); // on the board colour: the faint layers add up as before
+      const nSm = Math.round(90 * (W * H) / (960 * 1080)) + 12;
+      for (let i = 0; i < nSm; i++) {
+        const x = r() * W, y = r() * H, rr = (40 + r() * 230) * S, a = 0.007 + r() * 0.013;
+        const g = s.createRadialGradient(x, y, 0, x, y, rr);
+        g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(1, "rgba(255,255,255,0)");
+        s.fillStyle = g; s.fillRect(x - rr, y - rr, 2 * rr, 2 * rr);
+      }
+      for (let i = 0; i < 7; i++) { // old eraser sweeps
+        const y = r() * H, h = (30 + r() * 60) * S, g = s.createLinearGradient(0, y, 0, y + h);
+        g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(0.5, `rgba(255,255,255,${0.008 + r() * 0.01})`); g.addColorStop(1, "rgba(255,255,255,0)");
+        s.fillStyle = g; s.fillRect(-Q, y, W + 2 * Q, h);
+      }
+    });
+    const specks = Math.round(W * H * 0.011), steps = 6, dust = Array.from({ length: steps }, () => new Path2D());
+    for (let i = 0; i < specks; i++) { const a = r(); dust[Math.min(steps - 1, (a * steps) | 0)].rect(r() * W, r() * H, 1, 1); }
+    dust.forEach((p, k) => { ctx.fillStyle = `rgba(255,255,255,${0.02 + 0.05 * (k + 0.5) / steps})`; ctx.fill(p); });
+    // soft vignette so the edges of the board feel deeper (one fill, at full size)
     const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.hypot(W, H) * 0.6);
     v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,0.42)");
     ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
