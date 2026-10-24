@@ -268,6 +268,96 @@ body[data-scene="feedback"] .page__title { margin-top: clamp(72px, 14vh, 160px);
 .article__back { margin: 2em 0 18vh !important; text-align: center; }
 @media (max-width: 760px) { .article { margin-top: 64px; } .fig__lab, .fig__frac { font-size: 18px; } }
 
+/* ---------------------------------------------------------------- 6b. simulations */
+/* the Simulations page: lead, collection cards, then numbered cards: as many per row as fit (each at least
+   about 20rem wide, so the text stays readable), one per row on phones */
+.page--sims .page__title { margin-top: clamp(76px, 15vh, 170px); }
+.collections { margin-top: clamp(30px, 6vh, 60px); width: min(30rem, 100%); }
+.collections__list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 12px; }
+.collection-card { display: grid; gap: 6px; padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--radius); background: rgb(10 12 12 / 0.6); color: var(--ink-2); text-decoration: none; transition: background-color .2s, border-color .2s, transform .2s; }
+.collection-card:hover { background: rgb(var(--ink) / 0.06); border-color: rgb(var(--ink) / 0.72); transform: translateY(-1px); }
+.collection-card__title { font-family: var(--serif); font-size: clamp(19px, 0.5vw + 16px, 23px); color: var(--ink-1); }
+.collection-card__meta { font: 500 12px/1.4 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+.collection { margin-top: clamp(80px, 22vh, 220px); scroll-margin-top: max(70px, 8vh); margin-bottom: 18vh; }
+.collection__title { font-size: clamp(28px, 2.4vw + 14px, 48px); }
+.collection__intro { margin-top: 10px; max-width: 38rem; color: var(--ink-2); }
+.collection__intro a { color: var(--ink-1); text-underline-offset: 3px; }
+.project-grid { list-style: none; margin: clamp(22px, 4vh, 36px) 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); gap: clamp(14px, 2vw, 24px); }
+.project-card { position: relative; height: 100%; min-height: 15rem; display: flex; flex-direction: column; gap: 10px; padding: clamp(18px, 2.4vw, 28px); border: 1px solid var(--line); border-radius: var(--radius); background: rgb(10 12 12 / 0.66); color: var(--ink-2); text-decoration: none; scroll-margin-top: 90px; transition: background-color .2s, border-color .2s, transform .2s; }
+a.project-card:hover { background: rgb(var(--ink) / 0.06); border-color: rgb(var(--ink) / 0.72); transform: translateY(-2px); }
+.project-card__no { font: 400 clamp(38px, 3vw + 18px, 58px)/1 var(--serif); color: var(--ink-3); }
+.project-card__title { font-family: var(--serif); font-weight: 700; font-size: clamp(20px, 0.8vw + 16px, 26px); line-height: 1.2; color: var(--ink-1); }
+.project-card__text { font-size: 0.95em; line-height: 1.5; }
+.project-card__go, .project-card__badge { margin-top: auto; font: 600 13px/1 var(--sans); letter-spacing: 0.04em; color: var(--ink-1); }
+.project-card__badge { align-self: flex-start; padding: 6px 10px; border: 1px dashed rgb(var(--ink) / 0.5); border-radius: 999px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; font-size: 11px; color: var(--ink-2); }
+.project-card--soon { opacity: 0.5; }
+
+/* a simulation page: compact header, then panels (plot + its terminal box side by side; stacked on narrow screens) */
+.sim { width: min(72rem, 100%); margin: 0 auto; }
+.page .page__main.sim { padding-bottom: 14vh; }
+.sim-head { margin-top: clamp(64px, 10vh, 110px); }
+.page__title.sim__title { margin-top: 8px; font-size: clamp(34px, 3.2vw + 16px, 64px); }
+.sim-eq { margin-top: 16px; display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 10px 32px; align-items: start; }
+.sim-eq__formula { margin: 0; font-size: clamp(22px, 1.2vw + 16px, 32px); color: var(--ink-1); white-space: nowrap; padding-top: 2px; }
+.sim-notation { margin: 0; display: grid; gap: 4px; font-size: 0.93em; }
+.sim-notation > div { display: grid; grid-template-columns: 5.6em minmax(0, 1fr); gap: 10px; }
+.sim-notation dt { color: var(--ink-1); font-size: 1.08em; }
+.sim-notation dd { margin: 0; color: var(--ink-2); }
+@media (max-width: 860px) { .sim-eq { grid-template-columns: minmax(0, 1fr); } }
+.sim-sec { margin-top: clamp(48px, 9vh, 90px); scroll-margin-top: 70px; }
+.sim-sec__title { font-size: clamp(24px, 1.6vw + 15px, 36px); }
+.sim-sec__lead { max-width: 46rem; color: var(--ink-2); }
+.sim-controls { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; }
+.sim-ctl { display: flex; align-items: center; gap: 10px; flex: 1 1 15rem; max-width: 24rem; }
+.sim-ctl__name { min-width: 2.6em; color: var(--ink-1); font-size: 1.02em; }
+.sim-ctl output { min-width: 3.4em; text-align: right; font: 500 14px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; color: var(--ink-1); }
+.sim-ctl input[type="range"] { flex: 1; min-width: 0; }
+/* range sliders in chalk */
+.sim input[type="range"] { -webkit-appearance: none; appearance: none; height: 22px; background: transparent; accent-color: #f6f4ec; cursor: pointer; }
+.sim input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: rgb(var(--ink) / 0.35); border-radius: 2px; }
+.sim input[type="range"]::-moz-range-track { height: 2px; background: rgb(var(--ink) / 0.35); border-radius: 2px; }
+.sim input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -7px; border-radius: 50%; background: var(--ink-1); box-shadow: 0 0 8px rgb(var(--ink) / 0.35); }
+.sim input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border: 0; border-radius: 50%; background: var(--ink-1); box-shadow: 0 0 8px rgb(var(--ink) / 0.35); }
+.sim input[type="range"]:focus-visible { outline: 2px solid rgb(var(--ink) / 0.85); outline-offset: 2px; }
+.sim-errs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.sim-errs legend { float: left; margin-right: 6px; color: var(--ink-1); }
+.sim-err { display: inline-flex; align-items: center; gap: 7px; font: 500 14px/1.3 var(--sans); color: var(--ink-2); }
+.sim-err input[type="checkbox"] { accent-color: #f6f4ec; width: 15px; height: 15px; }
+.swatch { width: 16px; height: 3px; border-radius: 2px; background: var(--c); }
+.sim-num { width: 8.5em; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: rgb(10 12 12 / 0.8); color: var(--ink-1); font: 500 14px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+.sim-hint { font-size: 13px; color: #f0b27a; }
+.sim-panel { margin-top: 16px; display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 900px) { .sim-panel { grid-template-columns: minmax(0, 1fr); } }
+.sim-plot { position: relative; margin: 0; padding: 8px 6px 6px; border: 1px solid rgb(var(--ink) / 0.18); border-radius: var(--radius); background: rgb(10 12 12 / 0.62); }
+.sim-plot canvas { display: block; width: 100%; height: clamp(220px, 34vw, 400px); touch-action: pan-y; }
+.sim-plot--tall canvas { height: clamp(260px, 40vw, 460px); cursor: crosshair; }
+.sim-plot canvas.is-zooming { touch-action: none; outline: 1px dashed rgb(var(--ink) / 0.5); outline-offset: -1px; }
+.sim-cap { margin: 4px 6px 2px; font-size: 13px; color: var(--ink-3); }
+.sim-note { margin: 4px 6px 2px; font-size: 13px; color: #f0b27a; }
+.sim-toggle { margin: 0 0 6px 6px; display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.sim-toggle button, .sim-btn { padding: 5px 12px; border: 0; background: rgb(10 12 12 / 0.85); color: var(--ink-2); font: 500 12.5px/1 var(--sans); cursor: pointer; }
+.sim-toggle button[aria-pressed="true"] { background: rgb(var(--ink) / 0.88); color: #111; }
+.sim-btn { padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; }
+.sim-btn:hover, .sim-toggle button:hover { color: var(--ink-1); }
+.sim-btn[aria-pressed="true"] { background: rgb(var(--ink) / 0.88); color: #111; }
+.sim-btn[hidden] { display: none; }
+.sim-btn--zoom, .sim-hint--coarse { display: none; }
+@media (pointer: coarse) { .sim-btn--zoom { display: inline-block; } .sim-hint--coarse { display: inline; } .sim-hint--fine { display: none; } }
+.sim-theory ul { margin: 14px 0 0; padding-left: 1.2em; max-width: 46rem; font-family: var(--serif); font-size: clamp(17px, 0.3vw + 15.5px, 19px); line-height: 1.6; color: rgb(var(--ink) / 0.86); }
+.sim-theory li { margin-top: 0.55em; }
+.sim-theory b { color: var(--ink-1); }
+.sim-more { margin-top: clamp(40px, 7vh, 70px); display: flex; flex-wrap: wrap; gap: 14px; }
+
+/* the "terminal" boxes beside the plots: neon green chalk on a dark panel */
+.term { margin: 0; padding: 14px 16px; min-height: 6em; border: 1px solid rgb(125 255 138 / 0.28); border-radius: var(--radius); background: rgb(4 10 5 / 0.82); color: #7dff8a; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; text-shadow: 0 0 6px rgb(125 255 138 / 0.35); white-space: pre-wrap; overflow-wrap: anywhere; }
+.term sub { font-size: 0.78em; line-height: 0; }
+.term__hi { color: #c9ffcf; text-shadow: 0 0 9px rgb(125 255 138 / 0.75); font-weight: 600; }
+.term__dim { opacity: 0.6; }
+.term__cursor { display: inline-block; width: 0.6em; height: 1.05em; margin-left: 2px; vertical-align: -0.18em; background: #7dff8a; box-shadow: 0 0 6px rgb(125 255 138 / 0.6); animation: term-blink 1.1s steps(1) infinite; }
+@keyframes term-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .term__cursor { animation: none; } }
+@media (max-width: 520px) { .term { font-size: 12px; padding: 12px; } }
+
 /* ---------------------------------------------------------------- 7. states */
 /* leaving for another page: the text fades fast while the drawings are pulled into the link */
 .wq-collapsing main, .wq-collapsing .page__main, .wq-collapsing .back { opacity: 0; transition: opacity .2s ease; }
