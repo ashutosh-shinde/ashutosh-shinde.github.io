@@ -24,15 +24,23 @@
 
   (G.WQ.scenes = G.WQ.scenes || {}).elementary = function (env0) {
     let env = env0, W = 0, H = 0, S = 1, portrait = false, mobile = false, box = null, built = false, t = 0;
-    let items = [], lor = [], lorPath = null, lp = {}, bif = {}, bifCv = null;
+    let items = [], lor = [], lorPath = null, lp = {}, bif = {}, bifCv = null, drawn = false;
 
     /* ---------------------------------------------------------- Lorenz attractor */
     function buildLorenz() {
       const s = 10, rho = 28, b = 8 / 3, h = 0.005;
       let x = 1, y = 1, z = 1;
-      const fz = (x, y, z) => [s * (y - x), x * (rho - z) - y, x * y - b * z];
-      const step = () => { const k1 = fz(x, y, z), k2 = fz(x + h * k1[0] / 2, y + h * k1[1] / 2, z + h * k1[2] / 2), k3 = fz(x + h * k2[0] / 2, y + h * k2[1] / 2, z + h * k2[2] / 2), k4 = fz(x + h * k3[0], y + h * k3[1], z + h * k3[2]);
-        x += h / 6 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]); y += h / 6 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]); z += h / 6 * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]); };
+      // one RK4 step of the Lorenz system (written out, so no arrays are made on the way: same numbers, faster)
+      const step = () => {
+        const a1 = s * (y - x), b1 = x * (rho - z) - y, c1 = x * y - b * z;
+        let px = x + h * a1 / 2, py = y + h * b1 / 2, pz = z + h * c1 / 2;
+        const a2 = s * (py - px), b2 = px * (rho - pz) - py, c2 = px * py - b * pz;
+        px = x + h * a2 / 2; py = y + h * b2 / 2; pz = z + h * c2 / 2;
+        const a3 = s * (py - px), b3 = px * (rho - pz) - py, c3 = px * py - b * pz;
+        px = x + h * a3; py = y + h * b3; pz = z + h * c3;
+        const a4 = s * (py - px), b4 = px * (rho - pz) - py, c4 = px * py - b * pz;
+        x += h / 6 * (a1 + 2 * a2 + 2 * a3 + a4); y += h / 6 * (b1 + 2 * b2 + 2 * b3 + b4); z += h / 6 * (c1 + 2 * c2 + 2 * c3 + c4);
+      };
       for (let i = 0; i < 2000; i++) step();
       lor = []; for (let i = 0; i < 26000; i++) { step(); if (i % 2 === 0) lor.push([x, z]); }
     }
@@ -76,21 +84,30 @@
       if (lh > lw * 1.35) { const c = (lp.y0 + lp.y1) / 2; lp.y0 = c - lw * 0.675; lp.y1 = c + lw * 0.675; }
     }
 
+    // the attractor and the diagram, drawn for this size (made while the page idles, see prepare, or when first shown)
+    function finish() {
+      if (drawn) return;
+      if (!lor.length) buildLorenz();
+      lorPath = new Path2D(); lor.forEach((q, i) => { if (i % 3) return; const p = lorXY(q); i ? lorPath.lineTo(p[0], p[1]) : lorPath.moveTo(p[0], p[1]); });
+      buildBif();
+      drawn = true;
+    }
+
     return {
       still: 12,
       resize(e, b) {
         env = e; W = e.W; H = e.H; portrait = e.portrait; mobile = e.mobile; box = b || box;
         layout();
-        if (!lor.length) buildLorenz();
-        lorPath = new Path2D(); lor.forEach((q, i) => { if (i % 3) return; const p = lorXY(q); i ? lorPath.lineTo(p[0], p[1]) : lorPath.moveTo(p[0], p[1]); });
-        buildBif();
+        drawn = false;
         const n = mobile ? 16 : 30;
         if (items.length !== n) { items = []; for (let i = 0; i < n; i++) { const it = { layer: i < n * LAYERS[0].n ? 0 : i < n * (LAYERS[0].n + LAYERS[1].n) ? 1 : 2 }; spawn(it, true); items.push(it); } }
         else items.forEach((it) => spawn(it, true));
         built = true;
       },
+      prepare() { if (!built || drawn) return true; if (!lor.length) { buildLorenz(); return false; } finish(); return true; }, // background work: true when done
       update(dt, tt) {
         if (!built) return;
+        finish();
         t = tt;
         for (const it of items) { it.y -= it.v * dt; if (it.y < -60) spawn(it, false); }
       },

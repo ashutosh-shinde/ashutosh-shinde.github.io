@@ -17,10 +17,12 @@
      data-calm="0.6" sets the strength (default CFG.calm). Scenes lay out
      around their section's calm elements, except ones marked data-calm-only.
    PAGE CHANGES — a link with data-collapse pulls everything into the link in
-     a fast swirl of chalk dust that ends in a flare of light (the next page
-     starts loading part-way through, so no time is wasted); the next page
-     opens with a quick flash from the same spot (see .wq-arrive in site.css)
-     and a ring of chalk dust bursting outward.
+     a fast swirl of chalk dust that ends in a flare of light (the next page is
+     fetched at the click and opened as the swirl closes, so no time is wasted,
+     and once the drawings are gone only the swirl is drawn, so the browser can
+     give its time to the next page); the next page shows at once with a quick
+     flash from the same spot (see .wq-arrive in site.css), and its drawings
+     fade in as soon as the board starts.
    REDUCED MOTION — with "reduce motion" switched on in the visitor's system,
      each section shows one still drawing; nothing animates.
 
@@ -50,9 +52,9 @@
     feather: 70,            // px: softness of a calm zone's edge (phones: × 0.6)
     calmPad: 14,            // px: calm zone grows this much around the text
     trans: [0.06, 0.86],    // share of the "next section rising" scroll used by a transition
-    collapse: 0.5,          // s: everything is pulled into the clicked link
-    navAt: 0.6,             // share of the collapse after which the next page starts loading
-    arrive: 0.45,           // s: the burst of chalk dust when a page opens
+    collapse: 0.34,         // s: everything is pulled into the clicked link
+    navAt: 0.85,            // share of the collapse after which the next page is opened (by the time it
+                            // shows, the swirl has gathered into a point of light, so nothing freezes mid-way)
   };
 
   const E = { CFG, scenes: [], reduced: false, capture: false, lite: false, ready: false };
@@ -81,7 +83,7 @@
     env = makeEnv();
     if (prev) env.rand = prev.rand;
     measure(false);
-    for (const s of E.scenes) { s.env = env; s.obj.resize && s.obj.resize(env, sections[s.i].box); }
+    for (const s of E.scenes) { s.env = env; if (s.obj && s.obj.resize) s.obj.resize(env, sections[s.i].box); }
     MO.n = 0; // particle buffers re-allocated for the new size
   }
   function makeEnv() {
@@ -222,10 +224,13 @@
   /* --------------------------------------------------- page changes
      Leaving: the drawings (and a little of the whole board) are sucked into
      the clicked link in a fast swirl, streaking, while light gathers there and
-     flares. The next page starts loading at CFG.navAt, while this plays on.
+     flares. The next page is fetched at the click and opened at CFG.navAt,
+     when the swirl has nearly closed: if it takes a while, the light pulses.
      Arriving: the page is shown at once under a quick flash (CSS) from the same
-     spot, and a ring of chalk dust bursts outward and fades.               */
-  let CO = null, AR = null, glowCv = null;
+     spot; the board starts right after (site.js) and its drawings fade in (CSS).
+     Both are run by the browser's compositor, so they stay smooth while the
+     page is still busy starting up.                                         */
+  let CO = null, glowCv = null;
   function glowAt(x, y, r, a) { // soft light from one cached sprite
     if (a <= 0.004 || r <= 0.5) return;
     if (!glowCv) {
@@ -249,8 +254,9 @@
   function collapseStart(href, cx, cy) {
     if (CO) return;
     if (E.reduced || (!running && !E.capture) || !env) { G.location.href = href; return; }
+    try { fetch(href, { credentials: "same-origin" }).catch(() => {}); } catch (e) { /* only a head start */ } // the next page loads while this plays
     morphAlloc();
-    const n = MO.n, P0 = new Float32Array(2 * n), s = E.scenes[st.a];
+    const n = MO.n, P0 = new Float32Array(2 * n), s = visible(st.a);
     if (s) points(s, P0, n);
     const r0 = new Float32Array(n), th0 = new Float32Array(n), d = new Float32Array(n);
     for (let k = 0; k < n; k++) {
@@ -269,8 +275,10 @@
   function collapseDraw(dt) {
     CO.t += dt;
     const s = Math.min(1, CO.t / CFG.collapse), P = MO.P, n = CO.n;
-    for (let k = 0; k < n; k++) { collapseAt(k, s, P, 2 * k); collapseAt(k, Math.max(0, s - 0.07), MO.PR, 2 * k); } // trail: a moment earlier
-    drawDust(P, n, 0.95 * smooth(0, 0.06, s) * (1 - 0.7 * smooth(0.88, 1, s)), true, null, 1e4, 1, 0.24, true);
+    if (s < 1) { // (once it has all gathered, only the light is drawn: the waiting costs next to nothing)
+      for (let k = 0; k < n; k++) { collapseAt(k, s, P, 2 * k); collapseAt(k, Math.max(0, s - 0.07), MO.PR, 2 * k); } // trail: a moment earlier
+      drawDust(P, n, 0.95 * smooth(0, 0.06, s) * (1 - 0.7 * smooth(0.88, 1, s)), true, null, 1e4, 1, 0.24, true);
+    }
     // light gathers at the link and flares; it keeps pulsing if the next page is slow to arrive
     const g = smooth(0.2, 1, s), pulse = s >= 1 ? 1 + 0.1 * Math.sin(CO.t * 14) : 1;
     glowAt(CO.cx, CO.cy, (14 + 120 * g * g) * pulse, 0.95 * g);
@@ -281,29 +289,16 @@
       G.location.href = CO.href;
     }
   }
-  function arriveStart() {
-    let u = null;
-    try { u = JSON.parse(G.sessionStorage.getItem("wq-unfold") || "null"); G.sessionStorage.removeItem("wq-unfold"); } catch (e) { u = null; }
-    if (!u || Date.now() - (u.t || 0) > 6000 || E.reduced) return;
-    morphAlloc();
-    const n = Math.round(MO.n * 0.6), th = new Float32Array(n), far = new Float32Array(n), cx = u.x * W, cy = u.y * H, D = Math.hypot(W, H);
-    for (let k = 0; k < n; k++) { th[k] = R() * TAU; far[k] = D * (0.12 + 0.42 * Math.pow(R(), 0.7)); }
-    AR = { t: 0, cx, cy, n, th, far, D };
-  }
-  function arriveDraw(dt) {
-    AR.t += dt;
-    const s = Math.min(1, AR.t / CFG.arrive), e = Ease.out(s), P = MO.P, n = AR.n;
-    for (let k = 0; k < n; k++) { const r = AR.far[k] * e; P[2 * k] = AR.cx + r * Math.cos(AR.th[k]); P[2 * k + 1] = AR.cy + r * Math.sin(AR.th[k]); }
-    const e0 = Ease.out(Math.max(0, s - 0.08));
-    for (let k = 0; k < n; k++) { const r = AR.far[k] * e0; MO.PR[2 * k] = AR.cx + r * Math.cos(AR.th[k]); MO.PR[2 * k + 1] = AR.cy + r * Math.sin(AR.th[k]); } // trail
-    drawDust(P, n, 0.9 * (1 - smooth(0.3, 1, s)), true, null, 1e4, 1, 0.22, true);
-    const ring = []; for (let j = 0; j <= 96; j++) { const a = (j / 96) * TAU, r = AR.D * 0.5 * e; ring.push([AR.cx + r * Math.cos(a), AR.cy + r * Math.sin(a)]); }
-    CH.line(ctx, ring, 0.75 * (1 - s), 2.2 - 1.4 * s, false);
-    if (s >= 1) AR = null;
-  }
+  // the flash has played (the script at the top of the page started it): a reload must not play it again
+  function arrived() { try { G.sessionStorage.removeItem("wq-unfold"); } catch (e) { /* storage blocked */ } }
 
   /* ----------------------------------------------------------------- frame */
-  function visible(i) { return i >= 0 && i < E.scenes.length ? E.scenes[i] : null; }
+  // a scene is made the first time it is needed (see E.start)
+  function build(s) {
+    if (!s.obj) { s.obj = sections[s.i].obj = s.make(); s.env = env; s.obj.resize && s.obj.resize(env, sections[s.i].box); }
+    return s;
+  }
+  function visible(i) { return i >= 0 && i < E.scenes.length ? build(E.scenes[i]) : null; }
   function tick(s, dt) {
     if (!s.seen) { s.seen = true; s.obj.enter && s.obj.enter(); }
     s.t += dt; s.obj.update && s.obj.update(dt, s.t);
@@ -311,6 +306,12 @@
   // dt: scene time step (capped, so a slow frame never makes a scene jump);
   // real: the real time that passed, so page changes keep their pace on slow screens
   function render(dt, real = dt) {
+    if (CO && CO.t >= 0.4 * CFG.collapse) { // leaving, and the drawings are gone: only the swirl is drawn,
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, fx.width, fx.height); // so the next page opens sooner
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      collapseDraw(real);
+      return;
+    }
     st = scrollState();
     const A = visible(st.a), B = visible(st.b), q = st.q;
     let aA = B ? 1 - smooth(0, 0.42, q) : 1, aB = B ? smooth(0.58, 1, q) : 0;
@@ -328,7 +329,6 @@
     if (A && aA > 0.003) A.obj.draw(ctx, aA, "top");
     if (B && aB > 0.003) B.obj.draw(ctx, aB, "top");
     if (CO) collapseDraw(real);
-    if (AR) arriveDraw(real);
   }
   function loop(now) {
     if (!running) return;
@@ -384,19 +384,41 @@
     E.capture = qs.get("capture") === "1";
     const mq = G.matchMedia ? G.matchMedia("(prefers-reduced-motion: reduce)") : null;
     E.reduced = (!!mq && mq.matches) || qs.get("still") === "1";
-    // sections → scenes
+    // sections → scenes. Only the scenes on screen are made now, so a page opens quickly; the others
+    // are made a moment later while the page idles (or at once, if they come on screen first).
     const els = mode === "home" ? [...document.querySelectorAll("[data-scene]")] : [document.body];
-    sections = els.map((el) => ({ el, top: 0, h: 0, box: null }));
+    sections = els.map((el) => ({ el, top: 0, h: 0, box: null, obj: null }));
     W = 0; resize(true);
+    const startY = G.scrollY; // where the page opened (a scene made later still knows)
     E.scenes = sections.map((s, i) => {
-      const name = mode === "home" ? s.el.dataset.scene : opts.scene;
-      const make = name && WQ.scenes[name];
-      const obj = make ? make(env, { page: mode !== "home", section: s.el, ...(opts.sceneOpts || {}) }) : { draw() {}, points: null };
-      const sc = { name: name || "none", obj, t: 0, seen: false, env, i };
-      s.obj = obj;
-      obj.resize && obj.resize(env, s.box);
-      return sc;
+      const name = mode === "home" ? s.el.dataset.scene : opts.scene, make = name && WQ.scenes[name];
+      return { name: name || "none", obj: null, t: 0, seen: false, env, i,
+        make: () => make ? make(env, { page: mode !== "home", section: s.el, startY, ...(opts.sceneOpts || {}) }) : { draw() {}, points: null } };
     });
+    st = scrollState(); visible(st.a); visible(st.b);
+    // the other scenes: all at once if the home intro is about to play (nothing may interrupt it later);
+    // otherwise once the page has settled, nearest first, one at a time while the page idles
+    // (a scene may also have background work to finish, a little at a time: obj.prepare() → true when done)
+    const rest = () => E.scenes.filter((x) => !x.obj).sort((p, q) => Math.abs(p.i - st.a) - Math.abs(q.i - st.a));
+    const unprepared = () => E.scenes.find((x) => x.obj && x.obj.prepare && !x.prepared);
+    if (document.documentElement.classList.contains("intro")) {
+      rest().forEach(build);
+      for (let s; (s = unprepared());) { while (!s.obj.prepare()); s.prepared = true; }
+    } else {
+      const idle = G.requestIdleCallback ? (f) => G.requestIdleCallback(f, { timeout: 150 }) : (f) => setTimeout(f, 200);
+      const next = (deadline) => {
+        if (CO) return; // leaving the page: no more background work
+        do { // one piece of work, and more while this idle moment lasts
+          const p = unprepared();
+          if (p) { if (p.obj.prepare()) p.prepared = true; continue; }
+          const s = rest()[0];
+          if (!s) return; // all done
+          build(s);
+        } while (deadline && deadline.timeRemaining() > 6);
+        idle(next);
+      };
+      setTimeout(() => idle(next), 1000);
+    }
     // re-measure when layout settles (fonts, images) and on resize
     const remeasure = () => { measure(); if (E.reduced) queueStill(); };
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure);
@@ -424,7 +446,7 @@
       env.emit("still");
       return;
     }
-    arriveStart();
+    arrived();
     if (E.capture) return; // tests drive frames with E.step()
     running = true; lastT = performance.now();
     G.requestAnimationFrame(loop);

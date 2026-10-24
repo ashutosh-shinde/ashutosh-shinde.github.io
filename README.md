@@ -132,11 +132,16 @@ Paths are relative to the page's folder: `../` from a page one folder deep
   scenes draw them after the calm zones (the "top" pass) and size and place
   them so they stay clear of the text on any screen shape.
 - **Page changes:** any link with `data-collapse` pulls the drawings into the
-  link in half a second (the next page starts loading part-way through), and
-  the next page opens at once under a quick flash from the same spot. Every
-  page works this way (see "Adding a page"). A page opens at its top, or at
-  the `#section` the link names; a back link (`data-back`) opens it where the
-  visitor left it instead. The small script at the top of every page does
-  this. Timing: `collapse`, `navAt` and
-  `arrive` in `CFG` (`js/engine/engine.js`); the flash is `.wq-arrive` in
-  `css/site.css`.
+  link in a third of a second (the next page is fetched at the click and
+  opened as the swirl closes), and the next page shows at once under a quick
+  flash from the same spot; its drawings fade in as soon as the board has
+  started. Every page works this way (see "Adding a page"). A page opens at
+  its top, or at the `#section` the link names; a back link (`data-back`)
+  opens it where the visitor left it instead. The small script at the top of
+  every page does this. Timing: `collapse` and `navAt` in `CFG`
+  (`js/engine/engine.js`); the flash is `.wq-arrive` and the fade-in
+  `.wq-ready #board-fx` in `css/site.css`.
+- **Starting quickly:** a page shows its text first and starts the board right
+  after. Only the scenes on screen are made at once; the others are made a
+  moment later while the page is idle (on the home page with its intro, all at
+  once, so that nothing interrupts the intro).

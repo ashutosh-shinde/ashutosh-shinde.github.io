@@ -1,7 +1,7 @@
 /* =============================================================================
    Home — "the watcher"                                           (section 1)
    -----------------------------------------------------------------------------
-   Intro (plays once per visit, ~12 s; any scroll skips straight to the chase):
+   Intro (plays once per visit, ~10 s; any scroll skips straight to the chase):
      0.2  Lyapunov-stability and predictability equations write themselves on
           the left while a vortex unfurls on the right: four bright chalk arms
           strung with glowing knots, four faint ones, a disc of orbiting dust
@@ -12,11 +12,11 @@
           two shock rings
      4.2  …and there is an eye, watching through out-of-focus blades of grass.
           It opens, the pupil tightens, the gaze slides right, it blinks, narrows
-     8.0  the camera pulls back through the grass: the eye belongs to a tiger
+     6.2  the camera pulls back through the grass: the eye belongs to a tiger
           crouched in the grass; a chital stag grazes on the right
-     9.5  the stag lifts its head, the tiger launches (WildQuant is written in
+     7.7  the stag lifts its head, the tiger launches (WildQuant is written in
           chalk as it leaps), the stag bolts
-    11.8  the chase runs along the bottom, for as long as you stay
+    10.0  the chase runs along the bottom, for as long as you stay
    Always: an owl glides across the top now and then; equations drift.
    The intro and the animals are drawn above the calm zone (never faded by
    text); the animals are sized so they stay below the title on any screen.
@@ -27,8 +27,8 @@
   const { L, C, CH, PTS } = G.WQ;
   const { lerp, clamp, smooth, Ease, TAU, M2, Rig, drawOutline, blendPose, mulberry32, fract, makeNoise, rigBBox } = L;
   const INK = "246,244,236", BG = CH.BOARD;
-  const T = { spiral: 0.15, dust: 2.4, collapse: 3.45, eye: 4.15, open: 4.35, blink: 6.6, zoom0: 8.0, zoom1: 9.3,
-              alert: 9.5, pounce: 9.85, bolt: 10.05, land: 10.8, about: 11.4, chase: 11.8 };
+  const T = { spiral: 0.15, dust: 2.4, collapse: 3.45, eye: 4.15, open: 4.35, blink: 5.6, zoom0: 6.15, zoom1: 7.45,
+              alert: 7.65, pounce: 8.0, bolt: 8.2, land: 8.95, about: 9.55, chase: 9.95 };
   const OWL = { first: 4.0, every: 27, pass: 10 };        // seconds after the chase starts
   // the intro equations: [id, start, duration] (written in this order)
   const EQS = [["w_lyapunov", 0.15, 0.45], ["lyapunov", 0.4, 0.75], ["stable", 0.85, 0.55], ["w_predict", 1.05, 0.4], ["lyap_exp", 1.25, 0.65], ["pred_time", 1.6, 0.6]];
@@ -37,7 +37,7 @@
   const VORTEX = { arms: 8, phi: 4.4 * Math.PI, inner: 1 / 42, squash: 0.6, tilt: -0.38, wobble: 0.05 };
   const KS = Math.log(1 / VORTEX.inner) / VORTEX.phi;
 
-  (G.WQ.scenes = G.WQ.scenes || {}).home = function (env0) {
+  (G.WQ.scenes = G.WQ.scenes || {}).home = function (env0, opts = {}) {
     let env = env0, W = 0, H = 0, S = 1, portrait = false, mobile = false, box = null;
     let CX, CY, RS, RE, GY, SC, GH = 1e9, TX0, DX0, R1, V, OWLS, eqLay = [], built = false;
     const rT = new Rig(), rD = new Rig(), rO = new Rig(), rTmp = new Rig();
@@ -51,7 +51,7 @@
     // further down (a link to #feedback, or a back link to where the visitor left): they came for that part
     const qs = new URLSearchParams(G.location.search);
     try { if ((G.sessionStorage.getItem("wq-intro") === "1" && qs.get("intro") !== "1") || qs.get("intro") === "0") off = T.chase + 0.4; } catch (e) { /* storage blocked */ }
-    if (G.scrollY > G.innerHeight * 0.5) off = T.chase + 0.4;
+    if ((opts.startY ?? G.scrollY) > G.innerHeight * 0.5) off = T.chase + 0.4; // where the page opened
 
     /* ---------------------------------------------------------- choreography */
     const deerChaseX = (t) => W * (portrait ? 0.73 : 0.72) + W * 0.025 * Math.sin(t * 0.37) + W * 0.012 * nz.n2(t * 0.21, 3);
@@ -129,8 +129,8 @@
     function eyeState(t) {
       const te = t - T.open;
       const blink = 1 - 0.94 * Math.exp(-(((t - T.blink) / 0.08) ** 2));
-      const o = smooth(0, 1.0, te) * (1 - 0.36 * smooth(2.6, 3.2, te)) * blink;
-      return { o, pupil: 0.56 - 0.22 * smooth(0.4, 1.4, te), lx: 0.36 * smooth(1.2, 1.8, te) * (1 - 0.6 * smooth(2.7, 3.3, te)) };
+      const o = smooth(0, 0.8, te) * (1 - 0.38 * smooth(1.45, 1.75, te)) * blink;
+      return { o, pupil: 0.56 - 0.22 * smooth(0.3, 1.0, te), lx: 0.36 * smooth(0.9, 1.4, te) };
     }
 
     /* ---------------------------------------------------------- out-of-focus grass in front of the eye
