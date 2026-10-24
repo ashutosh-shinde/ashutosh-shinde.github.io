@@ -15,7 +15,7 @@
   // ↓↓↓ paste the comment store's web-app URL here ↓↓↓
   // (from the Apps Script deployment; it looks like https://script.google.com/macros/s/…/exec.
   //  Not the Google Sheet's own link: the site can't use that one.)
-  const SHEET_URL = "";
+  const SHEET_URL = "https://script.google.com/macros/s/AKfycbwortD6BkdyjJ1slQt63SdSJFa8V5nbLWVT2W4B-2wWjozD9oU0XLJ0Aye9IQHfQobFDw/exec";
   // ↑↑↑
 
   const MAX = 2000;           // longest comment accepted (characters)
