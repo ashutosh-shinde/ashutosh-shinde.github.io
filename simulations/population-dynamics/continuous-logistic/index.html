@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Continuous-time logistic model — WildQuant</title>
+  <meta name="description" content="An interactive continuous-time logistic model, dx/dt = r x(1 − x): the exact S-curve, the phase line, the growth rate over time, and what a large Euler step does.">
+  <meta name="author" content="Ashutosh Shinde">
+  <meta name="theme-color" content="#0d0f0f">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0f0f'/%3E%3Cpath d='M16 16m-9 0a9 9 0 1 0 18 0a7 7 0 1 0-14 0a5 5 0 1 0 10 0a3 3 0 1 0-6 0' fill='none' stroke='%23f6f4ec' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preload" href="../../../fonts/lm-roman-bold.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="../../../css/site.css">
+  <!-- arriving from another page of the site: the quick flash starts with the first paint (.wq-arrive in
+       site.css), and the page opens in the right place: a back link (data-back) returns to where you left
+       this page; any other link opens it at the top, or at the #section it names -->
+  <script>
+    (function (e) {
+      var go = location.hash ? location.hash.slice(1) : null, n, p, k = location.pathname.replace(/index\.html$/, "");
+      try { var u = JSON.parse(sessionStorage.getItem("wq-unfold") || "null");
+        if (u && Date.now() - u.t < 6000 && !matchMedia("(prefers-reduced-motion: reduce)").matches) { e.classList.add("wq-arrive"); e.style.setProperty("--fx", (u.x * 100).toFixed(1) + "%"); e.style.setProperty("--fy", (u.y * 100).toFixed(1) + "%"); }
+        n = JSON.parse(sessionStorage.getItem("wq-nav") || "null");
+        if (n && n.to == k && Date.now() - n.t < 10000) { sessionStorage.removeItem("wq-nav"); p = n.back != null && JSON.parse(sessionStorage.getItem("wq-pos:" + k) || "null");
+          go = p && Math.abs(p.w - innerWidth) < 3 ? p.y : n.back != null ? n.back.slice(1) || 0 : go || 0; }
+      } catch (x) {}
+      if (go === null) return;
+      var user = false, fixes = 0, place = function () { try { if (typeof go == "number") scrollTo(0, go); else { var t = document.getElementById(decodeURIComponent(go)); if (t) t.scrollIntoView(); } } catch (x) {} };
+      e.style.scrollBehavior = "auto";
+      ["wheel", "touchstart", "keydown", "pointerdown"].forEach(function (v) { addEventListener(v, function () { user = true; }, { capture: true, passive: true }); });
+      document.addEventListener("readystatechange", function () { if (document.readyState == "interactive" && !user) place(); });
+      addEventListener("load", function () { if (!user) place(); var end = Date.now() + 1500; // and keep it there until the visitor moves
+        addEventListener("scroll", function hold() { if (user || Date.now() > end || ++fixes > 8) removeEventListener("scroll", hold); else place(); }, { passive: true });
+        setTimeout(function () { e.style.scrollBehavior = ""; }, 300); });
+    })(document.documentElement);
+  </script>
+  <script defer src="../../../js/lib/core.js"></script>
+  <script defer src="../../../js/lib/chalk.js"></script>
+  <script defer src="../../../js/engine/engine.js"></script>
+  <script defer src="../../../js/lib/plot.js"></script>
+  <script defer src="../../../js/lib/simkit.js"></script>
+  <script defer src="../../../js/sims/continuous-logistic.js"></script>
+  <script defer src="../../../js/site.js"></script>
+</head>
+<body class="page page--sim">
+  <canvas id="board-tex" aria-hidden="true"></canvas>
+  <canvas id="board-fx" aria-hidden="true"></canvas>
+  <a class="back" href="../../" data-collapse data-back="#pd-2"><span aria-hidden="true">←</span> Simulations</a>
+  <main class="page__main sim">
+    <!-- ====================================================== CONTINUOUS-TIME LOGISTIC MODEL
+         HOW TO EDIT: texts below; the maths, the default values and the boxes' wording are in
+         js/sims/continuous-logistic.js; the plot style in js/lib/plot.js. -->
+    <header class="sim-head" data-calm>
+      <p class="article__kicker">Deterministic population dynamics · 2</p>
+      <h1 class="page__title sim__title"><span class="chalk-text">Continuous-time logistic model</span></h1>
+      <div class="sim-eq">
+        <p class="sim-eq__formula"><span class="m"><i>dx</i>/<i>dt</i> = <i>r</i><sub>m</sub> <i>x</i> (1 − <i>x</i>)</span></p>
+        <dl class="sim-notation">
+          <div><dt><span class="m"><i>x</i></span></dt><dd>population as a share of the carrying capacity <i>K</i> (<span class="m"><i>x</i> = <i>N</i>/<i>K</i></span>); it can start above 1</dd></div>
+          <div><dt><span class="m"><i>r</i><sub>m</sub></span></dt><dd>the largest growth rate per head (births − deaths, per unit time) when the population is tiny</dd></div>
+          <div><dt><span class="m">(1 − <i>x</i>)</span></dt><dd>crowding: the growth rate per head falls linearly and reaches 0 at <i>K</i></dd></div>
+          <div><dt><span class="m"><i>t</i></span></dt><dd>continuous time: births and deaths happen all the time, generations overlap</dd></div>
+          <div><dt><span class="m">Δ<i>t</i></span></dt><dd>the step of the Euler method in the owner's code: <span class="m"><i>x</i><sub><i>n</i>+1</sub> = <i>x</i><sub><i>n</i></sub> + <i>r</i><sub>m</sub>Δ<i>t</i> <i>x</i><sub><i>n</i></sub>(1 − <i>x</i><sub><i>n</i></sub>)</span></dd></div>
+        </dl>
+      </div>
+    </header>
+
+    <!-- ---------------------------------------------------- the controls drive all three panels -->
+    <section class="sim-sec" id="trajectory" aria-labelledby="h-traj">
+      <h2 class="sim-sec__title" id="h-traj" data-calm>Trajectory</h2>
+      <div class="sim-controls" data-calm>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>r</i><sub>m</sub></span></span><input type="range" id="rm" min="0" max="3" step="0.001" value="0.11"><output id="rm-out" for="rm">0.110</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>x</i><sub>0</sub></span></span><input type="range" id="x0" min="0" max="2" step="0.001" value="0.23"><output id="x0-out" for="x0">0.230</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>t</i><sub>max</sub></span></span><input type="range" id="tmax" min="10" max="300" step="1" value="100"><output id="tmax-out" for="tmax">100</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m">Δ<i>t</i></span></span><input type="range" id="dt" min="-3" max="0.30103" step="0.001" value="-2"><output id="dt-out" for="dt">0.01</output></label>
+      </div>
+      <div class="sim-panel">
+        <figure class="sim-plot"><canvas id="cv-traj" role="img" aria-label="Trajectory"></canvas><figcaption class="sim-cap">The exact curve and the owner's Euler steps.</figcaption></figure>
+        <div class="term" id="term-traj" aria-live="polite" aria-label="What the trajectory shows"></div>
+      </div>
+    </section>
+
+    <section class="sim-sec" id="phase-line" aria-labelledby="h-phase">
+      <div data-calm>
+        <h2 class="sim-sec__title" id="h-phase">Phase line</h2>
+        <p class="sim-sec__lead">The growth rate <span class="m"><i>dx</i>/<i>dt</i></span> for every density <span class="m"><i>x</i></span>: where it is above zero the population grows, where it is below it shrinks.</p>
+      </div>
+      <div class="sim-panel">
+        <figure class="sim-plot"><canvas id="cv-phase" role="img" aria-label="Phase line"></canvas><figcaption class="sim-cap">Growth rate against density: arrows show which way <span class="m"><i>x</i></span> moves.</figcaption></figure>
+        <div class="term" id="term-phase" aria-live="polite" aria-label="What the phase line shows"></div>
+      </div>
+    </section>
+
+    <section class="sim-sec" id="growth-rate" aria-labelledby="h-rate">
+      <div data-calm>
+        <h2 class="sim-sec__title" id="h-rate">Growth rate over time</h2>
+        <p class="sim-sec__lead">How fast the population changes along the exact curve, from <span class="m"><i>x</i><sub>0</sub></span> to <i>K</i>.</p>
+      </div>
+      <div class="sim-panel">
+        <figure class="sim-plot"><canvas id="cv-rate" role="img" aria-label="Growth rate over time"></canvas><figcaption class="sim-cap">How fast the population grows, over time.</figcaption></figure>
+        <div class="term" id="term-rate" aria-live="polite" aria-label="What the growth rate shows"></div>
+      </div>
+    </section>
+
+    <section class="sim-sec sim-theory" id="theory" aria-labelledby="h-theory" data-calm>
+      <h2 class="sim-sec__title" id="h-theory">The theory, in short</h2>
+      <ul>
+        <li><b>Assumptions.</b> Time is continuous; the population is large and well mixed (a mean field); no age or sex structure; births and deaths are spread evenly over time; only births and deaths change it (closed); the growth rate per head falls linearly with crowding, <span class="m"><i>r</i> = <i>r</i><sub>m</sub>(1 − <i>N</i>/<i>K</i>)</span>.</li>
+        <li><b>The model.</b> Over a short time Δ<i>t</i>, <span class="m">Δ<i>x</i> ≈ <i>r</i><sub>m</sub> <i>x</i>(1 − <i>x</i>) Δ<i>t</i></span>; letting Δ<i>t</i> → 0 gives <span class="m"><i>dx</i>/<i>dt</i> = <i>r</i><sub>m</sub> <i>x</i>(1 − <i>x</i>)</span>.</li>
+        <li><b>Equilibria.</b> <span class="m"><i>x</i>* = 0</span> and <span class="m"><i>x</i>* = 1</span> (<span class="m"><i>N</i>* = <i>K</i></span>). With <span class="m"><i>f</i> ′(<i>x</i>) = <i>r</i><sub>m</sub>(1 − 2<i>x</i>)</span>: <span class="m"><i>f</i> ′(0) = <i>r</i><sub>m</sub> &gt; 0</span>, so 0 is unstable; <span class="m"><i>f</i> ′(1) = −<i>r</i><sub>m</sub> &lt; 0</span>, so <i>K</i> is stable.</li>
+        <li><b>Exact solution.</b> <span class="m"><i>x</i>(<i>t</i>) = 1 / (1 + (1/<i>x</i><sub>0</sub> − 1) e<sup>−<i>r</i><sub>m</sub><i>t</i></sup>)</span>: an S-curve from below, a smooth decline from above. It never crosses <i>K</i>.</li>
+        <li><b>Fastest growth</b> is <span class="m"><i>r</i><sub>m</sub>/4</span>, at <span class="m"><i>x</i> = ½</span>, reached at <span class="m"><i>t</i> = ln((1 − <i>x</i><sub>0</sub>)/<i>x</i><sub>0</sub>)/<i>r</i><sub>m</sub></span> (for <span class="m"><i>x</i><sub>0</sub> &lt; ½</span>).</li>
+        <li><b>No oscillations.</b> Unlike card 1 (non-overlapping generations), the continuous model cannot overshoot: its only change of behaviour is at <span class="m"><i>r</i><sub>m</sub> = 0</span>, where 0 and <i>K</i> swap stability.</li>
+        <li><b>The Euler method</b> <span class="m"><i>x</i><sub><i>n</i>+1</sub> = <i>x</i><sub><i>n</i></sub> + <i>r</i><sub>m</sub>Δ<i>t</i> <i>x</i><sub><i>n</i></sub>(1 − <i>x</i><sub><i>n</i></sub>)</span> is card 1's map with <span class="m"><i>R</i> = 1 + <i>r</i><sub>m</sub>Δ<i>t</i></span>. A large step therefore shows overshoot, cycles and chaos that belong to the method, not to the model; keep <span class="m"><i>r</i><sub>m</sub>Δ<i>t</i></span> well below 1.</li>
+        <li><b>Negative <span class="m"><i>r</i><sub>m</sub></span>.</b> The README allows <span class="m"><i>r</i><sub>m</sub> &lt; 0</span> (then <i>K</i> &lt; 0 in its notation); the sliders keep <span class="m"><i>r</i><sub>m</sub> ≥ 0</span>, where <i>K</i> is a real carrying capacity. If births never exceed deaths the population simply declines to 0.</li>
+      </ul>
+    </section>
+
+    <section class="sim-more" data-calm>
+      <a class="btn" href="https://github.com/ashutosh-shinde/Population-Dynamics/blob/master/Continuous_time_logistic_model/README.md" target="_blank" rel="noopener">Read the full write-up on GitHub <span aria-hidden="true">→</span></a>
+      <a class="btn" href="../../" data-collapse data-back="#pd-2"><span aria-hidden="true">←</span> Back to the simulations</a>
+    </section>
+  </main>
+</body>
+</html>

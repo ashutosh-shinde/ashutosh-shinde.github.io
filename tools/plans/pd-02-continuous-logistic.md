@@ -53,7 +53,7 @@ this page uses the exact solution and its own Euler loop).
   `crossedK` (any step from one side of 1 to the other). Return `{ t, x, n, status, wentNegative, crossedK, maxGap }`
   with `maxGap = max |x_n − exact(x0, r, n·dt)|` over the computed steps.
 - Euler long run, `eulerLongRun(a, x0)` with `a = r·Δt` (independent of `t_max`): iterate the Euler map
-  `y ← y + a·y·(1 − y)` 3000 times (stop with `"escapes"` if not finite or `|y| > 1e6`), then look for a
+  `y ← y + a·y·(1 − y)` `max(3000, 40/a)` times, at most 2·10⁶ (small steps settle slowly; stop with `"escapes"` if not finite or `|y| > 1e6`), then look for a
   period `p` in 1…64 (`|y_{n+p} − y_n| < 1e-7` for 256 values, as on card 1). If none: Lyapunov exponent
   `λ = mean of ln|1 + a − 2a·y|` over 4000 further steps; `λ > 0.001` → `"chaos"`, else `"slow"`.
   Returns `{ kind: "fixed" | "cycle" | "chaos" | "escapes" | "slow", period, values (the cycle, sorted), lambda }`.
