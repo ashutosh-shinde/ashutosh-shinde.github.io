@@ -329,6 +329,13 @@ GitHub button → `https://github.com/ashutosh-shinde/Population-Dynamics/blob/m
   (allowed only if `t_max < 20·τ`).
 - The ramp's crash `p` (if any) is ≥ `p_c`; the recovery `p` (if any) is ≤ `p_r`.
 
+(Found while building, now in the code: the sign-change grid also needs 2000 log-spaced points from
+`1e-12·U`, because `θ` just above 1 puts the refuge very close to 0; and a run that is far from its
+destination at `t_max` may be crossing the slow "ghost" of a vanished fold, so "still moving" is also
+accepted when the run moves monotonically towards its destination without passing it. A run's
+destination is the next equilibrium in the direction `f(u_end)` points. For `θ > 1` a refuge below
+`1e-12·k` is not searched: the box then says "a refuge below 10⁻¹² k: effectively extinct".)
+
 ## 10. Screenshots to look at
 
 Each type at its default; every preset; Type II `h = 1.05` (bistable, fan split); Type III `k 10 θ 2` with the

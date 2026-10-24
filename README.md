@@ -27,6 +27,7 @@ double-click blocks the fonts.
 | Simulations: the list of collections and their numbered cards | `simulations/index.html` |
 | A simulation page (one folder each), e.g. the discrete-time logistic model | `simulations/population-dynamics/discrete-logistic/index.html` |
 | Card 2: the continuous-time logistic model | `simulations/population-dynamics/continuous-logistic/` + `js/sims/continuous-logistic.js` (tested by `node tools/test-continuous-logistic.mjs`) |
+| Card 3: harvesting with Holling responses | `simulations/population-dynamics/harvesting/` + `js/sims/harvesting.js` (tested by `node tools/test-harvesting.mjs`) |
 | Plots in chalk style (axes, lines, legends, log axes) | `js/lib/plot.js` |
 | ODE solvers: Dormand–Prince, ROS2 for stiff models, 2×2 eigenvalues | `js/lib/ode.js` (tested by `node tools/test-ode.mjs`) |
 | Shared page helpers for the simulations: sliders, boxes, runtime checks | `js/lib/simkit.js` |
