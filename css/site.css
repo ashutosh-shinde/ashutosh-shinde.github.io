@@ -269,7 +269,8 @@ body[data-scene="feedback"] .page__title { margin-top: clamp(72px, 14vh, 160px);
 @media (max-width: 760px) { .article { margin-top: 64px; } .fig__lab, .fig__frac { font-size: 18px; } }
 
 /* ---------------------------------------------------------------- 6b. simulations */
-/* the Simulations page: lead, collection cards, then square numbered cards (two per row; one on phones) */
+/* the Simulations page: lead, collection cards, then numbered cards: as many per row as fit (each at least
+   about 20rem wide, so the text stays readable), one per row on phones */
 .page--sims .page__title { margin-top: clamp(76px, 15vh, 170px); }
 .collections { margin-top: clamp(30px, 6vh, 60px); width: min(30rem, 100%); }
 .collections__list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 12px; }
@@ -281,8 +282,8 @@ body[data-scene="feedback"] .page__title { margin-top: clamp(72px, 14vh, 160px);
 .collection__title { font-size: clamp(28px, 2.4vw + 14px, 48px); }
 .collection__intro { margin-top: 10px; max-width: 38rem; color: var(--ink-2); }
 .collection__intro a { color: var(--ink-1); text-underline-offset: 3px; }
-.project-grid { list-style: none; margin: clamp(22px, 4vh, 36px) 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(14px, 2vw, 24px); max-width: 46rem; }
-.project-card { position: relative; aspect-ratio: 1; display: flex; flex-direction: column; gap: 10px; padding: clamp(18px, 2.4vw, 28px); border: 1px solid var(--line); border-radius: var(--radius); background: rgb(10 12 12 / 0.66); color: var(--ink-2); text-decoration: none; scroll-margin-top: 90px; transition: background-color .2s, border-color .2s, transform .2s; }
+.project-grid { list-style: none; margin: clamp(22px, 4vh, 36px) 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); gap: clamp(14px, 2vw, 24px); }
+.project-card { position: relative; height: 100%; min-height: 15rem; display: flex; flex-direction: column; gap: 10px; padding: clamp(18px, 2.4vw, 28px); border: 1px solid var(--line); border-radius: var(--radius); background: rgb(10 12 12 / 0.66); color: var(--ink-2); text-decoration: none; scroll-margin-top: 90px; transition: background-color .2s, border-color .2s, transform .2s; }
 a.project-card:hover { background: rgb(var(--ink) / 0.06); border-color: rgb(var(--ink) / 0.72); transform: translateY(-2px); }
 .project-card__no { font: 400 clamp(38px, 3vw + 18px, 58px)/1 var(--serif); color: var(--ink-3); }
 .project-card__title { font-family: var(--serif); font-weight: 700; font-size: clamp(20px, 0.8vw + 16px, 26px); line-height: 1.2; color: var(--ink-1); }
@@ -290,7 +291,6 @@ a.project-card:hover { background: rgb(var(--ink) / 0.06); border-color: rgb(var
 .project-card__go, .project-card__badge { margin-top: auto; font: 600 13px/1 var(--sans); letter-spacing: 0.04em; color: var(--ink-1); }
 .project-card__badge { align-self: flex-start; padding: 6px 10px; border: 1px dashed rgb(var(--ink) / 0.5); border-radius: 999px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; font-size: 11px; color: var(--ink-2); }
 .project-card--soon { opacity: 0.5; }
-@media (max-width: 700px) { .project-grid { grid-template-columns: minmax(0, 1fr); } }
 
 /* a simulation page: compact header, then panels (plot + its terminal box side by side; stacked on narrow screens) */
 .sim { width: min(72rem, 100%); margin: 0 auto; }
