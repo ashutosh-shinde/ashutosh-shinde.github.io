@@ -188,6 +188,14 @@ against the README's current heading, as in pd-04).
 - The block eigenvalues equal `eig2` of the `(R, C_i)` sub-matrix of `jacFD` (±1e-5).
 - The run's final state is within 1 % of the winner's equilibrium when `t_max ≥ 10/|λ_slowest|`.
 
+(Found while building, now in the code: that last check is skipped when the winner was pushed below 1e-9 of
+its `C*` on the way, because climbing back takes about `ln(1e9)/λ`, longer than `10/λ`. The tie preset's
+`δ₂ = 0.267857` is kept exact in the model (the slider, step 0.001, shows 0.268). The species-2 peak in §8
+comes out 7.1448 rather than 7.1475 (the stiff solver interpolates linearly between its steps); the exclusion
+time 9.89 is unaffected. In panel C an intercept is capped at 3× the larger of that axis's equilibrium and
+start: in the stiff corner one intercept is ~10⁶ and would flatten the plot. With `I = 0` there are no
+balance lines.)
+
 ## 10. Screenshots to look at
 
 Each preset (linear and log); the stiff corner (log scale: all three visible); `I = 0`; `C2(0) = 0`; a

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Consumer–resource model — WildQuant</title>
+  <meta name="description" content="An interactive consumer–resource model: two consumers eat one renewed food with Holling type II uptake. Food and consumers over time, the R* rule (the species that needs less food wins), and the two consumers' phase portrait.">
+  <meta name="author" content="Ashutosh Shinde">
+  <meta name="theme-color" content="#0d0f0f">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0f0f'/%3E%3Cpath d='M16 16m-9 0a9 9 0 1 0 18 0a7 7 0 1 0-14 0a5 5 0 1 0 10 0a3 3 0 1 0-6 0' fill='none' stroke='%23f6f4ec' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preload" href="../../../fonts/lm-roman-bold.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="../../../css/site.css">
+  <!-- arriving from another page of the site: the quick flash starts with the first paint (.wq-arrive in
+       site.css), and the page opens in the right place: a back link (data-back) returns to where you left
+       this page; any other link opens it at the top, or at the #section it names -->
+  <script>
+    (function (e) {
+      var go = location.hash ? location.hash.slice(1) : null, n, p, k = location.pathname.replace(/index\.html$/, "");
+      try { var u = JSON.parse(sessionStorage.getItem("wq-unfold") || "null");
+        if (u && Date.now() - u.t < 6000 && !matchMedia("(prefers-reduced-motion: reduce)").matches) { e.classList.add("wq-arrive"); e.style.setProperty("--fx", (u.x * 100).toFixed(1) + "%"); e.style.setProperty("--fy", (u.y * 100).toFixed(1) + "%"); }
+        n = JSON.parse(sessionStorage.getItem("wq-nav") || "null");
+        if (n && n.to == k && Date.now() - n.t < 10000) { sessionStorage.removeItem("wq-nav"); p = n.back != null && JSON.parse(sessionStorage.getItem("wq-pos:" + k) || "null");
+          go = p && Math.abs(p.w - innerWidth) < 3 ? p.y : n.back != null ? n.back.slice(1) || 0 : go || 0; }
+      } catch (x) {}
+      if (go === null) return;
+      var user = false, fixes = 0, place = function () { try { if (typeof go == "number") scrollTo(0, go); else { var t = document.getElementById(decodeURIComponent(go)); if (t) t.scrollIntoView(); } } catch (x) {} };
+      e.style.scrollBehavior = "auto";
+      ["wheel", "touchstart", "keydown", "pointerdown"].forEach(function (v) { addEventListener(v, function () { user = true; }, { capture: true, passive: true }); });
+      document.addEventListener("readystatechange", function () { if (document.readyState == "interactive" && !user) place(); });
+      addEventListener("load", function () { if (!user) place(); var end = Date.now() + 1500; // and keep it there until the visitor moves
+        addEventListener("scroll", function hold() { if (user || Date.now() > end || ++fixes > 8) removeEventListener("scroll", hold); else place(); }, { passive: true });
+        setTimeout(function () { e.style.scrollBehavior = ""; }, 300); });
+    })(document.documentElement);
+  </script>
+  <script defer src="../../../js/lib/core.js"></script>
+  <script defer src="../../../js/lib/chalk.js"></script>
+  <script defer src="../../../js/engine/engine.js"></script>
+  <script defer src="../../../js/lib/plot.js"></script>
+  <script defer src="../../../js/lib/ode.js"></script>
+  <script defer src="../../../js/lib/simkit.js"></script>
+  <script defer src="../../../js/sims/consumer-resource.js"></script>
+  <script defer src="../../../js/site.js"></script>
+</head>
+<body class="page page--sim">
+  <canvas id="board-tex" aria-hidden="true"></canvas>
+  <canvas id="board-fx" aria-hidden="true"></canvas>
+  <a class="back" href="../../" data-collapse data-back="#pd-5"><span aria-hidden="true">←</span> Simulations</a>
+  <main class="page__main sim">
+    <!-- ====================================================== CONSUMER–RESOURCE MODEL
+         HOW TO EDIT: texts below; the maths, the default values, the presets and the boxes' wording are
+         in js/sims/consumer-resource.js; the plot style in js/lib/plot.js. -->
+    <header class="sim-head" data-calm>
+      <p class="article__kicker">Deterministic population dynamics · 5</p>
+      <h1 class="page__title sim__title"><span class="chalk-text">Consumer–resource model</span></h1>
+      <div class="sim-eq">
+        <p class="sim-eq__formula math--lines sim-eq__formula--small"><span class="m"><i>dR</i>/<i>dt</i> = <i>I</i> − <i>β</i><sub>1</sub><i>R</i>/(<i>R</i><sub>01</sub> + <i>R</i>) <i>C</i><sub>1</sub> − <i>β</i><sub>2</sub><i>R</i>/(<i>R</i><sub>02</sub> + <i>R</i>) <i>C</i><sub>2</sub></span><span class="m"><i>dC</i><sub>1</sub>/<i>dt</i> = <i>γ</i><sub>1</sub><i>β</i><sub>1</sub><i>R</i>/(<i>R</i><sub>01</sub> + <i>R</i>) <i>C</i><sub>1</sub> − <i>δ</i><sub>1</sub><i>C</i><sub>1</sub></span><span class="m"><i>dC</i><sub>2</sub>/<i>dt</i> = <i>γ</i><sub>2</sub><i>β</i><sub>2</sub><i>R</i>/(<i>R</i><sub>02</sub> + <i>R</i>) <i>C</i><sub>2</sub> − <i>δ</i><sub>2</sub><i>C</i><sub>2</sub></span></p>
+        <dl class="sim-notation">
+          <div><dt><span class="m"><i>R</i></span></dt><dd>the resource (food), renewed at a constant rate <span class="m"><i>I</i></span></dd></div>
+          <div><dt><span class="m"><i>C</i><sub>1</sub>, <i>C</i><sub>2</sub></span></dt><dd>two consumers that only compete by eating the same food</dd></div>
+          <div><dt><span class="m"><i>β</i><sub><i>i</i></sub></span></dt><dd>the most one consumer can eat per unit time (Holling type II uptake)</dd></div>
+          <div><dt><span class="m"><i>R</i><sub>0<i>i</i></sub></span></dt><dd>the food level at which it eats half of that</dd></div>
+          <div><dt><span class="m"><i>γ</i><sub><i>i</i></sub></span></dt><dd>how much food turns into new consumers</dd></div>
+          <div><dt><span class="m"><i>δ</i><sub><i>i</i></sub></span></dt><dd>death rate per head</dd></div>
+        </dl>
+      </div>
+    </header>
+
+    <!-- ---------------------------------------------------- the controls drive all three panels -->
+    <section class="sim-sec" id="time-series" aria-labelledby="h-time">
+      <h2 class="sim-sec__title" id="h-time" data-calm>Time series</h2>
+      <div class="sim-controls sim-controls--grid" data-calm>
+        <fieldset class="sim-group">
+          <legend>Resource</legend>
+          <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>I</i></span></span><input type="range" id="I" min="0" max="30" step="0.1" value="12"><output id="I-out" for="I">12.0</output></label>
+        </fieldset>
+        <fieldset class="sim-group">
+          <legend>Species 1</legend>
+          <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>β</i><sub>1</sub></span></span><input type="range" id="b1" min="0.1" max="10" step="0.01" value="4"><output id="b1-out" for="b1">4.00</output></label>
+          <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>R</i><sub>01</sub></span></span><input type="range" id="R01" min="0.1" max="20" step="0.01" value="5"><output id="R01-out" for="R01">5.00</output></label>
+          <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>γ</i><sub>1</sub></span></span><input type="range" id="g1" min="0.05" max="2" step="0.01" value="1.4"><output id="g1-out" for="g1">1.40</output></label>
+          <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>δ</i><sub>1</sub></span></span><input type="range" id="d1" min="0.01" max="3" step="0.001" value="0.5"><output id="d1-out" for="d1">0.500</output></label>
+        </fieldset>
+        <fieldset class="sim-group">
+          <legend>Species 2</legend>
+          <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>β</i><sub>2</sub></span></span><input type="range" id="b2" min="0.1" max="10" step="0.01" value="3"><output id="b2-out" for="b2">3.00</output></label>
+          <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>R</i><sub>02</sub></span></span><input type="range" id="R02" min="0.1" max="20" step="0.01" value="5"><output id="R02-out" for="R02">5.00</output></label>
+          <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>γ</i><sub>2</sub></span></span><input type="range" id="g2" min="0.05" max="2" step="0.01" value="1"><output id="g2-out" for="g2">1.00</output></label>
+          <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>δ</i><sub>2</sub></span></span><input type="range" id="d2" min="0.01" max="3" step="0.001" value="0.8"><output id="d2-out" for="d2">0.800</output></label>
+        </fieldset>
+        <fieldset class="sim-group">
+          <legend>Start and time</legend>
+          <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>C</i><sub>1</sub>(0)</span></span><input type="range" id="C1s" min="0" max="30" step="0.1" value="5"><output id="C1s-out" for="C1s">5.0</output></label>
+          <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>C</i><sub>2</sub>(0)</span></span><input type="range" id="C2s" min="0" max="30" step="0.1" value="5"><output id="C2s-out" for="C2s">5.0</output></label>
+          <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>R</i>(0)</span></span><input type="range" id="Rs" min="0" max="30" step="0.1" value="10"><output id="Rs-out" for="Rs">10.0</output></label>
+          <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>t</i><sub>max</sub></span></span><input type="range" id="tmax" min="10" max="500" step="10" value="50"><output id="tmax-out" for="tmax">50</output></label>
+        </fieldset>
+      </div>
+      <div class="sim-presets" id="presets" data-calm></div>
+      <div class="sim-seg" id="scale" role="group" aria-label="Scale" data-calm><button type="button" data-value="linear" aria-pressed="true">linear</button><button type="button" data-value="log">log</button></div>
+      <div class="sim-panel sim-panel--wideterm">
+        <figure class="sim-plot"><canvas id="cv-time" role="img" aria-label="Food and both consumers over time"></canvas><figcaption class="sim-cap">Food and both consumers over time.</figcaption></figure>
+        <div class="term" id="term-time" aria-live="polite" aria-label="What the time series shows"></div>
+      </div>
+    </section>
+
+    <section class="sim-sec" id="r-star" aria-labelledby="h-rule">
+      <div data-calm>
+        <h2 class="sim-sec__title" id="h-rule">The R* rule</h2>
+        <p class="sim-sec__lead">How fast each consumer grows per head at each food level. The food level where it just replaces itself is its <span class="m"><i>R</i>*</span>.</p>
+      </div>
+      <div class="sim-panel sim-panel--wideterm">
+        <figure class="sim-plot"><canvas id="cv-rule" role="img" aria-label="Growth per head against the food level"></canvas><figcaption class="sim-cap">Each consumer's growth rate against the food level: it is zero at its <span class="m"><i>R</i>*</span>.</figcaption></figure>
+        <div class="term" id="term-rule" aria-live="polite" aria-label="What the R* rule shows"></div>
+      </div>
+    </section>
+
+    <section class="sim-sec" id="phase-portrait" aria-labelledby="h-phase">
+      <div data-calm>
+        <h2 class="sim-sec__title" id="h-phase">Phase portrait <span class="m"><i>C</i><sub>1</sub>–<i>C</i><sub>2</sub></span></h2>
+        <p class="sim-sec__lead">Nine starts and yours (thick), all with the food <span class="m"><i>R</i>(0)</span> set above.</p>
+      </div>
+      <div class="sim-panel sim-panel--wideterm">
+        <figure class="sim-plot sim-plot--phase"><canvas id="cv-phase" role="img" aria-label="Phase portrait of the two consumers"></canvas><figcaption class="sim-cap">Both consumers; each line is where the food balances at one species' <span class="m"><i>R</i>*</span>.</figcaption></figure>
+        <div class="term" id="term-phase" aria-live="polite" aria-label="What the phase portrait shows"></div>
+      </div>
+    </section>
+
+    <section class="sim-sec sim-theory" id="theory" aria-labelledby="h-theory" data-calm>
+      <h2 class="sim-sec__title" id="h-theory">The theory, in short</h2>
+      <ul>
+        <li><b>Food and eaters.</b> The food is renewed at rate <span class="m"><i>I</i></span> and eaten; consumers grow in proportion to what they eat (<span class="m"><i>γ</i></span>) and die at rate <span class="m"><i>δ</i></span>.</li>
+        <li><b>Holling type II uptake</b> <span class="m"><i>βR</i>/(<i>R</i><sub>0</sub> + <i>R</i>)</span>: little food → eating is limited by finding it; plenty → by handling it, up to <span class="m"><i>β</i></span>.</li>
+        <li><b><span class="m"><i>R</i>*</span>.</b> The food level where a consumer just replaces itself: <span class="m"><i>R</i>* = <i>δR</i><sub>0</sub>/(<i>γβ</i> − <i>δ</i>)</span> (needs <span class="m"><i>γβ</i> &gt; <i>δ</i></span>).</li>
+        <li><b>Alone,</b> species <span class="m"><i>i</i></span> settles at <span class="m"><i>R</i> = <i>R</i><sub><i>i</i></sub>*</span> with <span class="m"><i>C</i><sub><i>i</i></sub>* = <i>Iγ</i><sub><i>i</i></sub>/<i>δ</i><sub><i>i</i></sub></span>.</li>
+        <li><b>Together,</b> the species with the lower <span class="m"><i>R</i>*</span> wins: it pulls the food down to its own <span class="m"><i>R</i>*</span>, where the other's growth rate is negative (its invasion rate <span class="m"><i>γβR</i>*/(<i>R</i><sub>0</sub> + <i>R</i>*) − <i>δ</i> &lt; 0</span>).</li>
+        <li><b>Competitive exclusion.</b> Two consumers fully dependent on one resource cannot coexist unless <span class="m"><i>R</i><sub>1</sub>* = <i>R</i><sub>2</sub>*</span> exactly (a fragile tie).</li>
+        <li><b>Not the biggest eater.</b> The winner is the one that survives when food is scarcest, not the one that eats most when it is plenty.</li>
+        <li><b>Fixed points</b> (correcting a sign in the README draft): at equilibrium <span class="m"><i>R</i>*(<i>β</i><sub>1</sub><i>C</i><sub>1</sub>/(<i>R</i><sub>01</sub> + <i>R</i>*) + <i>β</i><sub>2</sub><i>C</i><sub>2</sub>/(<i>R</i><sub>02</sub> + <i>R</i>*)) = <i>I</i></span>.</li>
+      </ul>
+    </section>
+
+    <section class="sim-more" data-calm>
+      <a class="btn" href="https://github.com/ashutosh-shinde/Population-Dynamics/blob/master/Two_species_population_models/README.md#2-consumer---resource-model" target="_blank" rel="noopener">Read the full write-up on GitHub <span aria-hidden="true">→</span></a>
+      <a class="btn" href="../../" data-collapse data-back="#pd-5"><span aria-hidden="true">←</span> Back to the simulations</a>
+    </section>
+  </main>
+</body>
+</html>
