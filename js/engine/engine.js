@@ -236,6 +236,16 @@
     }
     ctx.save(); ctx.globalAlpha = Math.min(1, a); ctx.drawImage(glowCv, x - r, y - r, 2 * r, 2 * r); ctx.restore();
   }
+  // remember where this page was left (a back link, data-back="#section", returns there; the section is
+  // where it lands if the visitor never was on that page) and where the click goes. The small script at
+  // the top of every page reads both and opens the page in the right place.
+  const pageKey = (path) => path.replace(/index\.html$/, "");
+  function remember(a) {
+    try {
+      G.sessionStorage.setItem("wq-pos:" + pageKey(G.location.pathname), JSON.stringify({ y: Math.round(G.scrollY), w: G.innerWidth }));
+      G.sessionStorage.setItem("wq-nav", JSON.stringify({ t: Date.now(), to: pageKey(a.pathname), back: a.hasAttribute("data-back") ? a.getAttribute("data-back") || "#" : null }));
+    } catch (e) { /* storage blocked: links open pages the usual way */ }
+  }
   function collapseStart(href, cx, cy) {
     if (CO) return;
     if (E.reduced || (!running && !E.capture) || !env) { G.location.href = href; return; }
@@ -398,6 +408,7 @@
       const a = ev.target.closest && ev.target.closest("a[data-collapse]");
       if (!a || ev.defaultPrevented || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || a.target === "_blank") return;
       ev.preventDefault();
+      remember(a);
       const r = a.getBoundingClientRect();
       try { collapseStart(a.href, r.left + r.width / 2, r.top + r.height / 2); } catch (e) { console.error(e); G.location.href = a.href; } // never leave a link dead
     });

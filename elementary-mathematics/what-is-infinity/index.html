@@ -10,12 +10,26 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0f0f'/%3E%3Cpath d='M16 16m-9 0a9 9 0 1 0 18 0a7 7 0 1 0-14 0a5 5 0 1 0 10 0a3 3 0 1 0-6 0' fill='none' stroke='%23f6f4ec' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="preload" href="../../fonts/lm-roman-regular.woff" as="font" type="font/woff" crossorigin>
   <link rel="stylesheet" href="../../css/site.css">
-  <!-- arriving from another page of the site: start the quick flash with the first paint (see .wq-arrive in site.css) -->
+  <!-- arriving from another page of the site: the quick flash starts with the first paint (.wq-arrive in
+       site.css), and the page opens in the right place: a back link (data-back) returns to where you left
+       this page; any other link opens it at the top, or at the #section it names -->
   <script>
     (function (e) {
+      var go = location.hash ? location.hash.slice(1) : null, n, p, k = location.pathname.replace(/index\.html$/, "");
       try { var u = JSON.parse(sessionStorage.getItem("wq-unfold") || "null");
         if (u && Date.now() - u.t < 6000 && !matchMedia("(prefers-reduced-motion: reduce)").matches) { e.classList.add("wq-arrive"); e.style.setProperty("--fx", (u.x * 100).toFixed(1) + "%"); e.style.setProperty("--fy", (u.y * 100).toFixed(1) + "%"); }
+        n = JSON.parse(sessionStorage.getItem("wq-nav") || "null");
+        if (n && n.to == k && Date.now() - n.t < 10000) { sessionStorage.removeItem("wq-nav"); p = n.back != null && JSON.parse(sessionStorage.getItem("wq-pos:" + k) || "null");
+          go = p && Math.abs(p.w - innerWidth) < 3 ? p.y : n.back != null ? n.back.slice(1) || 0 : go || 0; }
       } catch (x) {}
+      if (go === null) return;
+      var user = false, fixes = 0, place = function () { try { if (typeof go == "number") scrollTo(0, go); else { var t = document.getElementById(decodeURIComponent(go)); if (t) t.scrollIntoView(); } } catch (x) {} };
+      e.style.scrollBehavior = "auto";
+      ["wheel", "touchstart", "keydown", "pointerdown"].forEach(function (v) { addEventListener(v, function () { user = true; }, { capture: true, passive: true }); });
+      document.addEventListener("readystatechange", function () { if (document.readyState == "interactive" && !user) place(); });
+      addEventListener("load", function () { if (!user) place(); var end = Date.now() + 1500; // and keep it there until the visitor moves
+        addEventListener("scroll", function hold() { if (user || Date.now() > end || ++fixes > 8) removeEventListener("scroll", hold); else place(); }, { passive: true });
+        setTimeout(function () { e.style.scrollBehavior = ""; }, 300); });
     })(document.documentElement);
   </script>
   <script defer src="../../js/lib/core.js"></script>
@@ -29,7 +43,7 @@
   <!-- the blackboard: snow falling on grass behind the article (js/scenes/snowfield.js) -->
   <canvas id="board-tex" aria-hidden="true"></canvas>
   <canvas id="board-fx" aria-hidden="true"></canvas>
-  <a class="back" href="../index.html" data-collapse><span aria-hidden="true">←</span> Elementary Mathematics</a>
+  <a class="back" href="../index.html" data-collapse data-back="#what-is-infinity"><span aria-hidden="true">←</span> Elementary Mathematics</a>
   <main class="page__main">
     <!-- ====================================================== CHAPTER 1 · WHAT IS INFINITY? (21 August 2021)
          HOW TO EDIT: the article is plain HTML. Inline maths goes in <span class="m">…</span>
@@ -139,7 +153,7 @@
       </section>
 
       <p class="article__end" aria-hidden="true">⁂</p>
-      <p class="article__back"><a class="btn" href="../index.html" data-collapse><span aria-hidden="true">←</span> Back to Elementary Mathematics</a></p>
+      <p class="article__back"><a class="btn" href="../index.html" data-collapse data-back="#what-is-infinity"><span aria-hidden="true">←</span> Back to Elementary Mathematics</a></p>
     </article>
   </main>
 </body>

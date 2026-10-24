@@ -4,7 +4,8 @@
 
    ONE-TIME SETUP (about 10 minutes)
    1. Create a new Google Sheet (any name, e.g. "WildQuant comments").
-      In row 1 write the headers:   time | comment
+      Keep its sharing "Restricted": this script reads and writes it for you,
+      so visitors never need access. (It adds the header row by itself.)
    2. In the sheet: Extensions → Apps Script. Delete what's there, paste this
       whole file, and click Save.
    3. Deploy → New deployment → type "Web app".
@@ -36,7 +37,7 @@ function doPost(e) {
     props.setProperty(key, String(n + 1));
     // a leading = + - @ would make the sheet treat the comment as a formula
     const safe = /^[=+\-@]/.test(text) ? "'" + text : text;
-    SpreadsheetApp.getActiveSpreadsheet().getSheets()[0].appendRow([new Date(), safe]);
+    sheet().appendRow([new Date(), safe]);
     return json({ ok: true });
   } catch (err) {
     return json({ ok: false, error: "Could not save the comment." });
@@ -45,13 +46,20 @@ function doPost(e) {
 
 function doGet(e) {
   if (!SHOW_COMMENTS) return json({ comments: [] });
-  const rows = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0].getDataRange().getValues().slice(1);
+  const rows = sheet().getDataRange().getValues().slice(1);
   const comments = rows
     .filter((r) => r[1] !== "" && r[1] !== null)
     .map((r) => ({ time: r[0] instanceof Date ? r[0].toISOString() : String(r[0]), comment: String(r[1]).replace(/^'/, "") }))
     .reverse()          // newest first
     .slice(0, 500);
   return json({ comments });
+}
+
+// the first sheet of the spreadsheet; on first use it gets its header row (time | comment)
+function sheet() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  if (sh.getLastRow() === 0) sh.appendRow(["time", "comment"]);
+  return sh;
 }
 
 function json(obj) {

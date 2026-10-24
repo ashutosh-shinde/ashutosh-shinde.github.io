@@ -12,8 +12,9 @@
 (function (G) {
   "use strict";
 
-  // ↓↓↓ add google sheet link here to store comments ↓↓↓
-  // (the Apps Script "web app" URL, looks like https://script.google.com/macros/s/…/exec)
+  // ↓↓↓ paste the comment store's web-app URL here ↓↓↓
+  // (from the Apps Script deployment; it looks like https://script.google.com/macros/s/…/exec.
+  //  Not the Google Sheet's own link: the site can't use that one.)
   const SHEET_URL = "";
   // ↑↑↑
 

@@ -64,6 +64,9 @@ Every file starts with a comment that explains what it does and has a
   1. Copy the folder `elementary-mathematics/what-is-infinity/` to a new
      folder, for example `elementary-mathematics/my-new-idea/`.
   2. Write the chapter in the new folder's `index.html`: title, date, text.
+     In its two back links, change `data-back="#what-is-infinity"` to the new
+     chapter's id, so that a visitor who came straight to the chapter goes back
+     to its intro.
   3. In `elementary-mathematics/index.html`, add a line to the index and copy
      a `<section class="chapter">` for it (a comment there shows how).
 - **Write maths in a chapter** (it is set in Latin Modern, like LaTeX):
@@ -98,7 +101,10 @@ build one from scratch, it needs all of these:
 2. **At the top of `<body>`:** the two canvases
    `<canvas id="board-tex" aria-hidden="true"></canvas>` and
    `<canvas id="board-fx" aria-hidden="true"></canvas>`, and a back link
-   `<a class="back" href="../#home" data-collapse><span aria-hidden="true">←</span> WildQuant</a>`.
+   `<a class="back" href="../" data-collapse data-back="#home"><span aria-hidden="true">←</span> WildQuant</a>`.
+   `data-back` makes it a back link: it returns to where the visitor left the
+   home page, or to the section it names (here `#home`, the top) if they never
+   were there. Use the section that links to your page.
 3. **`data-collapse` on every link to another page of the site**, for example
    `<a href="../about/index.html" data-collapse>`. Links to other websites, and
    `#` links within a page, do without.
@@ -115,7 +121,8 @@ Paths are relative to the page's folder: `../` from a page one folder deep
 ## Behaviour notes
 
 - **Home intro:** it plays once per browser session. Scrolling skips it, and
-  so does opening the page at a section (a link like `/#feedback`).
+  so does opening the page further down (a link like `/#feedback`, or a back
+  link to where the visitor left).
 - **Reduced motion:** visitors with "reduce motion" switched on see one still
   drawing per section. Nothing animates for them.
 - **Phones:** they get the same scenes with fewer particles, a smaller flock,
@@ -127,6 +134,9 @@ Paths are relative to the page's folder: `../` from a page one folder deep
 - **Page changes:** any link with `data-collapse` pulls the drawings into the
   link in half a second (the next page starts loading part-way through), and
   the next page opens at once under a quick flash from the same spot. Every
-  page works this way (see "Adding a page"). Timing: `collapse`, `navAt` and
+  page works this way (see "Adding a page"). A page opens at its top, or at
+  the `#section` the link names; a back link (`data-back`) opens it where the
+  visitor left it instead. The small script at the top of every page does
+  this. Timing: `collapse`, `navAt` and
   `arrive` in `CFG` (`js/engine/engine.js`); the flash is `.wq-arrive` in
   `css/site.css`.

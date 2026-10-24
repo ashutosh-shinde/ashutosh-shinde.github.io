@@ -47,11 +47,11 @@
     let NI = 0, PEQ, dly, armOf, uOf, ND = 0, disc = null, fur = null, blades = [], OY = 0, owlOK = true, camMemo = { t: -1, v: null };
     const tmp2 = [0, 0];
 
-    // skip the intro if it already played in this browser session (or ?intro=0), or if the page
-    // opens at another section (a link to #feedback, say): the visitor came for that section
-    const qs = new URLSearchParams(G.location.search), hash = G.location.hash;
+    // skip the intro if it already played in this browser session (or ?intro=0), or if the page opens
+    // further down (a link to #feedback, or a back link to where the visitor left): they came for that part
+    const qs = new URLSearchParams(G.location.search);
     try { if ((G.sessionStorage.getItem("wq-intro") === "1" && qs.get("intro") !== "1") || qs.get("intro") === "0") off = T.chase + 0.4; } catch (e) { /* storage blocked */ }
-    if (hash.length > 1 && hash !== "#home") off = T.chase + 0.4;
+    if (G.scrollY > G.innerHeight * 0.5) off = T.chase + 0.4;
 
     /* ---------------------------------------------------------- choreography */
     const deerChaseX = (t) => W * (portrait ? 0.73 : 0.72) + W * 0.025 * Math.sin(t * 0.37) + W * 0.012 * nz.n2(t * 0.21, 3);
