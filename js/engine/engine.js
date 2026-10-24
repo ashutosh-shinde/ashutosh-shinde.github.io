@@ -16,8 +16,11 @@
      drawings behind it to a faint trace, so text always stays readable.
      data-calm="0.6" sets the strength (default CFG.calm). Scenes lay out
      around their section's calm elements, except ones marked data-calm-only.
-   COLLAPSE — a link with data-collapse pulls everything into a spiral toward
-     the link, then opens it; the next page unfolds from the same point.
+   PAGE CHANGES — a link with data-collapse pulls everything into the link in
+     a fast swirl of chalk dust that ends in a flare of light (the next page
+     starts loading part-way through, so no time is wasted); the next page
+     opens with a quick flash from the same spot (see .wq-arrive in site.css)
+     and a ring of chalk dust bursting outward.
    REDUCED MOTION — with "reduce motion" switched on in the visitor's system,
      each section shows one still drawing; nothing animates.
 
@@ -47,8 +50,9 @@
     feather: 70,            // px: softness of a calm zone's edge (phones: × 0.6)
     calmPad: 14,            // px: calm zone grows this much around the text
     trans: [0.06, 0.86],    // share of the "next section rising" scroll used by a transition
-    collapse: 1.05,         // s: spiral collapse before a page opens
-    unfold: 1.25,           // s: spiral unfold when a page arrives
+    collapse: 0.5,          // s: everything is pulled into the clicked link
+    navAt: 0.6,             // share of the collapse after which the next page starts loading
+    arrive: 0.45,           // s: the burst of chalk dust when a page opens
   };
 
   const E = { CFG, scenes: [], reduced: false, capture: false, lite: false, ready: false };
@@ -200,24 +204,41 @@
     drawDust(P, n, a, !MO.fresh);
     MO.fresh = false;
   }
-  function drawDust(P, n, a, streaks, size) {
+  // streaks: trails back to MO.PR (the previous frame, or where the grain was a moment earlier);
+  // reach = longest trail drawn (px), part = share of it shown; keepTrail: MO.PR was set by the caller
+  function drawDust(P, n, a, streaks, size, reach = 60, part = 0.55, sa = 0.12, keepTrail = false) {
     if (a <= 0.003) return;
     const s = size || (env.mobile ? 1.4 : 1.55);
     if (streaks) {
-      ctx.strokeStyle = `rgba(246,244,236,${0.12 * a})`; ctx.lineWidth = 1; ctx.beginPath();
-      for (let k = 0; k < n; k++) { const x = P[2 * k], y = P[2 * k + 1], px = MO.PR[2 * k], py = MO.PR[2 * k + 1]; if (Math.abs(px - x) + Math.abs(py - y) < 60) { ctx.moveTo(px + 0.45 * (x - px), py + 0.45 * (y - py)); ctx.lineTo(x, y); } }
+      ctx.strokeStyle = `rgba(246,244,236,${sa * a})`; ctx.lineWidth = 1; ctx.beginPath();
+      for (let k = 0; k < n; k++) { const x = P[2 * k], y = P[2 * k + 1], px = MO.PR[2 * k], py = MO.PR[2 * k + 1]; if (Math.abs(px - x) + Math.abs(py - y) < reach) { ctx.moveTo(x + part * (px - x), y + part * (py - y)); ctx.lineTo(x, y); } }
       ctx.stroke();
     }
     ctx.fillStyle = `rgba(246,244,236,${a})`;
     for (let k = 0; k < n; k++) { const y = P[2 * k + 1]; if (y > -4 && y < H + 4) ctx.fillRect(P[2 * k] - s / 2, y - s / 2, s, s); }
-    MO.PR.set(P.subarray(0, 2 * n));
+    if (!keepTrail) MO.PR.set(P.subarray(0, 2 * n));
   }
 
-  /* --------------------------------------------------- collapse & unfold */
-  let CO = null, UN = null;
+  /* --------------------------------------------------- page changes
+     Leaving: the drawings (and a little of the whole board) are sucked into
+     the clicked link in a fast swirl, streaking, while light gathers there and
+     flares. The next page starts loading at CFG.navAt, while this plays on.
+     Arriving: the page is shown at once under a quick flash (CSS) from the same
+     spot, and a ring of chalk dust bursts outward and fades.               */
+  let CO = null, AR = null, glowCv = null;
+  function glowAt(x, y, r, a) { // soft light from one cached sprite
+    if (a <= 0.004 || r <= 0.5) return;
+    if (!glowCv) {
+      glowCv = document.createElement("canvas"); glowCv.width = glowCv.height = 128;
+      const g = glowCv.getContext("2d"), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gr.addColorStop(0, "rgba(255,253,246,1)"); gr.addColorStop(0.16, "rgba(255,253,246,0.62)"); gr.addColorStop(0.45, "rgba(255,253,246,0.16)"); gr.addColorStop(1, "rgba(255,253,246,0)");
+      g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+    }
+    ctx.save(); ctx.globalAlpha = Math.min(1, a); ctx.drawImage(glowCv, x - r, y - r, 2 * r, 2 * r); ctx.restore();
+  }
   function collapseStart(href, cx, cy) {
     if (CO) return;
-    if (E.reduced || !running || !env) { G.location.href = href; return; }
+    if (E.reduced || (!running && !E.capture) || !env) { G.location.href = href; return; }
     morphAlloc();
     const n = MO.n, P0 = new Float32Array(2 * n), s = E.scenes[st.a];
     if (s) points(s, P0, n);
@@ -225,54 +246,50 @@
     for (let k = 0; k < n; k++) {
       if (k % 4 === 0 || !s) { P0[2 * k] = R() * W; P0[2 * k + 1] = R() * H; } // a little of the whole board too
       const dx = P0[2 * k] - cx, dy = P0[2 * k + 1] - cy;
-      r0[k] = Math.hypot(dx, dy); th0[k] = Math.atan2(dy, dx); d[k] = R() * 0.25;
+      r0[k] = Math.hypot(dx, dy); th0[k] = Math.atan2(dy, dx); d[k] = R() * 0.22;
     }
     CO = { t: 0, href, cx, cy, r0, th0, d, n, nav: false };
     document.documentElement.classList.add("wq-collapsing");
   }
+  function collapseAt(k, s, out, o) { // where dust grain k is at collapse time s (0..1)
+    const e = Ease.in(clamp((s - CO.d[k]) / 0.78, 0, 1)), rr = CO.r0[k] * Math.pow(1 - e, 1.1);
+    const th = CO.th0[k] + TAU * 0.85 * e * (0.8 + 0.4 * ((k * 0.618) % 1));
+    out[o] = CO.cx + rr * Math.cos(th); out[o + 1] = CO.cy + rr * Math.sin(th);
+  }
   function collapseDraw(dt) {
     CO.t += dt;
-    const s = CO.t / CFG.collapse, P = MO.P, n = CO.n;
-    for (let k = 0; k < n; k++) {
-      const e = Ease.in(clamp((s - CO.d[k]) / (1 - 0.25), 0, 1)), rr = CO.r0[k] * Math.pow(1 - e, 1.15);
-      const th = CO.th0[k] + TAU * 1.6 * e * (0.8 + 0.4 * ((k * 0.618) % 1));
-      P[2 * k] = CO.cx + rr * Math.cos(th); P[2 * k + 1] = CO.cy + rr * Math.sin(th);
-    }
-    drawDust(P, n, 0.9 * smooth(0, 0.12, s), CO.t > 0.03);
-    const g = smooth(0.55, 0.95, s), rad = (4 + 18 * g) * (1 - 0.5 * smooth(0.95, 1.05, s));
-    if (g > 0) {
-      const grd = ctx.createRadialGradient(CO.cx, CO.cy, 0, CO.cx, CO.cy, rad * 3);
-      grd.addColorStop(0, `rgba(255,255,250,${0.9 * g})`); grd.addColorStop(1, "rgba(255,255,250,0)");
-      ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(CO.cx, CO.cy, rad * 3, 0, TAU); ctx.fill();
-    }
-    if (s >= 1.05 && !CO.nav) {
+    const s = Math.min(1, CO.t / CFG.collapse), P = MO.P, n = CO.n;
+    for (let k = 0; k < n; k++) { collapseAt(k, s, P, 2 * k); collapseAt(k, Math.max(0, s - 0.07), MO.PR, 2 * k); } // trail: a moment earlier
+    drawDust(P, n, 0.95 * smooth(0, 0.06, s) * (1 - 0.7 * smooth(0.88, 1, s)), true, null, 1e4, 1, 0.24, true);
+    // light gathers at the link and flares; it keeps pulsing if the next page is slow to arrive
+    const g = smooth(0.2, 1, s), pulse = s >= 1 ? 1 + 0.1 * Math.sin(CO.t * 14) : 1;
+    glowAt(CO.cx, CO.cy, (14 + 120 * g * g) * pulse, 0.95 * g);
+    glowAt(CO.cx, CO.cy, (5 + 14 * g) * pulse, g);
+    if (s >= CFG.navAt && !CO.nav) {
       CO.nav = true;
       try { G.sessionStorage.setItem("wq-unfold", JSON.stringify({ x: CO.cx / W, y: CO.cy / H, t: Date.now() })); } catch (e) { /* private mode */ }
       G.location.href = CO.href;
     }
-    return 1 - smooth(0, 0.4, s); // how much of the scene is still visible
   }
-  function unfoldStart() {
+  function arriveStart() {
     let u = null;
     try { u = JSON.parse(G.sessionStorage.getItem("wq-unfold") || "null"); G.sessionStorage.removeItem("wq-unfold"); } catch (e) { u = null; }
-    if (!u || Date.now() - (u.t || 0) > 15000 || E.reduced) return;
+    if (!u || Date.now() - (u.t || 0) > 6000 || E.reduced) return;
     morphAlloc();
-    const n = MO.n, tx = new Float32Array(2 * n), r = new Float32Array(n), th = new Float32Array(n);
-    for (let k = 0; k < n; k++) { tx[2 * k] = R() * W; tx[2 * k + 1] = R() * H; }
-    const cx = u.x * W, cy = u.y * H;
-    for (let k = 0; k < n; k++) { const dx = tx[2 * k] - cx, dy = tx[2 * k + 1] - cy; r[k] = Math.hypot(dx, dy); th[k] = Math.atan2(dy, dx); }
-    UN = { t: 0, cx, cy, r, th, n };
-    document.documentElement.classList.add("wq-unfolding");
+    const n = Math.round(MO.n * 0.6), th = new Float32Array(n), far = new Float32Array(n), cx = u.x * W, cy = u.y * H, D = Math.hypot(W, H);
+    for (let k = 0; k < n; k++) { th[k] = R() * TAU; far[k] = D * (0.12 + 0.42 * Math.pow(R(), 0.7)); }
+    AR = { t: 0, cx, cy, n, th, far, D };
   }
-  function unfoldDraw(dt) {
-    UN.t += dt;
-    const s = UN.t / CFG.unfold, P = MO.P, n = UN.n;
-    for (let k = 0; k < n; k++) {
-      const e = Ease.out(clamp(s * 1.1 - (k % 7) * 0.01, 0, 1)), rr = UN.r[k] * e, th2 = UN.th[k] - TAU * 1.4 * (1 - e);
-      P[2 * k] = UN.cx + rr * Math.cos(th2); P[2 * k + 1] = UN.cy + rr * Math.sin(th2);
-    }
-    drawDust(P, n, 0.85 * (1 - smooth(0.45, 1, s)), s > 0.02);
-    if (s >= 1) { UN = null; document.documentElement.classList.remove("wq-unfolding"); }
+  function arriveDraw(dt) {
+    AR.t += dt;
+    const s = Math.min(1, AR.t / CFG.arrive), e = Ease.out(s), P = MO.P, n = AR.n;
+    for (let k = 0; k < n; k++) { const r = AR.far[k] * e; P[2 * k] = AR.cx + r * Math.cos(AR.th[k]); P[2 * k + 1] = AR.cy + r * Math.sin(AR.th[k]); }
+    const e0 = Ease.out(Math.max(0, s - 0.08));
+    for (let k = 0; k < n; k++) { const r = AR.far[k] * e0; MO.PR[2 * k] = AR.cx + r * Math.cos(AR.th[k]); MO.PR[2 * k + 1] = AR.cy + r * Math.sin(AR.th[k]); } // trail
+    drawDust(P, n, 0.9 * (1 - smooth(0.3, 1, s)), true, null, 1e4, 1, 0.22, true);
+    const ring = []; for (let j = 0; j <= 96; j++) { const a = (j / 96) * TAU, r = AR.D * 0.5 * e; ring.push([AR.cx + r * Math.cos(a), AR.cy + r * Math.sin(a)]); }
+    CH.line(ctx, ring, 0.75 * (1 - s), 2.2 - 1.4 * s, false);
+    if (s >= 1) AR = null;
   }
 
   /* ----------------------------------------------------------------- frame */
@@ -281,7 +298,9 @@
     if (!s.seen) { s.seen = true; s.obj.enter && s.obj.enter(); }
     s.t += dt; s.obj.update && s.obj.update(dt, s.t);
   }
-  function render(dt) {
+  // dt: scene time step (capped, so a slow frame never makes a scene jump);
+  // real: the real time that passed, so page changes keep their pace on slow screens
+  function render(dt, real = dt) {
     st = scrollState();
     const A = visible(st.a), B = visible(st.b), q = st.q;
     let aA = B ? 1 - smooth(0, 0.42, q) : 1, aB = B ? smooth(0.58, 1, q) : 0;
@@ -290,7 +309,7 @@
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, fx.width, fx.height);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     let fade = 1;
-    if (CO) fade = 1 - smooth(0, 0.4, (CO.t + dt) / CFG.collapse);
+    if (CO) fade = 1 - smooth(0, 0.4, (CO.t + real) / CFG.collapse);
     aA *= fade; aB *= fade;
     if (A && aA > 0.003) A.obj.draw(ctx, aA, "base");
     if (B && aB > 0.003) B.obj.draw(ctx, aB, "base");
@@ -298,8 +317,8 @@
     calmMask(fade);
     if (A && aA > 0.003) A.obj.draw(ctx, aA, "top");
     if (B && aB > 0.003) B.obj.draw(ctx, aB, "top");
-    if (CO) collapseDraw(dt);
-    if (UN) unfoldDraw(dt);
+    if (CO) collapseDraw(real);
+    if (AR) arriveDraw(real);
   }
   function loop(now) {
     if (!running) return;
@@ -308,7 +327,7 @@
     if (dt < 1 / 64) return; // ~60 fps cap on high-refresh screens
     lastT = now;
     const t0 = performance.now();
-    render(Math.min(dt, 0.05));
+    render(Math.min(dt, 0.05), Math.min(dt, 0.25));
     const ms = performance.now() - t0;
     E.ms = E.ms ? E.ms * 0.95 + ms * 0.05 : ms; // smoothed render time (ms), handy for checks
     adapt(ms);
@@ -394,7 +413,7 @@
       env.emit("still");
       return;
     }
-    unfoldStart();
+    arriveStart();
     if (E.capture) return; // tests drive frames with E.step()
     running = true; lastT = performance.now();
     G.requestAnimationFrame(loop);

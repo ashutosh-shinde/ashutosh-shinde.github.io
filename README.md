@@ -68,5 +68,8 @@ Every file starts with a comment that explains what it does and has a
   faint. Use `data-calm="0.6"` for a lighter effect. Animals are never faded:
   scenes draw them after the calm zones (the "top" pass) and size and place
   them so they stay clear of the text on any screen shape.
-- **Spiral collapse:** any link with `data-collapse` pulls the drawings into a
-  spiral toward the link before the page opens.
+- **Page changes:** any link with `data-collapse` pulls the drawings into the
+  link in half a second (the next page starts loading part-way through), and
+  the next page opens at once under a quick flash from the same spot. Timing:
+  `collapse`, `navAt` and `arrive` in `CFG` (`js/engine/engine.js`); the flash
+  is `.wq-arrive` in `css/site.css`.

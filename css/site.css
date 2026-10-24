@@ -4,7 +4,7 @@
    1. fonts            4. home (title, about card, social icons)
    2. design tokens    5. sections (text blocks, buttons, quote, form)
    3. base + board     6. other pages (about, section pages, comments)
-                       7. states (collapse, unfold, reduced motion)
+                       7. states (page changes, reduced motion)
    HOW TO EDIT: colours and sizes live in the tokens (section 2). Where a
    section's text sits on the screen is set per section in section 5.
    ============================================================================= */
@@ -204,14 +204,22 @@ body[data-scene="feedback"] .page__title { margin-top: clamp(72px, 14vh, 160px);
 .comments__note { margin-top: 28px; max-width: 36rem; color: var(--ink-3); }
 
 /* ---------------------------------------------------------------- 7. states */
-/* collapse into a link: the text fades while the drawings spiral in */
-.wq-collapsing main, .wq-collapsing .page__main, .wq-collapsing .back { opacity: 0; transition: opacity .45s ease; }
-/* arriving page: title fades in as the dust unfolds */
-.wq-unfolding .page__main { opacity: 0; }
-.page__main { transition: opacity .7s ease .25s; }
+/* leaving for another page: the text fades fast while the drawings are pulled into the link */
+.wq-collapsing main, .wq-collapsing .page__main, .wq-collapsing .back { opacity: 0; transition: opacity .2s ease; }
+/* arriving from another page of the site: a quick flash of chalk light from the spot where the
+   link was clicked, over the page, which is shown at once. html.wq-arrive and --fx / --fy are set
+   by a tiny script in <head>, so the flash starts with the first paint. */
+.wq-arrive body::after {
+  content: ""; position: fixed; z-index: 30; left: var(--fx, 50%); top: var(--fy, 50%); pointer-events: none;
+  width: 240vmax; height: 240vmax; margin: -120vmax 0 0 -120vmax; border-radius: 50%; opacity: 0;
+  background: radial-gradient(closest-side, rgb(255 253 246 / 0.95), rgb(255 253 246 / 0.55) 7%, rgb(246 244 236 / 0.16) 24%, rgb(246 244 236 / 0) 55%);
+  animation: wq-flash .55s cubic-bezier(.2, .75, .3, 1) both;
+}
+@keyframes wq-flash { from { transform: scale(.06); opacity: 1; } 30% { opacity: .9; } to { transform: scale(1); opacity: 0; } }
 /* reduced motion: everything is shown at once, nothing moves */
 .wq-still .hero__subtitle, .wq-still .hero__by, .wq-still .about-card, .wq-still .scroll-hint { opacity: 1 !important; transform: none !important; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .wq-arrive body::after { display: none; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

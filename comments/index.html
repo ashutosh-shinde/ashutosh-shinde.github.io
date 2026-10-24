@@ -10,7 +10,14 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0f0f'/%3E%3Cpath d='M16 16m-9 0a9 9 0 1 0 18 0a7 7 0 1 0-14 0a5 5 0 1 0 10 0a3 3 0 1 0-6 0' fill='none' stroke='%23f6f4ec' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="preload" href="../fonts/lm-roman-bold.woff" as="font" type="font/woff" crossorigin>
   <link rel="stylesheet" href="../css/site.css">
-  <script defer src="../js/data/equations.js"></script>
+  <!-- arriving from another page of the site: start the quick flash with the first paint (see .wq-arrive in site.css) -->
+  <script>
+    (function (e) {
+      try { var u = JSON.parse(sessionStorage.getItem("wq-unfold") || "null");
+        if (u && Date.now() - u.t < 6000 && !matchMedia("(prefers-reduced-motion: reduce)").matches) { e.classList.add("wq-arrive"); e.style.setProperty("--fx", (u.x * 100).toFixed(1) + "%"); e.style.setProperty("--fy", (u.y * 100).toFixed(1) + "%"); }
+      } catch (x) {}
+    })(document.documentElement);
+  </script>
   <script defer src="../js/lib/core.js"></script>
   <script defer src="../js/lib/chalk.js"></script>
   <script defer src="../js/lib/creatures.js"></script>

@@ -12,10 +12,17 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0f0f'/%3E%3Cpath d='M16 16m-9 0a9 9 0 1 0 18 0a7 7 0 1 0-14 0a5 5 0 1 0 10 0a3 3 0 1 0-6 0' fill='none' stroke='%23f6f4ec' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="preload" href="fonts/lm-roman-bold.woff" as="font" type="font/woff" crossorigin>
   <link rel="stylesheet" href="css/site.css">
-  <!-- before the first paint: hide the title so the intro can write it (only with JS and motion allowed) -->
+  <!-- before the first paint: hide the title so the intro can write it (only when the intro will play),
+       and start the quick flash when arriving from another page of the site -->
   <script>
-    (function (e) { e.classList.add("js");
-      try { if (!matchMedia("(prefers-reduced-motion: reduce)").matches && !/[?&]still=1/.test(location.search)) e.classList.add("intro"); } catch (x) {}
+    (function (e) {
+      e.classList.add("js");
+      var q = location.search, still = /[?&]still=1/.test(q), seen = false, u = null;
+      try { still = still || matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (x) {}
+      try { seen = sessionStorage.getItem("wq-intro") === "1"; u = JSON.parse(sessionStorage.getItem("wq-unfold") || "null"); } catch (x) {}
+      var skip = /[?&]intro=0(&|$)/.test(q) || (seen && !/[?&]intro=1(&|$)/.test(q));
+      if (!still && !skip) e.classList.add("intro");
+      if (!still && u && Date.now() - u.t < 6000) { e.classList.add("wq-arrive"); e.style.setProperty("--fx", (u.x * 100).toFixed(1) + "%"); e.style.setProperty("--fy", (u.y * 100).toFixed(1) + "%"); }
     })(document.documentElement);
   </script>
 
