@@ -17,7 +17,7 @@
   "use strict";
   const { L, CH, PTS } = G.WQ;
   const { lerp, clamp, smooth, Ease, TAU, mulberry32, fract } = L;
-  const INK = "246,244,236", BG = CH.BOARD, GREY = 0.62;
+  const INK = "246,244,236", BG = CH.BOARD, GREY = 0.7;
   const CYCLE_CARDS = 13, CYCLE_DICE = 4.2, CYCLE_GAME = 14, CYCLE_DOORS = 12.5, FLIP = 0.42;
   const EQS = ["kelly", "bayes", "expect", "nash", "minimax", "gambler", "binomial", "variance", "lanchester", "replicator"];
   const HAND = [["r_10", "s_sp"], ["r_J", "s_sp"], ["r_Q", "s_sp"], ["r_K", "s_sp"], ["r_A", "s_sp"]];
@@ -179,7 +179,7 @@
       outlines.length = 0; drawnAt = t;
       for (const s of slots) {
         const lt = t + s.ph, c = Math.floor(lt / s.per), u = (lt - c * s.per) / s.per, sp = slotSpot(s, c);
-        CH.write(ctx, sp.id, sp.px, sp.x, sp.y, smooth(0.02, 0.22, u), { alpha: a * (1 - smooth(0.82, 0.97, u)) * 0.15, tip: u < 0.22 });
+        CH.write(ctx, sp.id, sp.px, sp.x, sp.y, smooth(0.02, 0.22, u), { alpha: a * (1 - smooth(0.82, 0.97, u)) * 0.3, tip: u < 0.22 });
       }
       drawGame(ctx, a); drawDoors(ctx, a); drawCoin(ctx, a); drawDice(ctx, a); drawCards(ctx, a);
     }

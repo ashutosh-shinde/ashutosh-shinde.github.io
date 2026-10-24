@@ -202,10 +202,10 @@
     const q = Math.min(2, env.dpr), cv = document.createElement("canvas"); cv.width = Math.round(W * q); cv.height = Math.round(H * q);
     const c = cv.getContext("2d"); c.scale(q, q);
     const r = mulberry32(21);
-    // ghost equations (very faint)
-    c.globalAlpha = 0.05; c.filter = "blur(0.8px)";
-    for (const [id, x, y, px] of [["fokker_planck", 380, 470 + 40, 12], ["random_walk", 560, 515, 11], ["hopf", 820, 60, 12], ["diffusion", 40, 40, 12]]) VQ.draw(c, id, px * S, X(x), Y(y), { chalk: false, q });
-    c.filter = "none"; c.globalAlpha = 1;
+    // ghost equations (faint)
+    c.globalAlpha = 0.17;
+    for (const [id, x, y, px] of [["fokker_planck", 380, 470 + 40, 12], ["random_walk", 560, 515, 11], ["hopf", 820, 60, 12], ["diffusion", 40, 40, 12]]) VQ.draw(c, id, px * S, X(x), Y(y), { q });
+    c.globalAlpha = 1;
     // ground with tufts
     const lnc = (pts, w, a) => SM.line(c, pts.map(([x, y]) => [X(x), Y(y)]), w * S, a, INK);
     lnc([[236 + CX, GY], [960, GY]], 1.4, 0.7);
@@ -283,6 +283,25 @@
   }
 
   let SA = 1, tc = 0, t = 0, lp = null, mm = null, box = null;
+  /* Keep the drawings clear of the text block: where the cast can be, in design
+     units [x0, y0, x1, y1] (the cliff with him on it, the board with him and the
+     leopard, the leopard walking off). Moves the stage down, then a little left,
+     then shrinks it, until none of them is under the text. */
+  const ZONES = [[100, 36, 400, 470], [560, 236, 940, 470], [470, 380, 1000, 470]];
+  function fitStage() {
+    const S0 = S, m = 12, T0 = [box.x - m, box.y - m, box.x + box.w + m, box.y + box.h + m];
+    const under = (s, x, y) => ZONES.reduce((sum, [a, b, c, d]) => sum + Math.max(0, Math.min(x + c * s, T0[2]) - Math.max(x + a * s, T0[0])) * Math.max(0, Math.min(y + d * s, T0[3]) - Math.max(y + b * s, T0[1])), 0);
+    let best = null;
+    for (let s = S0; s >= S0 * 0.45; s *= 0.97) {
+      const x = (W - 960 * s) / 2, y0 = (H - 540 * s) / 2, y1 = Math.max(y0, H - 6 - 500 * s); // the water stays on screen
+      for (let dx = 0; dx <= Math.max(0, x + 60 * s); dx += 8) for (let y = y0; y <= y1 + 0.5; y += 4) {
+        const u = under(s, x - dx, y);
+        if (u === 0) { S = s; ox = x - dx; oy = y; return; }
+        if (!best || u < best[0]) best = [u, s, x - dx, y];
+      }
+    }
+    if (best) [, S, ox, oy] = best; // no clear spot (a very short screen): the least overlap
+  }
   function layout(e) {
     env = e; W = e.W; H = e.H;
     if (e.portrait) { // phones: full width, centred in the space under the text
@@ -291,7 +310,7 @@
       oy = top + Math.max(0, (room - 540 * S) * 0.55) - 150 * S;
       oy = Math.min(oy, H - 540 * S - H * 0.02);
     }
-    else { S = Math.min(W / 960, H / 540); ox = (W - 960 * S) / 2; oy = (H - 540 * S) / 2; }
+    else { S = Math.min(W / 960, H / 540); ox = (W - 960 * S) / 2; oy = (H - 540 * S) / 2; if (box) fitStage(); }
     rnd = mulberry32(9); grain = VQ.grain(); stage = buildStage();
     // chalk-dust targets: his figure at the board (t = 0)
     const r = mulberry32(4);
@@ -329,9 +348,9 @@
       p.poly("blog-ground", [[236 + CX, GY], [960, GY]].map(([x, y]) => [X(x), Y(y)]), 0.08).end();
     },
     draw(ctx, A, pass) {
-      if (pass !== "base") return;
       const tAbs = tc;
       SA = A; ctx.save(); ctx.globalAlpha = A;
+      if (pass === "top") { drawCast(ctx, tAbs); ctx.restore(); return; } // the explorer and the leopard are never faded by the text
       ctx.drawImage(stage, 0, 0, W, H);
       // ---- board writing (+ ghost eraser at reset)
       const wp = sm(0.4, 4.2, t), er = sm(28.0, 29.6, t);
@@ -350,6 +369,18 @@
       ctx.strokeStyle = `rgba(${INK},0.6)`; ctx.lineWidth = 1.3 * S; ctx.stroke();
       for (let k = 0; k < 3; k++) { ctx.beginPath(); const y0 = GEO.water + 14 + k * 14; for (let x = 6; x <= GEO.waterX - 12; x += 3) { const y = y0 + 1.5 * Math.sin(x * 0.25 + tAbs * 1.7 + k); x > 6 ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y)); } ctx.strokeStyle = `rgba(${INK},${0.18 - k * 0.04})`; ctx.stroke(); }
       ctx.restore();
+      ctx.restore();
+    },
+    // where the leopard and the explorer are (for layout checks): [[x0, y0, x1, y1], ...]
+    actors() {
+      const out = [];
+      if (lp) out.push(L.rigBBox(rig, 0));
+      if (mm) { const J = SM.joints(mm.p, rootM(mm.rx, mm.ry, mm.dir)), pts = [J.hip, J.sh, J.neckTop, J.head, ...J.legs.flat(), ...J.arms.flat()]; out.push([Math.min(...pts.map((q) => q[0])) - 8 * S, Math.min(...pts.map((q) => q[1])) - 14 * S, Math.max(...pts.map((q) => q[0])) + 8 * S, Math.max(...pts.map((q) => q[1])) + 4 * S]); }
+      return out;
+    },
+  };
+
+  function drawCast(ctx, tAbs) {
       // ---- rope coil, quickdraws, rope
       const ra = sm(14.4, 14.7, t) * (1 - sm(27.8, 29.0, t));
       if (ra > 0) {
@@ -413,8 +444,6 @@
         const fa = sm(31.0, 31.9, t);
         if (fa > 0) { const m0 = man(0.001); SM.draw(ctx, m0.p, rootM(m0.rx, m0.ry, m0.dir), { width: Math.max(1.3, 2 * S), alpha: fa, frames: "rect" }); }
       }
-      ctx.restore();
-    },
-  };
+  }
 };
 })(window);

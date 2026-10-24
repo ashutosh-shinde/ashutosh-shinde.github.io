@@ -65,6 +65,8 @@ Every file starts with a comment that explains what it does and has a
 - **Phones:** they get the same scenes with fewer particles, a smaller flock,
   and layouts arranged for portrait.
 - **Calm zones:** any element with `data-calm` keeps the drawings behind it
-  faint. Use `data-calm="0.6"` for a lighter effect.
+  faint. Use `data-calm="0.6"` for a lighter effect. Animals are never faded:
+  scenes draw them after the calm zones (the "top" pass) and size and place
+  them so they stay clear of the text on any screen shape.
 - **Spiral collapse:** any link with `data-collapse` pulls the drawings into a
   spiral toward the link before the page opens.

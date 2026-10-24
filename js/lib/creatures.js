@@ -325,7 +325,7 @@
     bez(c, t) { const m = 1 - t; return [m * m * m * c[0][0] + 3 * m * m * t * c[1][0] + 3 * m * t * t * c[2][0] + t * t * t * c[3][0], m * m * m * c[0][1] + 3 * m * m * t * c[1][1] + 3 * m * t * t * c[2][1] + t * t * t * c[3][1]]; },
     fur: null,
     // static fur field: [u, v, angle, len, brightness]
-    makeFur(n = 1500) {
+    makeFur(n = 2600) {
       const r = G.WQ.L.mulberry32(5), nz = G.WQ.L.makeNoise(9), out = [];
       while (out.length < n) {
         const u = (r() * 2 - 1) * 2.7, v = (r() * 2 - 1) * 2.0;
@@ -337,7 +337,7 @@
         let b = 0.42 + 0.12 * nz.n2(u * 3, v * 3);
         if (v < -0.42 && v > -1.15 && Math.abs(u + 0.1) < 0.95) b = 0.88;               // white brow patch
         const st = Math.sin(4.2 * (u * 0.55 + v * 0.95) + 1.6 * nz.n2(u * 1.3, v * 1.3));  // stripes
-        if (st > 0.62 && !(v < -0.42 && v > -1.15 && Math.abs(u + 0.1) < 0.95)) b = 0.06;
+        if (st > 0.5 && !(v < -0.42 && v > -1.15 && Math.abs(u + 0.1) < 0.95)) b = 0.06;
         if (Math.abs(u) < 1.1 && (Math.abs(v - up) < 0.18 || Math.abs(v - lo) < 0.14)) b = 0.04; // dark rim
         if (u < -1 && u > -1.5 && v > 0.05 && v < 0.6 && Math.abs(v - 0.05 - (-(u + 1)) * 0.9) < 0.12) b = 0.03; // tear line
         out.push([u, v, ang, 0.07 + r() * 0.13, b, r() * 6.28]);

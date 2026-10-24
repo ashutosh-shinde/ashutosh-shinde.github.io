@@ -20,7 +20,7 @@
     "w_hilbert", "w_banach", "w_topology", "w_homeo", "w_linalg", "w_eigen", "w_complex", "w_holo", "w_fourier", "w_manifold", "w_group",
     "w_measure", "w_chaos", "w_attractor", "w_bifurcation", "w_fractal", "w_infinity", "w_primes", "w_symmetry", "w_number", "w_probability"];
   // depth layers: font size (px at 1x), rising speed (px/s at 1x), brightness, share of items
-  const LAYERS = [{ px: 12, v: 11, a: 0.13, n: 0.42 }, { px: 16.5, v: 19, a: 0.22, n: 0.36 }, { px: 23, v: 30, a: 0.34, n: 0.22 }];
+  const LAYERS = [{ px: 12, v: 11, a: 0.21, n: 0.42 }, { px: 16.5, v: 19, a: 0.33, n: 0.36 }, { px: 23, v: 30, a: 0.48, n: 0.22 }];
 
   (G.WQ.scenes = G.WQ.scenes || {}).elementary = function (env0) {
     let env = env0, W = 0, H = 0, S = 1, portrait = false, mobile = false, box = null, built = false, t = 0;
@@ -114,8 +114,8 @@
         const ph = lorXY(lor[head]); ctx.fillStyle = `rgba(255,253,244,${0.9 * a})`; ctx.beginPath(); ctx.arc(ph[0], ph[1], 2.6 * Math.max(0.8, S), 0, TAU); ctx.fill();
         ctx.restore();
         const lab = 12 * Math.max(0.85, Math.min(S, 1.4));
-        CH.draw(ctx, "w_lorenz", lab, (lp.x0 + lp.x1) / 2, lp.y1 + 14 * S, { alpha: a * 0.4, align: "center" });
-        CH.draw(ctx, "lorenz", lab * 0.9, (lp.x0 + lp.x1) / 2, lp.y0 - 4 * S, { alpha: a * 0.3, align: "center" });
+        CH.draw(ctx, "w_lorenz", lab, (lp.x0 + lp.x1) / 2, lp.y1 + 14 * S, { alpha: a * 0.58, align: "center" });
+        CH.draw(ctx, "lorenz", lab * 0.9, (lp.x0 + lp.x1) / 2, lp.y0 - 4 * S, { alpha: a * 0.48, align: "center" });
         // bifurcation diagram: computed left → right, then rests and starts over
         const cyc = 20, u = fract(t / cyc), rev = Ease.inOut(clamp(u / 0.55, 0, 1)), fade = 1 - smooth(0.9, 1, u);
         const bw = bif.x1 - bif.x0, bh = bif.y1 - bif.y0;
@@ -132,8 +132,8 @@
           ctx.fillStyle = `rgba(255,253,244,${0.9 * a})`;
           for (let k = 0; k < 24; k++) { v = r * v * (1 - v); ctx.beginPath(); ctx.arc(x, bif.y0 + (1 - v) * bh, 1.6 * Math.max(0.8, S), 0, TAU); ctx.fill(); }
         }
-        CH.draw(ctx, "w_logmap", lab, (bif.x0 + bif.x1) / 2, bif.y1 + 14 * S, { alpha: a * 0.4, align: "center" });
-        CH.draw(ctx, "logistic_map", lab * 0.9, (bif.x0 + bif.x1) / 2, bif.y0 - 12 * S, { alpha: a * 0.3, align: "center" });
+        CH.draw(ctx, "w_logmap", lab, (bif.x0 + bif.x1) / 2, bif.y1 + 14 * S, { alpha: a * 0.58, align: "center" });
+        CH.draw(ctx, "logistic_map", lab * 0.9, (bif.x0 + bif.x1) / 2, bif.y0 - 12 * S, { alpha: a * 0.48, align: "center" });
       },
       points(out, n) {
         const p = PTS.begin(out, n);

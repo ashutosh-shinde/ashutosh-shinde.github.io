@@ -70,8 +70,10 @@ p { margin: 0.7em 0 0; }
 .social svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 
 /* the hero block: WildQuant written in chalk, subtitle, name, about card */
-.hero { margin-top: clamp(96px, 21vh, 230px); max-width: min(46rem, 52vw); }
-.hero__title { font-size: clamp(56px, 7.6vw + 12px, 148px); line-height: 1; position: relative; display: inline-block; padding: 0.04em 0.02em 0.1em; }
+/* sizes follow the screen height too, so on short or very wide screens the
+   block stays compact and the chase below it keeps its strip */
+.hero { margin-top: clamp(40px, calc(38vh - 150px), 230px); max-width: min(46rem, 52vw); }
+.hero__title { font-size: clamp(56px, min(7.6vw + 12px, 15vh + 6px), 148px); line-height: 1; position: relative; display: inline-block; padding: 0.04em 0.02em 0.1em; }
 .chalk-text {
   display: inline-block; color: rgb(var(--ink) / 0.96);
   background-image: var(--chalk); background-size: 240px 240px;
@@ -82,10 +84,10 @@ p { margin: 0.7em 0 0; }
 .has-chalk .chalk-text { color: transparent; }
 .chalk-tip { position: absolute; top: 46%; left: calc(var(--reveal) * 100%); width: 0.09em; height: 0.09em; border-radius: 50%; background: #fffdf4; box-shadow: 0 0 14px 4px rgb(255 253 240 / 0.45); opacity: 0; pointer-events: none; }
 .writing .chalk-tip { opacity: 1; }
-.hero__subtitle { font-family: var(--serif); font-style: italic; font-size: clamp(19px, 1.2vw + 13px, 30px); color: var(--ink-1); margin-top: 0.35em; line-height: 1.25; }
+.hero__subtitle { font-family: var(--serif); font-style: italic; font-size: clamp(19px, min(1.2vw + 13px, 2.2vh + 12px), 30px); color: var(--ink-1); margin-top: 0.35em; line-height: 1.25; }
 .hero__by { font-family: var(--caps); font-size: clamp(15px, 0.5vw + 12px, 20px); letter-spacing: 0.08em; color: var(--ink-3); margin-top: 0.55em; }
 .about-card {
-  display: inline-grid; grid-template-columns: auto auto; column-gap: 18px; align-items: center; margin-top: 26px;
+  display: inline-grid; grid-template-columns: auto auto; column-gap: 18px; align-items: center; margin-top: clamp(14px, 3.4vh, 26px);
   padding: 12px 18px 12px 20px; border: 1px solid var(--line); border-radius: var(--radius); text-decoration: none;
   background: rgb(13 15 15 / 0.35); transition: background-color .25s, border-color .25s, transform .25s;
 }
@@ -159,6 +161,13 @@ p { margin: 0.7em 0 0; }
 .site-footer a { text-decoration: none; }
 .site-footer a:hover { color: var(--ink-1); text-decoration: underline; text-underline-offset: 3px; }
 
+/* short desktop windows: a more compact form, so the snow leopard can walk in below it */
+@media (max-height: 720px) and (min-width: 761px) {
+  .feedback { margin-top: clamp(36px, 6vh, 140px); }
+  .comment-form { margin-top: 12px; }
+  .comment-form textarea { min-height: 92px; }
+  .comment-form .btn { margin-top: 12px; }
+}
 /* phones and narrow windows: every text block sits at the top, full width */
 @media (max-width: 760px) {
   .hero { max-width: 100%; margin-top: clamp(76px, 13vh, 130px); }
@@ -168,10 +177,14 @@ p { margin: 0.7em 0 0; }
   .panel--feedback { align-items: stretch; }
   .site-footer { flex-direction: column; }
 }
-/* short landscape phones: smaller title so the chase keeps its strip */
+/* short landscape screens (phones on their side): a compact title block so the chase keeps its strip */
 @media (max-height: 520px) and (orientation: landscape) {
-  .hero { margin-top: 56px; }
-  .hero__title { font-size: clamp(44px, 6vw, 76px); }
+  .panel--home { padding-top: 34px; }
+  .hero { margin-top: 6px; }
+  .hero__title { font-size: clamp(38px, min(6vw, 11vh), 70px); }
+  .hero__subtitle { font-size: 17px; margin-top: 0.2em; }
+  .hero__by { font-size: 14px; margin-top: 0.3em; }
+  .about-card { margin-top: 10px; padding: 7px 14px 7px 16px; }
   .panel__text, .panel__text--center, .panel__text--top { margin-top: 28px; }
 }
 

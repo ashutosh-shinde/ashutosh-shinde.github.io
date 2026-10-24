@@ -28,6 +28,9 @@
      points(out, n)         n live points (CSS px) on its drawings, for the dust
      still                  clock time shown to reduced-motion visitors
      enter()                optional: first time the scene becomes visible
+     actors()               optional: boxes [[x0,y0,x1,y1], ...] around its animals
+                            (for layout checks: animals belong in the "top" pass,
+                            placed clear of the text)
    HOW TO EDIT: the numbers in CFG.
    ============================================================================= */
 (function (G) {

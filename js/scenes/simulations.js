@@ -15,12 +15,13 @@
 (function (G) {
   "use strict";
   const { L, C, CH, PTS } = G.WQ;
-  const { lerp, clamp, smooth, Ease, TAU, Rig, drawOutline, mulberry32, fract, makeNoise, gauss } = L;
+  const { lerp, clamp, smooth, Ease, TAU, Rig, drawOutline, mulberry32, fract, makeNoise, gauss, rigBBox } = L;
   const INK = "246,244,236", BG = CH.BOARD;
   const PACK = [{ x: 0.5, d: 0, ph: 0.0 }, { x: 0.3, d: 1, ph: 0.37 }, { x: 0.12, d: 0.45, ph: 0.71 }]; // base x (fraction), depth, gait phase
   const PACK_PHONE = [{ x: 0.47, d: 0, ph: 0.0 }, { x: 0.15, d: 0.6, ph: 0.45 }];                       // phones: two wolves
   const BIRDS = { desktop: 130, phone: 46 };
-  const GRAPH_A = 0.26;     // how bright the background graphs are
+  const GRAPH_A = 0.32;     // how bright the background graphs are
+  const EQ_A = 0.34;        // how bright the equations are
   const EQS = ["lv_inline", "logistic", "vicsek", "pursuit", "replicator", "ou", "fokker_planck", "comp_lv", "random_walk", "diffusion", "lanchester", "ito"];
   const LV = { a: 1, b: 0.5, g: 0.75, d: 0.25, XM: 9.5, YM: 6.4 };
 
@@ -56,6 +57,7 @@
       GY = portrait ? H * 0.9 : H * 0.87;
       SC = portrait ? W * 0.0026 : Math.min(W / 900, H / 520) * 0.95;
       pack = portrait ? PACK_PHONE : PACK;
+      fitPack();
       V = W * (portrait ? 0.95 : 0.7);
       const tb = box || { x: W * 0.06, y: H * 0.14, w: W * 0.4, h: H * 0.3 }; // the text block
       const top = portrait ? tb.y + tb.h + H * 0.03 : H * 0.07;
@@ -73,6 +75,20 @@
         panels.ts = { x0: W * 0.36, x1: W * 0.62, y0: gy0 + gh * 0.1, y1: gy0 + gh * 0.9 };
         panels.sde = { x0: W * 0.7, x1: W * 0.95, y0: gy0, y1: gy0 + gh };
       }
+    }
+    /* The chase must stay clear of the text block on every screen shape: an animal
+       whose path runs under the text fits between the text and the ground (it
+       shrinks a little, and the ground drops a little, on short screens).
+       Heights in creature units, measured from the rigs. */
+    function fitPack() {
+      if (!box) return;
+      const want = SC, gy0 = GY, top = box.y + box.h + 14, bx0 = box.x - 10, bx1 = box.x + box.w + 10, under = (x0, x1) => x1 > bx0 && x0 < bx1;
+      const xs = pack.map((w) => w.x), lo = Math.min(...xs) - 0.03, hi = Math.max(...xs) + 0.07, hx = portrait ? 0.8 : 0.72;
+      const ok = (sc, gy) => !(under(W * lo - 97 * sc, W * hi + 80 * sc) && gy - 12 * S - 97 * sc < top) &&
+                             !(under(W * (hx - 0.055) - 61 * sc, W * (hx + 0.055) + 40 * sc) && gy - 58 * sc < top);
+      const best = (gy, floor) => { let sc = want; while (sc > want * floor && !ok(sc, gy)) sc *= 0.98; return ok(sc, gy) ? sc : 0; };
+      for (const f of [0, 0.015, 0.03, 0.045]) { const sc = best(gy0 + H * f, 0.78); if (sc) { GY = gy0 + H * f; SC = sc; return; } }
+      GY = gy0 + H * 0.045; SC = best(GY, 0.45) || want * 0.45;
     }
     function build() {
       const r = mulberry32(31);
@@ -124,6 +140,10 @@
         nz.curl(b.x * 0.003, b.y * 0.003, tt * 0.15, nn); ax += nn[0] * 60; ay += nn[1] * 60;
         const wk = portrait ? 18 : 8;
         if (b.y < fb.y0) ay += (fb.y0 - b.y) * 12; if (b.y > fb.y1) ay -= (b.y - fb.y1) * 12; if (b.x < fb.x0) ax += (fb.x0 - b.x) * wk; if (b.x > fb.x1) ax -= (b.x - fb.x1) * wk;
+        if (box) { // never fly behind the text: a bird that strays near it is pushed back out
+          const m = 30 * Math.max(0.7, S), ex = Math.min(b.x - (box.x - m), box.x + box.w + m - b.x), ey = Math.min(b.y - (box.y - m), box.y + box.h + m - b.y);
+          if (ex > 0 && ey > 0) { if (ex < ey) ax += (b.x < box.x + box.w / 2 ? -1 : 1) * (40 + ex * 40); else ay += (b.y < box.y + box.h / 2 ? -1 : 1) * (40 + ey * 40); }
+        }
         const fx = b.x - falcon.x, fy = b.y - falcon.y, fd = Math.hypot(fx, fy);
         if (fd < 90) { ax += (fx / fd) * 900 * (1 - fd / 90); ay += (fy / fd) * 900 * (1 - fd / 90); }
         b.vx += ax * dt; b.vy += ay * dt;
@@ -192,12 +212,13 @@
         C.hare.record(rH, C.root(hx, GY, SC * 1.15), "hop", tt / 0.42);
       },
       draw(ctx, a, pass) {
-        if (!built || pass !== "base") return;
+        if (!built) return;
         const tt = t;
+        if (pass === "top") { drawAnimals(ctx, a, tt); return; } // the animals are never faded by the text
         // equations that write themselves, rest and fade
         for (const s of slots) {
           const lt = tt + s.ph, c = Math.floor(lt / s.per), u = (lt - c * s.per) / s.per, sp = slotSpot(s, c);
-          const al = (1 - smooth(0.82, 0.97, u)) * 0.17;
+          const al = (1 - smooth(0.82, 0.97, u)) * EQ_A;
           CH.write(ctx, sp.id, sp.px, sp.x, sp.y, smooth(0.02, 0.22, u), { alpha: a * al, tip: u < 0.22 });
         }
         // the three living graphs
@@ -212,16 +233,12 @@
         }
         ctx.strokeStyle = `rgba(${INK},${0.25 * a})`; ctx.stroke();
         for (const d of dust) { ctx.fillStyle = `rgba(${INK},${0.22 * d.life * a})`; ctx.beginPath(); ctx.arc(d.wx - camX, d.y, d.r * (1.6 - d.life), 0, TAU); ctx.fill(); }
-        // wolves (back to front) and the hare
-        const order = pack.map((w, i) => i).sort((i, j) => pack[j].d - pack[i].d);
-        for (const i of order) drawOutline(ctx, rW[i], { width: 1.35 * Math.max(1, S * 0.8), color: `rgb(${INK})`, alpha: a * (1 - 0.28 * pack[i].d), occlude: 0.95, bg: BG, far: 0.45, grain: CH.grain(), grainA: 0.5 });
-        drawOutline(ctx, rH, { width: 1.3 * Math.max(1, S * 0.8), color: `rgb(${INK})`, alpha: a, occlude: 0.92, bg: BG, far: 0.45, grain: CH.grain(), grainA: 0.5 });
-        // flock + falcon
-        ctx.strokeStyle = `rgba(${INK},${0.72 * a})`; ctx.lineWidth = 1; ctx.beginPath();
-        const bs = Math.max(0.8, S);
-        for (const b of birds) C.bird(ctx, b.x, b.y, (3.2 + b.r * 1.6) * bs, b.f, Math.atan2(b.vy, b.vx) * 0.3);
-        ctx.stroke();
-        if (falcon.on) { ctx.strokeStyle = `rgba(${INK},${0.95 * a})`; ctx.lineWidth = 1.5; ctx.beginPath(); C.bird(ctx, falcon.x, falcon.y, 9 * bs, tt * 6, -0.4); ctx.stroke(); }
+      },
+      // where the animals are (for layout checks): [[x0, y0, x1, y1], ...]
+      actors() {
+        const out = rW.slice(0, pack.length).map((r) => rigBBox(r, 0)).concat([rigBBox(rH, 0)]), bs = Math.max(0.8, S);
+        for (const b of birds) { const s = (3.2 + b.r * 1.6) * bs; out.push([b.x - s, b.y - s, b.x + s, b.y + s]); }
+        return out;
       },
       points(out, n) {
         const p = PTS.begin(out, n);
@@ -233,5 +250,18 @@
         p.poly("sim-ground", [[0, GY + 1], [W, GY + 1]], 0.1).end();
       },
     };
+
+    function drawAnimals(ctx, a, tt) {
+        // wolves (back to front) and the hare
+        const order = pack.map((w, i) => i).sort((i, j) => pack[j].d - pack[i].d);
+        for (const i of order) drawOutline(ctx, rW[i], { width: 1.35 * Math.max(1, S * 0.8), color: `rgb(${INK})`, alpha: a * (1 - 0.28 * pack[i].d), occlude: 0.95, bg: BG, far: 0.45, grain: CH.grain(), grainA: 0.5 });
+        drawOutline(ctx, rH, { width: 1.3 * Math.max(1, S * 0.8), color: `rgb(${INK})`, alpha: a, occlude: 0.92, bg: BG, far: 0.45, grain: CH.grain(), grainA: 0.5 });
+        // flock + falcon
+        ctx.strokeStyle = `rgba(${INK},${0.72 * a})`; ctx.lineWidth = 1; ctx.beginPath();
+        const bs = Math.max(0.8, S);
+        for (const b of birds) C.bird(ctx, b.x, b.y, (3.2 + b.r * 1.6) * bs, b.f, Math.atan2(b.vy, b.vx) * 0.3);
+        ctx.stroke();
+        if (falcon.on) { ctx.strokeStyle = `rgba(${INK},${0.95 * a})`; ctx.lineWidth = 1.5; ctx.beginPath(); C.bird(ctx, falcon.x, falcon.y, 9 * bs, tt * 6, -0.4); ctx.stroke(); }
+    }
   };
 })(window);
