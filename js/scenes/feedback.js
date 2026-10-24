@@ -12,28 +12,23 @@
           (a slow blink is how cats say they trust you), tail tip flicking
    The Comments page uses the same scene, already in its final, sitting state.
    The animals are drawn above the text's calm zone and placed around the text.
-   HOW TO EDIT: timeline T, layout in layout(), SNOW (how heavy), IBEX, BIRDS.
+   HOW TO EDIT: timeline T, layout in layout(), IBEX, BIRDS; the snow itself
+   (how heavy) is LAYERS in js/lib/snowfall.js.
    ============================================================================= */
 (function (G) {
   "use strict";
   const { L, C, CH, PTS } = G.WQ;
-  const { lerp, clamp, smooth, Ease, TAU, Rig, drawOutline, blendPose, mulberry32, makeNoise, rigBBox } = L;
+  const { lerp, clamp, smooth, Ease, Rig, drawOutline, blendPose, mulberry32, rigBBox } = L;
   const INK = "246,244,236", BG = CH.BOARD;
   const T = { leoIn: 3.0, alert: 4.6, startle: 5.6, flip: 5.78, flee: 6.0, arrive: 9.0, sit: 10.3, turn: 10.8, final: 13 };
   const BIRDS = { first: 1.5, every: 11, n: 7 };
-  // snow in three depths: flakes (desktop, phone), size px, fall speed px/s, brightness, how much the wind moves it
-  const SNOW = [
-    { n: 620, nm: 260, s: [1.0, 1.7], v: [18, 32], a: 0.42, wind: 0.5 },  // far
-    { n: 270, nm: 120, s: [1.7, 2.7], v: [40, 66], a: 0.62, wind: 0.85 }, // middle
-    { n: 72, nm: 32, s: [3.0, 5.0], v: [90, 135], a: 0.8, wind: 1.25 },   // near: soft, falls in front of the animals
-  ];
   const IBEX = { speed: 240, stride: 140, accel: 0.3, fade: 0.12 }; // flee speed and stride (px at S = 1), s to reach speed, s to vanish
 
   (G.WQ.scenes = G.WQ.scenes || {}).feedback = function (env0, opts = {}) {
     let env = env0, W = 0, H = 0, S = 1, portrait = false, mobile = false, box = null, built = false;
     let t = 0, off = opts.final ? T.final : 0, GY, SC, slope = [], slopeLeft = true, xSit, stage = null;
-    let snow = [], dot = null, birdLo = 0, birdHi = 0, birdsNow = [], gradOverall = 0, xHome = 0, dirRun = -1;
-    const rLeo = new Rig(), rHead = new Rig(), rIbex = new Rig(), nz = makeNoise(12);
+    let snow = null, birdLo = 0, birdHi = 0, birdsNow = [], gradOverall = 0, xHome = 0, dirRun = -1;
+    const rLeo = new Rig(), rHead = new Rig(), rIbex = new Rig();
     let leo = null, ibex = null, turnK = 0, faceAt = null, ibexGone = -1, ibexA = 1, enterLeft = false;
 
     /* ---------------------------------------------------------- layout & static stage */
@@ -118,68 +113,9 @@
       return cv;
     }
 
-    /* ---------------------------------------------------------- snow */
-    function makeSnow() {
-      const r = mulberry32(5), k = Math.max(0.8, S), ks = Math.max(0.85, S * 0.8);
-      snow = SNOW.map((Ly) => {
-        const n = mobile ? Ly.nm : Ly.n, f = new Float32Array(n * 5);
-        for (let i = 0; i < n; i++) { f[5 * i] = r() * W; f[5 * i + 1] = r() * H; f[5 * i + 2] = lerp(Ly.v[0], Ly.v[1], r()) * k; f[5 * i + 3] = lerp(Ly.s[0], Ly.s[1], r()) * ks; f[5 * i + 4] = r() * TAU; }
-        return f;
-      });
-      if (!dot) { // a soft snowflake, used for the near layer
-        dot = document.createElement("canvas"); dot.width = dot.height = 32;
-        const g = dot.getContext("2d"), gr = g.createRadialGradient(16, 16, 0, 16, 16, 16);
-        gr.addColorStop(0, "rgba(255,255,252,1)"); gr.addColorStop(0.45, "rgba(255,255,252,0.55)"); gr.addColorStop(1, "rgba(255,255,252,0)");
-        g.fillStyle = gr; g.fillRect(0, 0, 32, 32);
-      }
-    }
-    let gust = 0;
-    function stepSnow(dt) {
-      const r = env.rand;
-      gust = 24 * Math.max(0.8, S) * (0.5 + 0.3 * Math.sin(t * 0.21) + 0.5 * nz.n2(t * 0.35, 1.7));
-      SNOW.forEach((Ly, li) => {
-        const f = snow[li], n = f.length / 5;
-        for (let i = 0; i < n; i++) {
-          f[5 * i + 1] += f[5 * i + 2] * dt;
-          f[5 * i] += (gust * Ly.wind + 9 * (1 + li * 0.6) * Math.sin(t * (0.8 + 0.3 * li) + f[5 * i + 4])) * dt;
-          if (f[5 * i + 1] > H + 8) { f[5 * i + 1] = -8; f[5 * i] = r() * W; }
-          if (f[5 * i] > W + 8) f[5 * i] -= W + 16; else if (f[5 * i] < -8) f[5 * i] += W + 16;
-        }
-      });
-    }
-    function drawSnow(ctx, a, li) {
-      const f = snow[li], n = f.length / 5;
-      if (li === 0) { // far: fine specks
-        const p = new Path2D();
-        for (let i = 0; i < n; i++) { const s = f[5 * i + 3]; p.rect(f[5 * i] - s / 2, f[5 * i + 1] - s / 2, s, s); }
-        ctx.fillStyle = `rgba(${INK},${SNOW[0].a * a})`; ctx.fill(p); return;
-      }
-      // middle: short soft streaks along the fall (the blur of a fast flake)
-      const thin = new Path2D(), thick = new Path2D(), k = 0.03, wx = gust * SNOW[li].wind + 0;
-      for (let i = 0; i < n; i++) {
-        const x = f[5 * i], y = f[5 * i + 1], v = f[5 * i + 2], q = f[5 * i + 3] < 2.2 ? thin : thick;
-        q.moveTo(x - wx * k, y - v * k); q.lineTo(x, y);
-      }
-      ctx.save(); ctx.lineCap = "round"; ctx.strokeStyle = `rgba(${INK},${SNOW[li].a * a})`;
-      ctx.lineWidth = 1.8 * Math.max(0.85, S * 0.8); ctx.stroke(thin); ctx.lineWidth = 2.6 * Math.max(0.85, S * 0.8); ctx.stroke(thick);
-      ctx.restore();
-    }
-    // near flakes are drawn over everything except the text: they thin out around it
-    function clearOfText(x, y) {
-      if (!box) return 1;
-      const sy = opts.page ? G.scrollY : 0, dx = Math.max(box.x - x, 0, x - box.x - box.w), dy = Math.max(box.y - sy - y, 0, y - (box.y - sy + box.h));
-      return smooth(4, 44, Math.hypot(dx, dy));
-    }
-    function drawNearSnow(ctx, a) {
-      const f = snow[2], n = f.length / 5;
-      ctx.save();
-      for (let i = 0; i < n; i++) {
-        const x = f[5 * i], y = f[5 * i + 1], s = f[5 * i + 3], k = clearOfText(x, y);
-        if (k < 0.02) continue;
-        ctx.globalAlpha = SNOW[2].a * a * k; ctx.drawImage(dot, x - s, y - s, 2 * s, 2 * s);
-      }
-      ctx.restore();
-    }
+    /* ---------------------------------------------------------- snow (js/lib/snowfall.js) */
+    // the nearest flakes fall in front of the animals but thin out around the text
+    const clearOfText = G.WQ.Snowfall.clearOf(() => box, opts.page);
 
     /* ---------------------------------------------------------- the animals */
     function leopardState(tl) {
@@ -247,12 +183,12 @@
       still: T.final + 1.4,
       resize(e, b) {
         env = e; W = e.W; H = e.H; portrait = e.portrait; mobile = e.mobile; box = b || box;
-        layout(); stage = buildStage(); makeSnow(); built = true;
+        layout(); stage = buildStage(); snow = G.WQ.Snowfall.make(env); built = true;
       },
       update(dt, tt) {
         if (!built) return;
         t = tt + off;
-        stepSnow(dt);
+        snow.step(dt, t);
         birdsAt(t);
         leo = leopardState(t); ibex = ibexState(t);
         if (leo) {
@@ -275,7 +211,7 @@
         if (!built) return;
         if (pass === "base") { // scenery and the far snow (calmed behind the text)
           ctx.save(); ctx.globalAlpha = a; ctx.drawImage(stage, 0, 0, W, H); ctx.restore();
-          drawSnow(ctx, a, 0); drawSnow(ctx, a, 1);
+          snow.draw(ctx, a, 0); snow.draw(ctx, a, 1);
           return;
         }
         // top pass: the animals are never faded by the text (they are placed clear of it)
@@ -293,7 +229,7 @@
             if (faceAt) C.snow.face(ctx, faceAt.c[0], faceAt.c[1], faceAt.s, { open: blinkAt(t), turn: turnK, alpha: a * turnK, bg: BG });
           }
         }
-        drawNearSnow(ctx, a);
+        snow.drawNear(ctx, a, clearOfText);
       },
       // where the animals are (for layout checks): [[x0, y0, x1, y1], ...]
       actors() {

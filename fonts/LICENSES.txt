@@ -1,6 +1,7 @@
 Fonts in this folder (subsets, WOFF):
 
   lm-roman-*.woff  Latin Modern Roman — (c) GUST e-foundry, GUST Font License (LPPL 1.3c)
+  lm-math.woff     Latin Modern Math (maths symbols only; root sign raised onto the text line) — (c) GUST e-foundry, GUST Font License (LPPL 1.3c)
   inter-*.woff     Inter — (c) 2016-2023 The Inter Project Authors, SIL Open Font License 1.1
 
 ================ GUST FONT LICENSE (Latin Modern) ================

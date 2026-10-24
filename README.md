@@ -23,14 +23,19 @@ double-click blocks the fonts.
 | What | File |
 |---|---|
 | Home page text, links, section texts, the comment box | `index.html` |
-| Section pages (blank for now) | `about/`, `simulations/`, `elementary-mathematics/`, `blogs/` → each has an `index.html` |
+| Section pages (blank for now) | `about/`, `simulations/`, `blogs/` → each has an `index.html` |
+| Elementary Mathematics: title, index and the list of chapters | `elementary-mathematics/index.html` |
+| A chapter (one folder each) | `elementary-mathematics/what-is-infinity/index.html` |
 | Comments page | `comments/index.html` |
 | Colours, fonts, sizes, where each section's text sits | `css/site.css` (tokens at the top) |
-| The scroll / dust / calm-zone / spiral-collapse engine | `js/engine/engine.js` (settings in `CFG`) |
-| The six scenes | `js/scenes/home.js`, `simulations.js`, `elementary.js`, `lab.js`, `blog.js`, `feedback.js` |
+| The scroll / dust / calm-zone / page-change engine | `js/engine/engine.js` (settings in `CFG`) |
+| The six home-page scenes | `js/scenes/home.js`, `simulations.js`, `elementary.js`, `lab.js`, `blog.js`, `feedback.js` |
+| Page backgrounds: drifting pure maths (Elementary Mathematics), snow on grass (chapters) | `js/scenes/pure.js`, `js/scenes/snowfield.js` |
+| Falling chalk snow (Feedback, Comments, chapters) | `js/lib/snowfall.js` |
 | Animals (hare, wolf, deer, tiger, leopard, owl, ibex, snow leopard, eye) | `js/lib/creatures.js` |
 | The explorer (stick figure with glasses and backpack) | `js/lib/explorer.js` |
-| Chalk equations, chalk lines, blackboard texture | `js/lib/chalk.js` + `js/data/equations.js` (generated) |
+| Chalk equations, chalk lines, blackboard texture | `js/lib/chalk.js` + `js/data/equations.js` and `js/data/pure.js` (both generated) |
+| Fonts (small subsets) and their licences | `fonts/` + `fonts/LICENSES.txt` |
 | Comment storage (Google Sheet) | `js/comments.js` + `tools/comments-google-apps-script.gs` |
 | Old site | `trash/` (not linked anywhere) |
 
@@ -51,15 +56,66 @@ Every file starts with a comment that explains what it does and has a
   2. Run `python3 tools/make_equations.py`. This needs LaTeX
      (`pdflatex` and `pdftocairo`).
   3. Use the new id in a scene.
+- **Add or change a drifting note on the Elementary Mathematics page:** edit
+  `PURE` in `tools/make_equations.py` and run
+  `python3 tools/make_equations.py pure`. Every entry appears on the page by
+  itself. Ids starting with `n_` are theorem names, the rest are formulas.
+- **Add a chapter to Elementary Mathematics:**
+  1. Copy the folder `elementary-mathematics/what-is-infinity/` to a new
+     folder, for example `elementary-mathematics/my-new-idea/`.
+  2. Write the chapter in the new folder's `index.html`: title, date, text.
+  3. In `elementary-mathematics/index.html`, add a line to the index and copy
+     a `<section class="chapter">` for it (a comment there shows how).
+- **Write maths in a chapter** (it is set in Latin Modern, like LaTeX):
+  - inline: `<span class="m"><i>f</i> : ℕ → ℝ</span>`, with letters in
+    `<i>` and `<sub>` / `<sup>` for indices and powers
+  - root: `<span class="m">√<span class="rt">2</span></span>`
+  - fraction: `<span class="frac"><span>1</span><span>2</span></span>`
+  - on its own centred line: `<p class="math"><span class="m">…</span></p>`
+  - theorem and proof: `<div class="theorem">…</div>`,
+    `<div class="proof">…<span class="qed">∎</span></div>`
+  - the maths font has `ℕ ℚ ℝ ℤ ∅ ∈ ∉ ∋ ∌ ⊂ ⊃ ⊆ ⊇ ∪ ∩ → ↦ ⇒ ⇔ ∀ ∃ ≤ ≥ ≠ ≡ ∞ √ ℵ
+    − × · … ⋯ ∖ ∣ ∎ 𝒫 𝜋 𝜑 𝜀 𝛿`; other symbols use the text font.
 - **Timing of a scene:** the timeline constants (`T = {...}`) are at the top of
   each scene file.
 - **Speed and quality:** `CFG` in `js/engine/engine.js` sets the pixel budget
   and the number of particles. The engine also lowers quality by itself on slow
   devices.
 
+## Adding a page
+
+Every page of the site opens and closes with the same animation: a click on a
+link pulls the drawings into the link, and the next page opens under a quick
+flash from the same spot. A new page gets this, and the blackboard, by being
+built like the others. The easiest way is to copy a page and change it: copy
+`about/index.html` for a plain page, or a chapter for a long read. If you
+build one from scratch, it needs all of these:
+
+1. **In `<head>`:** `../css/site.css` and the small inline `<script>` marked
+   "arriving from another page of the site" (copy it unchanged from any page).
+   Then the scripts `../js/lib/core.js`, `../js/lib/chalk.js`,
+   `../js/engine/engine.js` and, last, `../js/site.js`, each with `defer`.
+2. **At the top of `<body>`:** the two canvases
+   `<canvas id="board-tex" aria-hidden="true"></canvas>` and
+   `<canvas id="board-fx" aria-hidden="true"></canvas>`, and a back link
+   `<a class="back" href="../#home" data-collapse><span aria-hidden="true">←</span> WildQuant</a>`.
+3. **`data-collapse` on every link to another page of the site**, for example
+   `<a href="../about/index.html" data-collapse>`. Links to other websites, and
+   `#` links within a page, do without.
+4. **`data-calm` on the text blocks**, so the drawings fade behind them.
+5. **A background (optional):** add `data-scene="…"` to `<body>` and load the
+   scene's script before `site.js`. `pure` (faint drifting maths, also needs
+   `../js/data/pure.js` first) and `snowfield` (snow on grass, also needs
+   `../js/lib/snowfall.js` first) are made for pages. Without a scene the page
+   shows the plain blackboard.
+
+Paths are relative to the page's folder: `../` from a page one folder deep
+(like `about/`), `../../` from two folders deep (like a chapter).
+
 ## Behaviour notes
 
-- **Home intro:** it plays once per browser session. Scrolling skips it.
+- **Home intro:** it plays once per browser session. Scrolling skips it, and
+  so does opening the page at a section (a link like `/#feedback`).
 - **Reduced motion:** visitors with "reduce motion" switched on see one still
   drawing per section. Nothing animates for them.
 - **Phones:** they get the same scenes with fewer particles, a smaller flock,
@@ -70,6 +126,7 @@ Every file starts with a comment that explains what it does and has a
   them so they stay clear of the text on any screen shape.
 - **Page changes:** any link with `data-collapse` pulls the drawings into the
   link in half a second (the next page starts loading part-way through), and
-  the next page opens at once under a quick flash from the same spot. Timing:
-  `collapse`, `navAt` and `arrive` in `CFG` (`js/engine/engine.js`); the flash
-  is `.wq-arrive` in `css/site.css`.
+  the next page opens at once under a quick flash from the same spot. Every
+  page works this way (see "Adding a page"). Timing: `collapse`, `navAt` and
+  `arrive` in `CFG` (`js/engine/engine.js`); the flash is `.wq-arrive` in
+  `css/site.css`.

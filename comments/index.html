@@ -16,11 +16,16 @@
       try { var u = JSON.parse(sessionStorage.getItem("wq-unfold") || "null");
         if (u && Date.now() - u.t < 6000 && !matchMedia("(prefers-reduced-motion: reduce)").matches) { e.classList.add("wq-arrive"); e.style.setProperty("--fx", (u.x * 100).toFixed(1) + "%"); e.style.setProperty("--fy", (u.y * 100).toFixed(1) + "%"); }
       } catch (x) {}
+      // opening at a #section: be there from the first paint (no slow scroll down to it)
+      if (location.hash) { e.style.scrollBehavior = "auto";
+        document.addEventListener("readystatechange", function () { try { var t = document.readyState == "interactive" && document.getElementById(decodeURIComponent(location.hash.slice(1))); if (t) t.scrollIntoView(); } catch (x) {} });
+        addEventListener("load", function () { setTimeout(function () { e.style.scrollBehavior = ""; }, 300); }); }
     })(document.documentElement);
   </script>
   <script defer src="../js/lib/core.js"></script>
   <script defer src="../js/lib/chalk.js"></script>
   <script defer src="../js/lib/creatures.js"></script>
+  <script defer src="../js/lib/snowfall.js"></script>
   <script defer src="../js/scenes/feedback.js"></script>
   <script defer src="../js/comments.js"></script>
   <script defer src="../js/engine/engine.js"></script>
@@ -35,7 +40,7 @@
          HOW TO EDIT: write this page's content below the title. -->
     <div class="page__block" data-calm>
       <h1 class="page__title"><span class="chalk-text">Comments</span></h1>
-      <p class="comments__intro">What visitors have written. <a href="../#feedback">Write one</a>.</p>
+      <p class="comments__intro">What visitors have written. <a href="../#feedback" data-collapse>Write one</a>.</p>
       <ol class="comments" id="comments" aria-live="polite"></ol>
       <p class="comments__note" id="comments-note">Loading…</p>
     </div>

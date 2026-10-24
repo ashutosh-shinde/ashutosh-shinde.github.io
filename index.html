@@ -20,9 +20,13 @@
       var q = location.search, still = /[?&]still=1/.test(q), seen = false, u = null;
       try { still = still || matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (x) {}
       try { seen = sessionStorage.getItem("wq-intro") === "1"; u = JSON.parse(sessionStorage.getItem("wq-unfold") || "null"); } catch (x) {}
-      var skip = /[?&]intro=0(&|$)/.test(q) || (seen && !/[?&]intro=1(&|$)/.test(q));
+      var skip = /[?&]intro=0(&|$)/.test(q) || (seen && !/[?&]intro=1(&|$)/.test(q)) || (location.hash.length > 1 && location.hash != "#home");
       if (!still && !skip) e.classList.add("intro");
       if (!still && u && Date.now() - u.t < 6000) { e.classList.add("wq-arrive"); e.style.setProperty("--fx", (u.x * 100).toFixed(1) + "%"); e.style.setProperty("--fy", (u.y * 100).toFixed(1) + "%"); }
+      // opening at a #section: be there from the first paint (no slow scroll down to it)
+      if (location.hash) { e.style.scrollBehavior = "auto";
+        document.addEventListener("readystatechange", function () { try { var t = document.readyState == "interactive" && document.getElementById(decodeURIComponent(location.hash.slice(1))); if (t) t.scrollIntoView(); } catch (x) {} });
+        addEventListener("load", function () { setTimeout(function () { e.style.scrollBehavior = ""; }, 300); }); }
     })(document.documentElement);
   </script>
 
@@ -31,6 +35,7 @@
   <script defer src="js/lib/core.js"></script>
   <script defer src="js/lib/chalk.js"></script>
   <script defer src="js/lib/creatures.js"></script>
+  <script defer src="js/lib/snowfall.js"></script>
   <script defer src="js/lib/explorer.js"></script>
   <script defer src="js/engine/engine.js"></script>
   <script defer src="js/scenes/home.js"></script>
@@ -52,18 +57,10 @@
          HOW TO EDIT: title, subtitle and your name below; links in .social -->
     <section id="home" class="panel panel--home" data-scene="home" aria-label="WildQuant">
       <nav class="social" aria-label="Contact and profiles">
-        <a href="mailto:ashu0x@gmail.com" aria-label="Email" title="Email: ashu0x@gmail.com">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.8 6.8 12 13l8.2-6.2"/></svg>
-        </a>
-        <a href="https://www.linkedin.com/in/ashutosh-shinde-600162222/" target="_blank" rel="noopener" aria-label="LinkedIn" title="LinkedIn">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M9 7.5V5.6c0-.6.4-1 1-1h4c.6 0 1 .4 1 1v1.9M3 12.6h18M10.6 12.6v1.6h2.8v-1.6"/></svg>
-        </a>
-        <a href="https://github.com/ashutosh-shinde" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 7.5 4 12l4.5 4.5M15.5 7.5 20 12l-4.5 4.5M13.4 5.5l-2.8 13"/></svg>
-        </a>
-        <a href="https://www.instagram.com/ashutoshpshinde" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5c0-.8.7-1.5 1.5-1.5h2.3l1.4-2h5.6l1.4 2h2.3c.8 0 1.5.7 1.5 1.5v9c0 .8-.7 1.5-1.5 1.5h-13c-.8 0-1.5-.7-1.5-1.5z"/><circle cx="12" cy="12.8" r="3.6"/><path d="M17.2 9.6h.01"/></svg>
-        </a>
+        <a href="mailto:ashu0x@gmail.com" title="Email: ashu0x@gmail.com">Email</a>
+        <a href="https://www.linkedin.com/in/ashutosh-shinde-600162222/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/ashutosh-shinde" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.instagram.com/ashutoshpshinde" target="_blank" rel="noopener">Instagram</a>
       </nav>
 
       <div class="hero" data-calm>

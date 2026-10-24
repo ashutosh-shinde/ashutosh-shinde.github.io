@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 """
 make_equations.py — typeset every equation, label and word drawn on the
-chalkboard with real LaTeX, and save them as compact vector data in
-js/data/equations.js. The browser draws them with Path2D (see js/lib/chalk.js):
-no images, no web fonts, always sharp.
+chalkboard with real LaTeX, and save them as compact vector data. The browser
+draws them with Path2D (see js/lib/chalk.js): no images, no web fonts, always
+sharp. Two sets, one file each (a page loads only the one it needs):
+  ITEMS → js/data/equations.js   the home page's scenes
+  PURE  → js/data/pure.js        the drifting pure mathematics behind the
+                                 Elementary Mathematics page
 
 HOW TO EDIT
-  1. Add or change an entry in ITEMS below (id -> LaTeX, math mode).
+  1. Add or change an entry in ITEMS or PURE below (id -> LaTeX, math mode).
      Text: wrap it as \text{...}, \textsc{...} (small caps) or \textit{...}.
-  2. Run:  python3 tools/make_equations.py
+  2. Run:  python3 tools/make_equations.py          (both files)
+           python3 tools/make_equations.py pure     (just one: equations | pure)
      (needs pdflatex + pdftocairo, e.g. TeX Live + poppler-utils)
-  3. Use the id in a scene, e.g.  CH.draw(ctx, "euler", 18, x, y)
+  3. Use the id in a scene, e.g.  CH.draw(ctx, "euler", 18, x, y). Every item
+     in PURE is used by the pure-mathematics scene automatically.
 """
 import json, os, re, subprocess, sys, tempfile
 import xml.etree.ElementTree as ET
@@ -110,6 +115,121 @@ ITEMS = {
     "ax_t": r"t", "ax_xt": r"x(t),\;y(t)", "ax_Xt": r"X_t", "ax_px": r"p(x)", "ax_r": r"r", "ax_x": r"x",
 }
 
+# Pure mathematics, drifting faintly behind the Elementary Mathematics page:
+# definitions (epsilon-delta and friends), theorems as formulas, and theorem names.
+PURE = {
+    # ------------------------------------------------------------ definitions
+    "p_lim": r"\lim_{x\to a}f(x)=L\iff\forall\varepsilon>0\;\exists\delta>0:\;0<|x-a|<\delta\Rightarrow|f(x)-L|<\varepsilon",
+    "p_cont": r"\forall\varepsilon>0\;\exists\delta>0:\;|x-a|<\delta\Rightarrow|f(x)-f(a)|<\varepsilon",
+    "p_unif": r"\forall\varepsilon>0\;\exists\delta>0\;\forall x,y:\;|x-y|<\delta\Rightarrow|f(x)-f(y)|<\varepsilon",
+    "p_seq": r"a_n\to L\iff\forall\varepsilon>0\;\exists N\;\forall n\ge N:\;|a_n-L|<\varepsilon",
+    "p_cauchy_seq": r"\forall\varepsilon>0\;\exists N\;\forall m,n\ge N:\;|a_m-a_n|<\varepsilon",
+    "p_open": r"U\text{ open}\iff\forall x\in U\;\exists\varepsilon>0:\;B_\varepsilon(x)\subseteq U",
+    "p_deriv": r"f'(x)=\lim_{h\to0}\frac{f(x+h)-f(x)}{h}",
+    "p_riemann": r"\int_a^b f(x)\,dx=\lim_{n\to\infty}\sum_{i=1}^{n}f(x_i^{*})\,\Delta x",
+    "p_sup": r"s=\sup A\iff\forall\varepsilon>0\;\exists a\in A:\;a>s-\varepsilon",
+    "p_metric": r"d(x,z)\le d(x,y)+d(y,z)",
+    # ------------------------------------------------------------ analysis
+    "p_ift": r"F(x_0,y_0)=0,\;\;\frac{\partial F}{\partial y}(x_0,y_0)\ne0\;\Rightarrow\;y=g(x),\;\;g'(x)=-\frac{F_x}{F_y}",
+    "p_invft": r"(f^{-1})'(b)=\frac{1}{f'(a)},\qquad b=f(a)",
+    "p_mvt": r"\exists\,c\in(a,b):\;f'(c)=\frac{f(b)-f(a)}{b-a}",
+    "p_ivt": r"f(a)<0<f(b)\;\Rightarrow\;\exists\,c\in(a,b):\;f(c)=0",
+    "p_rolle": r"f(a)=f(b)\;\Rightarrow\;\exists\,c\in(a,b):\;f'(c)=0",
+    "p_taylor": r"f(x)=\sum_{k=0}^{n}\frac{f^{(k)}(a)}{k!}(x-a)^{k}+\frac{f^{(n+1)}(\xi)}{(n+1)!}(x-a)^{n+1}",
+    "p_ftc": r"\frac{d}{dx}\int_{a}^{x}f(t)\,dt=f(x)",
+    "p_lhopital": r"\lim_{x\to a}\frac{f(x)}{g(x)}=\lim_{x\to a}\frac{f'(x)}{g'(x)}",
+    "p_e": r"e=\lim_{n\to\infty}\Big(1+\frac{1}{n}\Big)^{n}",
+    "p_euler": r"e^{i\pi}+1=0",
+    "p_eulerf": r"e^{i\theta}=\cos\theta+i\sin\theta",
+    "p_demoivre": r"(\cos\theta+i\sin\theta)^{n}=\cos n\theta+i\sin n\theta",
+    "p_stirling": r"n!\sim\sqrt{2\pi n}\,\Big(\frac{n}{e}\Big)^{n}",
+    "p_gamma": r"\Gamma(s)=\int_{0}^{\infty}t^{s-1}e^{-t}\,dt",
+    "p_wallis": r"\frac{\pi}{2}=\prod_{n=1}^{\infty}\frac{4n^{2}}{4n^{2}-1}",
+    "p_leibniz": r"\frac{\pi}{4}=1-\frac{1}{3}+\frac{1}{5}-\frac{1}{7}+\cdots",
+    "p_basel": r"\sum_{n=1}^{\infty}\frac{1}{n^{2}}=\frac{\pi^{2}}{6}",
+    "p_harmonic": r"\sum_{n=1}^{\infty}\frac{1}{n}=\infty",
+    "p_geom": r"\sum_{k=0}^{\infty}r^{k}=\frac{1}{1-r},\qquad|r|<1",
+    "p_gaussint": r"\int_{-\infty}^{\infty}e^{-x^{2}}\,dx=\sqrt{\pi}",
+    "p_cs": r"|\langle u,v\rangle|\le\lVert u\rVert\,\lVert v\rVert",
+    "p_triangle": r"|x+y|\le|x|+|y|",
+    "p_amgm": r"\frac{a_1+\cdots+a_n}{n}\ge\sqrt[n]{a_1\cdots a_n}",
+    "p_holder": r"\lVert fg\rVert_1\le\lVert f\rVert_p\,\lVert g\rVert_q,\qquad\tfrac{1}{p}+\tfrac{1}{q}=1",
+    "p_banach": r"d(Tx,Ty)\le q\,d(x,y),\;q<1\;\Rightarrow\;\exists!\,x^{*}:\;Tx^{*}=x^{*}",
+    "p_dct": r"|f_n|\le g\in L^{1}\;\Rightarrow\;\lim_{n\to\infty}\int f_n\,d\mu=\int f\,d\mu",
+    "p_fubini": r"\iint_{X\times Y}f\;d(\mu\times\nu)=\int_X\int_Y f\;d\nu\,d\mu",
+    "p_green": r"\oint_{C}(L\,dx+M\,dy)=\iint_{D}\Big(\frac{\partial M}{\partial x}-\frac{\partial L}{\partial y}\Big)\,dA",
+    "p_div": r"\iiint_{V}\nabla\cdot\mathbf{F}\,dV=\oint_{\partial V}\mathbf{F}\cdot d\mathbf{S}",
+    "p_stokes": r"\int_{\partial\Omega}\omega=\int_{\Omega}d\omega",
+    "p_cif": r"f(a)=\frac{1}{2\pi i}\oint_{\gamma}\frac{f(z)}{z-a}\,dz",
+    "p_cr": r"u_x=v_y,\qquad u_y=-v_x",
+    "p_residue": r"\oint_{\gamma}f(z)\,dz=2\pi i\sum_{k}\operatorname{Res}(f,a_k)",
+    "p_fourier": r"\hat f(\xi)=\int_{-\infty}^{\infty}f(x)\,e^{-2\pi i x\xi}\,dx",
+    "p_parseval": r"\sum_{n}|c_n|^{2}=\frac{1}{2\pi}\int_{-\pi}^{\pi}|f(t)|^{2}\,dt",
+    # ------------------------------------------------------------ algebra & number theory
+    "p_fermat": r"a^{p}\equiv a\pmod{p}",
+    "p_euler_thm": r"a^{\varphi(n)}\equiv1\pmod{n}",
+    "p_wilson": r"(p-1)!\equiv-1\pmod{p}",
+    "p_bezout": r"\gcd(a,b)=ax+by",
+    "p_fta": r"n=p_1^{a_1}p_2^{a_2}\cdots p_k^{a_k}",
+    "p_euclid": r"N=p_1p_2\cdots p_n+1",
+    "p_pnt": r"\pi(x)\sim\frac{x}{\ln x}",
+    "p_zeta": r"\zeta(s)=\sum_{n=1}^{\infty}\frac{1}{n^{s}}=\prod_{p}\frac{1}{1-p^{-s}}",
+    "p_qr": r"\Big(\frac{p}{q}\Big)\Big(\frac{q}{p}\Big)=(-1)^{\frac{p-1}{2}\cdot\frac{q-1}{2}}",
+    "p_flt": r"x^{n}+y^{n}\ne z^{n},\qquad n>2",
+    "p_lagrange": r"|G|=[G:H]\,|H|",
+    "p_iso": r"G/\ker\varphi\cong\operatorname{im}\varphi",
+    "p_cayley_hamilton": r"p_A(A)=0",
+    "p_rank": r"\dim\ker T+\dim\operatorname{im}T=\dim V",
+    "p_det": r"\det A=\sum_{\sigma\in S_n}\operatorname{sgn}(\sigma)\prod_{i=1}^{n}a_{i,\sigma(i)}",
+    "p_eigen": r"A\mathbf{v}=\lambda\mathbf{v}",
+    "p_spectral": r"A=U\Lambda U^{*},\qquad U^{*}U=I",
+    "p_binom": r"(x+y)^{n}=\sum_{k=0}^{n}\binom{n}{k}x^{k}y^{n-k}",
+    "p_vandermonde": r"\binom{m+n}{r}=\sum_{k}\binom{m}{k}\binom{n}{r-k}",
+    "p_ftalg": r"p(z)=a_n\prod_{k=1}^{n}(z-z_k)",
+    "p_quad": r"x=\frac{-b\pm\sqrt{b^{2}-4ac}}{2a}",
+    "p_golden": r"\varphi=\frac{1+\sqrt{5}}{2}",
+    "p_gauss_sum": r"1+2+\cdots+n=\frac{n(n+1)}{2}",
+    "p_triples": r"(m^{2}-n^{2})^{2}+(2mn)^{2}=(m^{2}+n^{2})^{2}",
+    # ------------------------------------------------------------ sets, logic, topology, geometry
+    "p_cantor": r"|X|<|\mathcal{P}(X)|",
+    "p_alephs": r"|\mathbb{N}|=\aleph_0,\qquad|\mathbb{R}|=2^{\aleph_0}",
+    "p_ch": r"2^{\aleph_0}=\aleph_1",
+    "p_demorgan": r"\overline{A\cup B}=\overline{A}\cap\overline{B}",
+    "p_russell": r"R=\{x:\;x\notin x\}",
+    "p_powerset": r"|\mathcal{P}(A)|=2^{|A|}",
+    "p_qcount": r"|\mathbb{N}|=|\mathbb{Z}|=|\mathbb{Q}|",
+    "p_induction": r"P(1)\wedge\big(P(n)\Rightarrow P(n+1)\big)\;\Rightarrow\;\forall n\;P(n)",
+    "p_euler_char": r"V-E+F=2",
+    "p_gauss_bonnet": r"\int_{M}K\,dA+\int_{\partial M}k_g\,ds=2\pi\,\chi(M)",
+    "p_pi1": r"\pi_1(S^{1})\cong\mathbb{Z}",
+    "p_pythag": r"a^{2}+b^{2}=c^{2}",
+    "p_cosine": r"c^{2}=a^{2}+b^{2}-2ab\cos\gamma",
+    "p_heron": r"A=\sqrt{s(s-a)(s-b)(s-c)}",
+    # ------------------------------------------------------------ theorem names
+    "n_ift": SC("Implicit function theorem"), "n_invft": SC("Inverse function theorem"),
+    "n_mvt": SC("Mean value theorem"), "n_ivt": SC("Intermediate value theorem"),
+    "n_bw": SC("Bolzano--Weierstrass theorem"), "n_hb": SC("Heine--Borel theorem"),
+    "n_rolle": SC("Rolle's theorem"), "n_taylor": SC("Taylor's theorem"),
+    "n_ftc": SC("Fundamental theorem of calculus"), "n_ftalg": SC("Fundamental theorem of algebra"),
+    "n_ftar": SC("Fundamental theorem of arithmetic"), "n_cantor": SC("Cantor's diagonal argument"),
+    "n_sb": SC(r"Schr\"oder--Bernstein theorem"), "n_banach": SC("Banach fixed-point theorem"),
+    "n_brouwer": SC("Brouwer fixed-point theorem"), "n_hahn": SC("Hahn--Banach theorem"),
+    "n_baire": SC("Baire category theorem"), "n_aa": SC(r"Arzel\`a--Ascoli theorem"),
+    "n_sw": SC("Stone--Weierstrass theorem"), "n_dct": SC("Dominated convergence theorem"),
+    "n_cauchy": SC("Cauchy's integral theorem"), "n_liouville": SC("Liouville's theorem"),
+    "n_picard": SC("Picard's theorem"), "n_rmt": SC("Riemann mapping theorem"),
+    "n_jordan": SC("Jordan curve theorem"), "n_sylow": SC("Sylow theorems"),
+    "n_lagrange": SC("Lagrange's theorem"), "n_crt": SC("Chinese remainder theorem"),
+    "n_pnt": SC("Prime number theorem"), "n_flt": SC("Fermat's last theorem"),
+    "n_zorn": SC("Zorn's lemma"), "n_ac": SC("Axiom of choice"),
+    "n_godel": SC(r"G\"odel's incompleteness theorems"), "n_ch": SC("Continuum hypothesis"),
+    "n_hairy": SC("Hairy ball theorem"), "n_pigeon": SC("Pigeonhole principle"),
+    "n_wo": SC("Well-ordering principle"), "n_ind": SC("Principle of induction"),
+    "n_compact": IT("every open cover has a finite subcover"),
+    "n_bwtext": IT("every bounded sequence has a convergent subsequence"),
+    "n_eps": IT(r"for every $\varepsilon>0$ there is a $\delta>0$"),
+}
+
 NS = {"svg": "http://www.w3.org/2000/svg", "xlink": "http://www.w3.org/1999/xlink"}
 PREAMBLE = r"""\documentclass[border=1.5pt]{standalone}
 \usepackage{amsmath,amssymb,bm}
@@ -127,8 +247,9 @@ def typeset(tex, workdir, name):
     return open(os.path.join(workdir, name + ".svg")).read()
 
 NUM = lambda v: float(f"{v:.2f}")
-def num_d(d):  # shorten every number in an SVG path to 2 decimals
-    return re.sub(r"-?\d+\.\d+", lambda m: f"{float(m.group(0)):.2f}".rstrip("0").rstrip("."), d).strip()
+DEC = 2  # decimals kept in glyph outlines (1 is plenty for faint background items)
+def num_d(d):  # shorten every number in an SVG path to DEC decimals
+    return re.sub(r"-?\d+\.\d+", lambda m: f"{float(m.group(0)):.{DEC}f}".rstrip("0").rstrip("."), d).strip()
 
 def parse_matrix(tr):
     if not tr: return [1, 0, 0, 1, 0, 0]
@@ -174,23 +295,33 @@ def convert(svg_text, glyphs, gidx):
     for ch in root: walk(ch, [1, 0, 0, 1, 0, 0])
     return {"w": NUM(w), "h": NUM(h), "u": uses, "f": fills, "s": strokes}
 
-def main():
+SETS = {"equations": (ITEMS, 2), "pure": (PURE, 1)}   # set: (items, decimals in glyph outlines)
+
+def build(name, items, dec):
+    global DEC
+    DEC = dec
     glyphs, gidx, out = [], {}, {}
     with tempfile.TemporaryDirectory() as td:
-        for name, tex in ITEMS.items():
+        for key, tex in items.items():
             try:
-                out[name] = convert(typeset(tex, td, re.sub(r"\W", "_", name)), glyphs, gidx)
+                out[key] = convert(typeset(tex, td, re.sub(r"\W", "_", key)), glyphs, gidx)
             except subprocess.CalledProcessError:
-                sys.exit(f"LaTeX failed for {name!r}: {tex}")
+                sys.exit(f"LaTeX failed for {key!r}: {tex}")
     js = ("/* AUTO-GENERATED by tools/make_equations.py — do not edit by hand.\n"
           "   LaTeX-typeset equations, labels and words as vector glyphs (1 unit = 1pt at 10pt).\n"
           "   EQ.G = shared glyph outlines (SVG path data)\n"
           "   EQ.E[id] = {w, h, u: [[glyph, x, y]...], f: filled paths, s: stroked paths} */\n"
           "window.WQ = window.WQ || {};\nWQ.EQDATA = " + json.dumps({"G": glyphs, "E": out}, separators=(",", ":")) + ";\n")
-    path = os.path.join(ROOT, "js", "data", "equations.js")
+    path = os.path.join(ROOT, "js", "data", name + ".js")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f: f.write(js)
-    print(f"wrote js/data/equations.js  {len(js)//1024} KB  {len(out)} items  {len(glyphs)} glyphs")
+    print(f"wrote js/data/{name}.js  {len(js)//1024} KB  {len(out)} items  {len(glyphs)} glyphs")
+
+def main():
+    names = sys.argv[1:] or list(SETS)
+    for name in names:
+        if name not in SETS: sys.exit(f"unknown set {name!r} (choose from {', '.join(SETS)})")
+        build(name, *SETS[name])
 
 if __name__ == "__main__":
     main()

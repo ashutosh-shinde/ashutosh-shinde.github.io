@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Elementary Mathematics — WildQuant</title>
-  <meta name="description" content="Ideas in mathematics that fascinate me.">
+  <meta name="description" content="Beautiful mathematical ideas that need no prior knowledge of mathematics, by Ashutosh Shinde.">
   <meta name="author" content="Ashutosh Shinde">
   <meta name="theme-color" content="#0d0f0f">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0f0f'/%3E%3Cpath d='M16 16m-9 0a9 9 0 1 0 18 0a7 7 0 1 0-14 0a5 5 0 1 0 10 0a3 3 0 1 0-6 0' fill='none' stroke='%23f6f4ec' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -16,23 +16,49 @@
       try { var u = JSON.parse(sessionStorage.getItem("wq-unfold") || "null");
         if (u && Date.now() - u.t < 6000 && !matchMedia("(prefers-reduced-motion: reduce)").matches) { e.classList.add("wq-arrive"); e.style.setProperty("--fx", (u.x * 100).toFixed(1) + "%"); e.style.setProperty("--fy", (u.y * 100).toFixed(1) + "%"); }
       } catch (x) {}
+      // opening at a #section: be there from the first paint (no slow scroll down to it)
+      if (location.hash) { e.style.scrollBehavior = "auto";
+        document.addEventListener("readystatechange", function () { try { var t = document.readyState == "interactive" && document.getElementById(decodeURIComponent(location.hash.slice(1))); if (t) t.scrollIntoView(); } catch (x) {} });
+        addEventListener("load", function () { setTimeout(function () { e.style.scrollBehavior = ""; }, 300); }); }
     })(document.documentElement);
   </script>
+  <script defer src="../js/data/pure.js"></script>
   <script defer src="../js/lib/core.js"></script>
   <script defer src="../js/lib/chalk.js"></script>
   <script defer src="../js/engine/engine.js"></script>
+  <script defer src="../js/scenes/pure.js"></script>
   <script defer src="../js/site.js"></script>
 </head>
-<body class="page">
+<body class="page page--chapters" data-scene="pure">
+  <!-- the blackboard: faint pure mathematics drifting slowly up (js/scenes/pure.js) -->
   <canvas id="board-tex" aria-hidden="true"></canvas>
   <canvas id="board-fx" aria-hidden="true"></canvas>
   <a class="back" href="../#elementary-mathematics" data-collapse><span aria-hidden="true">←</span> WildQuant</a>
   <main class="page__main">
     <!-- ====================================================== ELEMENTARY MATHEMATICS
-         HOW TO EDIT: write this page's content below the title. -->
-    <div class="page__block" data-calm>
+         HOW TO ADD A CHAPTER
+           1. Add a line to the index below (its href is the chapter's id, e.g. #what-is-infinity).
+           2. Copy a <section class="chapter"> below and change its id, number, date, title, question and link.
+           3. Make the chapter's page: copy the folder what-is-infinity/ to a new folder
+              (e.g. my-new-idea/) and write the chapter in its index.html. -->
+    <header class="page__block" data-calm>
       <h1 class="page__title"><span class="chalk-text">Elementary Mathematics</span></h1>
-    </div>
+      <p class="page__lead">Here you’ll find some beautiful mathematical ideas. You don’t need any prior knowledge of mathematics to understand most of them.</p>
+    </header>
+
+    <nav class="toc" aria-labelledby="toc-title" data-calm>
+      <h2 class="toc__title" id="toc-title">Index</h2>
+      <ol class="toc__list">
+        <li><a href="#what-is-infinity"><span class="toc__no">1</span><span class="toc__name">What is infinity?</span></a></li>
+      </ol>
+    </nav>
+
+    <section class="chapter" id="what-is-infinity" aria-labelledby="ch1-title" data-calm>
+      <p class="chapter__meta">Chapter 1 · <time datetime="2021-08-21">August 21, 2021</time></p>
+      <h2 class="chapter__title" id="ch1-title">What is infinity?</h2>
+      <p class="chapter__intro">How big are infinities? Why are some infinities bigger than others? Are there more real numbers than natural numbers? How can a plane and a line have the same number of points on them? We will look for answers to these questions and dive into the ocean of infinitely many different infinities.</p>
+      <a class="btn" href="what-is-infinity/index.html" data-collapse>Read the chapter <span aria-hidden="true">→</span></a>
+    </section>
   </main>
 </body>
 </html>

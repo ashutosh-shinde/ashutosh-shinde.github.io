@@ -16,6 +16,10 @@
       try { var u = JSON.parse(sessionStorage.getItem("wq-unfold") || "null");
         if (u && Date.now() - u.t < 6000 && !matchMedia("(prefers-reduced-motion: reduce)").matches) { e.classList.add("wq-arrive"); e.style.setProperty("--fx", (u.x * 100).toFixed(1) + "%"); e.style.setProperty("--fy", (u.y * 100).toFixed(1) + "%"); }
       } catch (x) {}
+      // opening at a #section: be there from the first paint (no slow scroll down to it)
+      if (location.hash) { e.style.scrollBehavior = "auto";
+        document.addEventListener("readystatechange", function () { try { var t = document.readyState == "interactive" && document.getElementById(decodeURIComponent(location.hash.slice(1))); if (t) t.scrollIntoView(); } catch (x) {} });
+        addEventListener("load", function () { setTimeout(function () { e.style.scrollBehavior = ""; }, 300); }); }
     })(document.documentElement);
   </script>
   <script defer src="../js/lib/core.js"></script>
