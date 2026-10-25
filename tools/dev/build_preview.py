@@ -6,7 +6,7 @@
 The preview host wraps the home page in its own <html>/<head>/<body>, so the home page is written without
 them (its own head script is kept, plus the body class); fonts are inlined into the CSS; and because the
 preview serves no folder pages, every link to a folder ("../", "../../#pd-1", "simulations/") names its
-index.html. Every folder with an index.html is included automatically.
+index.html. Every folder with an index.html is included automatically, with its img/ folder (a post's photos).
 """
 import base64, os, re, shutil, sys
 sys.path.insert(0, os.path.dirname(__file__))
@@ -34,13 +34,16 @@ body = src[src.index("<!-- the blackboard"):src.index("</body>")].rstrip() + "\n
 head = '<title>WildQuant</title>\n<link rel="stylesheet" href="css/site.css">\n' + inline + "\n"
 open(os.path.join(OUT, "index.html"), "w", encoding="utf-8").write(head + scripts + "\n" + folder_links(body))
 
-# ---- CSS with the fonts inlined
-css = open(os.path.join(REPO, "css/site.css"), encoding="utf-8").read()
+# ---- CSS (every stylesheet in css/), with the fonts inlined
 def inline_font(m):
     path = os.path.normpath(os.path.join(REPO, "css", m.group(1)))
     return 'url("data:font/woff;base64,' + base64.b64encode(open(path, "rb").read()).decode() + '")'
-css = re.sub(r'url\("(\.\./fonts/[^"]+\.woff)"\)', inline_font, css)
-os.makedirs(os.path.join(OUT, "css")); open(os.path.join(OUT, "css/site.css"), "w", encoding="utf-8").write(css)
+os.makedirs(os.path.join(OUT, "css"))
+for f in sorted(os.listdir(os.path.join(REPO, "css"))):
+    if f.endswith(".css"):
+        css = open(os.path.join(REPO, "css", f), encoding="utf-8").read()
+        css = re.sub(r'url\("(\.\./fonts/[^"]+\.woff)"\)', inline_font, css)
+        open(os.path.join(OUT, "css", f), "w", encoding="utf-8").write(css)
 
 # ---- scripts
 for root, _, files in os.walk(os.path.join(REPO, "js")):
@@ -57,6 +60,9 @@ for path in pages(REPO):
     s = re.sub(r'\n\s*<link rel="preload" href="(?:\.\./)+fonts/[^"]+"[^>]*>', "", s)
     os.makedirs(os.path.dirname(os.path.join(OUT, path)) or OUT, exist_ok=True)
     open(os.path.join(OUT, path), "w", encoding="utf-8").write(folder_links(s))
+    img = os.path.join(REPO, os.path.dirname(path), "img")         # a post's photos (made by tools/publish/build.py)
+    if os.path.isdir(img):
+        shutil.copytree(img, os.path.join(OUT, os.path.dirname(path), "img"), dirs_exist_ok=True)
 
 files = sorted(os.path.relpath(os.path.join(r, f), OUT) for r, _, fs in os.walk(OUT) for f in fs)
 print(OUT); print("\n".join(f for f in files if not f.startswith("js/")))

@@ -1,0 +1,18 @@
+{
+ "note": "made by tools/publish/build.py: do not edit",
+ "posts": [
+  {
+   "src": "content/maths/what-is-infinity/index.md",
+   "slug": "what-is-infinity",
+   "title": "What is infinity?",
+   "date": "2021-08-21",
+   "category": "Set theory",
+   "abstract": "How big are infinities? Why are some infinities bigger than others? Are there more real numbers than natural numbers? How can a plane and a line have the same number of points on them? We will look for answers to these questions and dive into the ocean of infinitely many different infinities.",
+   "url": "elementary-mathematics/what-is-infinity/",
+   "image": null,
+   "chapter": 1,
+   "draft": false,
+   "card": "      <li>\n        <a class=\"post-card\" id=\"what-is-infinity\" href=\"what-is-infinity/\" data-collapse>\n          <span class=\"post-card__meta\">Chapter 1 · <span class=\"post-card__cat\">Set theory</span> · <time datetime=\"2021-08-21\">August 21, 2021</time></span>\n          <span class=\"post-card__title\">What is infinity?</span>\n          <span class=\"post-card__abstract\">How big are infinities? Why are some infinities bigger than others? Are there more real numbers than natural numbers? How can a plane and a line have the same number of points on them? We will look for answers to these questions and dive into the ocean of infinitely many different infinities.</span>\n          <span class=\"post-card__go\">Read the chapter <span aria-hidden=\"true\">→</span></span>\n        </a>\n      </li>"
+  }
+ ]
+}

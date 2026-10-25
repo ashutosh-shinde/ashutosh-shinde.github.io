@@ -23,7 +23,9 @@ double-click blocks the fonts.
 | What | File |
 |---|---|
 | Home page text, links, section texts, the comment box | `index.html` |
-| Section pages (blank for now) | `about/`, `blogs/` → each has an `index.html` |
+| About page (blank for now) | `about/index.html` |
+| Blogs: title and the list of stories (the boxes are made by `tools/publish/build.py`) | `blogs/index.html` |
+| Blogs list: the background of words and gear (particles in a box) and the explorer strip at the bottom | `js/scenes/gearbox.js`, `js/lib/strip.js` |
 | Simulations: the list of collections and their numbered cards | `simulations/index.html` |
 | A simulation page (one folder each), e.g. the discrete-time logistic model | `simulations/population-dynamics/discrete-logistic/index.html` |
 | A simulation's maths and controls (one file per simulation) | `js/sims/`, e.g. `js/sims/logistic.js` (tested by `node tools/test-logistic.mjs`) |
@@ -36,13 +38,17 @@ double-click blocks the fonts.
 | ODE solvers: Dormand–Prince, ROS2 for stiff models, 2×2 eigenvalues | `js/lib/ode.js` (tested by `node tools/test-ode.mjs`) |
 | Shared page helpers for the simulations: sliders, boxes, runtime checks | `js/lib/simkit.js` |
 | Checking tools: screenshots, slider sweeps, error pass, page changes, preview | `tools/dev/` (see its README) |
-| Elementary Mathematics: title, index and the list of chapters | `elementary-mathematics/index.html` |
-| A chapter (one folder each) | `elementary-mathematics/what-is-infinity/index.html` |
+| Elementary Mathematics: title and the list of chapters (the boxes are made by `tools/publish/build.py`) | `elementary-mathematics/index.html` |
+| **Blog posts and maths chapters: what you write** (Google Doc, Markdown, R Markdown, LaTeX, knitted HTML) | `content/blog/`, `content/maths/` — how to write and publish: **`content/README.md`** |
+| The pages made from them (don't edit: they are rewritten on every publish) | `blogs/<name>/`, `elementary-mathematics/<name>/` |
+| Publishing: files → pages, maths typeset (MathJax), photos resized; the page templates | `tools/publish/build.py`, `tools/publish/templates/`; run on GitHub by `.github/workflows/publish.yml` |
+| Drive → GitHub sync (Google Apps Script) | `tools/drive-sync/drive-to-github.gs` (tested by `node tools/test-drive-sync.cjs`) |
+| Styles of the two lists, the posts and chapters, and the strip | `css/writing.css` |
 | Comments page | `comments/index.html` |
 | Colours, fonts, sizes, where each section's text sits | `css/site.css` (tokens at the top) |
 | The scroll / dust / calm-zone / page-change engine | `js/engine/engine.js` (settings in `CFG`) |
 | The six home-page scenes | `js/scenes/home.js`, `simulations.js`, `elementary.js`, `lab.js`, `blog.js`, `feedback.js` |
-| Page backgrounds: drifting pure maths (Elementary Mathematics), snow on grass (chapters) | `js/scenes/pure.js`, `js/scenes/snowfield.js` |
+| Page backgrounds: drifting pure maths (Elementary Mathematics), snow on grass (posts and chapters) | `js/scenes/pure.js`, `js/scenes/snowfield.js` |
 | Falling chalk snow (Feedback, Comments, chapters) | `js/lib/snowfall.js` |
 | Animals (hare, wolf, deer, tiger, leopard, owl, ibex, snow leopard, eye) | `js/lib/creatures.js` |
 | The explorer (stick figure with glasses and backpack) | `js/lib/explorer.js` |
@@ -72,15 +78,15 @@ Every file starts with a comment that explains what it does and has a
   `PURE` in `tools/make_equations.py` and run
   `python3 tools/make_equations.py pure`. Every entry appears on the page by
   itself. Ids starting with `n_` are theorem names, the rest are formulas.
-- **Add a chapter to Elementary Mathematics:**
-  1. Copy the folder `elementary-mathematics/what-is-infinity/` to a new
-     folder, for example `elementary-mathematics/my-new-idea/`.
-  2. Write the chapter in the new folder's `index.html`: title, date, text.
-     In its two back links, change `data-back="#what-is-infinity"` to the new
-     chapter's id, so that a visitor who came straight to the chapter goes back
-     to its intro.
-  3. In `elementary-mathematics/index.html`, add a line to the index and copy
-     a `<section class="chapter">` for it (a comment there shows how).
+- **Publish a blog post or a maths chapter:** write it in Google Docs (or as
+  a `.md`, `.Rmd`, `.tex` or knitted `.html` file), start it with the four
+  header lines (`title:`, `date:`, `category:`, `abstract:`), and put it in
+  your Drive folder `WildQuant website/Blog` or `…/Elementary Mathematics`, or
+  upload it to `content/blog/` or `content/maths/` on github.com. It gets its
+  page and its box on the list by itself. All of it: `content/README.md`.
+- **The Blogs background and strip:** the words, peaks, routes and gear are
+  the lists at the top of `js/scenes/gearbox.js`; the explorer's activities are
+  `ACTS` in `js/lib/strip.js`.
 - **Add a simulation:**
   1. Copy a simulation folder to a new folder and write the page:
      `simulations/population-dynamics/discrete-logistic/` for a map, or one of
@@ -93,7 +99,9 @@ Every file starts with a comment that explains what it does and has a
      tools in `tools/dev/`.
   3. In `simulations/index.html`, add its card: copy an `<li>` and give it the
      next number and id (a comment there shows how).
-- **Write maths in a chapter** (it is set in Latin Modern, like LaTeX):
+- **Maths in a post or chapter:** LaTeX in its file (`$…$`, `$$…$$`), see
+  `content/README.md`. **Maths in a hand-made page** (set in Latin Modern,
+  like LaTeX):
   - inline: `<span class="m"><i>f</i> : ℕ → ℝ</span>`, with letters in
     `<i>` and `<sub>` / `<sup>` for indices and powers
   - root: `<span class="m">√<span class="rt">2</span></span>`
@@ -108,6 +116,20 @@ Every file starts with a comment that explains what it does and has a
 - **Speed and quality:** `CFG` in `js/engine/engine.js` sets the pixel budget
   and the number of particles. The engine also lowers quality by itself on slow
   devices.
+
+## Publishing (Blogs and Elementary Mathematics)
+
+What you write lives in `content/` (from Drive or uploaded on GitHub); every
+push to `master` runs `.github/workflows/publish.yml`, which makes the pages
+with `tools/publish/build.py`, commits them, and deploys the site to GitHub
+Pages (about two minutes). One-time settings: GitHub → Settings → Pages →
+Source: **GitHub Actions**; and the Drive sync script (steps at the top of
+`tools/drive-sync/drive-to-github.gs`).
+
+To make the pages on your computer: install pandoc 3.9, then
+`pip install -r tools/publish/requirements.txt`,
+`npm install --prefix tools/publish`, and run
+`python3 tools/publish/build.py` (then preview as above).
 
 ## Adding a page
 

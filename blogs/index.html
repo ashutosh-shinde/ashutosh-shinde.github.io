@@ -10,6 +10,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0f0f'/%3E%3Cpath d='M16 16m-9 0a9 9 0 1 0 18 0a7 7 0 1 0-14 0a5 5 0 1 0 10 0a3 3 0 1 0-6 0' fill='none' stroke='%23f6f4ec' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="preload" href="../fonts/lm-roman-bold.woff" as="font" type="font/woff" crossorigin>
   <link rel="stylesheet" href="../css/site.css">
+  <link rel="stylesheet" href="../css/writing.css">
   <!-- arriving from another page of the site: the quick flash starts with the first paint (.wq-arrive in
        site.css), and the page opens in the right place: a back link (data-back) returns to where you left
        this page; any other link opens it at the top, or at the #section it names -->
@@ -34,19 +35,49 @@
   </script>
   <script defer src="../js/lib/core.js"></script>
   <script defer src="../js/lib/chalk.js"></script>
+  <script defer src="../js/lib/explorer.js"></script>
+  <script defer src="../js/lib/creatures.js"></script>
   <script defer src="../js/engine/engine.js"></script>
+  <script defer src="../js/scenes/gearbox.js"></script>
+  <script defer src="../js/lib/strip.js"></script>
   <script defer src="../js/site.js"></script>
 </head>
-<body class="page">
+<body class="page page--list page--blogs has-strip" data-scene="gearbox">
+  <!-- the blackboard: faint chalk words and gear drifting about like particles in a box (js/scenes/gearbox.js) -->
   <canvas id="board-tex" aria-hidden="true"></canvas>
   <canvas id="board-fx" aria-hidden="true"></canvas>
   <a class="back" href="../" data-collapse data-back="#blogs"><span aria-hidden="true">←</span> WildQuant</a>
   <main class="page__main">
     <!-- ====================================================== BLOGS WITH AN IRRATIONAL LOGIC
-         HOW TO EDIT: write this page's content below the title. -->
-    <div class="page__block" data-calm>
+         HOW TO EDIT: the title and lead below. The list of stories is made by
+         tools/publish/build.py from the files in content/blog/ (see content/README.md):
+         don't edit between LIST:START and LIST:END, it is rewritten on every publish. -->
+    <header class="page__block" data-calm>
       <h1 class="page__title"><span class="chalk-text">Blogs with an Irrational Logic</span></h1>
-    </div>
+      <p class="page__lead">Climbing, expeditions and field stories.</p>
+    </header>
+
+    <section class="posts" aria-label="Stories" data-calm>
+    <!-- LIST:START (made by tools/publish/build.py from content/blog/: do not edit by hand) -->
+    <ol class="post-list">
+      <li>
+        <a class="post-card" id="a-winter-night-on-kalsubai" href="a-winter-night-on-kalsubai/" data-collapse>
+          <span class="post-card__meta"><span class="post-card__cat">Trekking</span> · <time datetime="2026-01-18">January 18, 2026</time></span>
+          <span class="post-card__title">A winter night on Kalsubai</span>
+          <span class="post-card__abstract">The highest point of Maharashtra by headtorch, a night of wind at the summit temple, and a sunrise that made every frozen finger worth it. (A demo story, written in Google Docs, to show how a post looks.)</span>
+          <span class="post-card__go">Read <span aria-hidden="true">→</span></span>
+        </a>
+      </li>
+    </ol>
+    <!-- LIST:END -->
+    </section>
   </main>
+  <!-- the explorer strip, fixed to the bottom of the screen (js/lib/strip.js) -->
+  <div class="strip" id="strip">
+    <canvas aria-hidden="true"></canvas>
+    <button class="strip__pause" type="button" aria-pressed="false" aria-label="Pause the animation" title="Pause the animation">
+      <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M4 2.5v9M10 2.5v9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>
+    </button>
+  </div>
 </body>
 </html>
