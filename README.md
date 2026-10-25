@@ -30,6 +30,7 @@ double-click blocks the fonts.
 | Card 3: harvesting with Holling responses | `simulations/population-dynamics/harvesting/` + `js/sims/harvesting.js` (tested by `node tools/test-harvesting.mjs`) |
 | Card 4: Lotka–Volterra competition | `simulations/population-dynamics/lv-competition/` + `js/sims/lv-competition.js` (tested by `node tools/test-lv-competition.mjs`) |
 | Card 5: the consumer–resource model | `simulations/population-dynamics/consumer-resource/` + `js/sims/consumer-resource.js` (tested by `node tools/test-consumer-resource.mjs`) |
+| Card 6: prey–predator models | `simulations/population-dynamics/prey-predator/` + `js/sims/prey-predator.js` (tested by `node tools/test-prey-predator.mjs`) |
 | Plots in chalk style (axes, lines, legends, log axes) | `js/lib/plot.js` |
 | ODE solvers: Dormand–Prince, ROS2 for stiff models, 2×2 eigenvalues | `js/lib/ode.js` (tested by `node tools/test-ode.mjs`) |
 | Shared page helpers for the simulations: sliders, boxes, runtime checks | `js/lib/simkit.js` |

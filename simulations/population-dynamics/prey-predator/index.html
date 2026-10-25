@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Prey–predator models — WildQuant</title>
+  <meta name="description" content="Three interactive prey–predator models (Lotka–Volterra, Volterra with logistic prey, Rosenzweig–MacArthur): the phase plane with your own starts, both populations over time, and the paradox of enrichment.">
+  <meta name="author" content="Ashutosh Shinde">
+  <meta name="theme-color" content="#0d0f0f">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0f0f'/%3E%3Cpath d='M16 16m-9 0a9 9 0 1 0 18 0a7 7 0 1 0-14 0a5 5 0 1 0 10 0a3 3 0 1 0-6 0' fill='none' stroke='%23f6f4ec' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preload" href="../../../fonts/lm-roman-bold.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="../../../css/site.css">
+  <!-- arriving from another page of the site: the quick flash starts with the first paint (.wq-arrive in
+       site.css), and the page opens in the right place: a back link (data-back) returns to where you left
+       this page; any other link opens it at the top, or at the #section it names -->
+  <script>
+    (function (e) {
+      var go = location.hash ? location.hash.slice(1) : null, n, p, k = location.pathname.replace(/index\.html$/, "");
+      try { var u = JSON.parse(sessionStorage.getItem("wq-unfold") || "null");
+        if (u && Date.now() - u.t < 6000 && !matchMedia("(prefers-reduced-motion: reduce)").matches) { e.classList.add("wq-arrive"); e.style.setProperty("--fx", (u.x * 100).toFixed(1) + "%"); e.style.setProperty("--fy", (u.y * 100).toFixed(1) + "%"); }
+        n = JSON.parse(sessionStorage.getItem("wq-nav") || "null");
+        if (n && n.to == k && Date.now() - n.t < 10000) { sessionStorage.removeItem("wq-nav"); p = n.back != null && JSON.parse(sessionStorage.getItem("wq-pos:" + k) || "null");
+          go = p && Math.abs(p.w - innerWidth) < 3 ? p.y : n.back != null ? n.back.slice(1) || 0 : go || 0; }
+      } catch (x) {}
+      if (go === null) return;
+      var user = false, fixes = 0, place = function () { try { if (typeof go == "number") scrollTo(0, go); else { var t = document.getElementById(decodeURIComponent(go)); if (t) t.scrollIntoView(); } } catch (x) {} };
+      e.style.scrollBehavior = "auto";
+      ["wheel", "touchstart", "keydown", "pointerdown"].forEach(function (v) { addEventListener(v, function () { user = true; }, { capture: true, passive: true }); });
+      document.addEventListener("readystatechange", function () { if (document.readyState == "interactive" && !user) place(); });
+      addEventListener("load", function () { if (!user) place(); var end = Date.now() + 1500; // and keep it there until the visitor moves
+        addEventListener("scroll", function hold() { if (user || Date.now() > end || ++fixes > 8) removeEventListener("scroll", hold); else place(); }, { passive: true });
+        setTimeout(function () { e.style.scrollBehavior = ""; }, 300); });
+    })(document.documentElement);
+  </script>
+  <script defer src="../../../js/lib/core.js"></script>
+  <script defer src="../../../js/lib/chalk.js"></script>
+  <script defer src="../../../js/engine/engine.js"></script>
+  <script defer src="../../../js/lib/plot.js"></script>
+  <script defer src="../../../js/lib/ode.js"></script>
+  <script defer src="../../../js/lib/simkit.js"></script>
+  <script defer src="../../../js/sims/prey-predator.js"></script>
+  <script defer src="../../../js/site.js"></script>
+</head>
+<body class="page page--sim">
+  <canvas id="board-tex" aria-hidden="true"></canvas>
+  <canvas id="board-fx" aria-hidden="true"></canvas>
+  <a class="back" href="../../" data-collapse data-back="#pd-6"><span aria-hidden="true">←</span> Simulations</a>
+  <main class="page__main sim">
+    <!-- ====================================================== PREY–PREDATOR MODELS
+         HOW TO EDIT: texts below; the maths, the default values per model, the presets and the boxes'
+         wording are in js/sims/prey-predator.js; the plot style in js/lib/plot.js. -->
+    <header class="sim-head" data-calm>
+      <p class="article__kicker">Deterministic population dynamics · 6</p>
+      <h1 class="page__title sim__title"><span class="chalk-text">Prey–predator models</span></h1>
+      <div class="sim-eq">
+        <p class="sim-eq__formula math--lines sim-eq__formula--wrap" id="formula"><span class="m"><i>dN</i>/<i>dt</i> = <i>rN</i> − <i>βNP</i></span><span class="m"><i>dP</i>/<i>dt</i> = <i>γβNP</i> − <i>δP</i></span></p>
+        <dl class="sim-notation">
+          <div><dt>general form</dt><dd><span class="m"><i>dN</i>/<i>dt</i> = <i>f</i>(<i>N</i>) − <i>h</i>(<i>N</i>, <i>P</i>)</span>, <span class="m"><i>dP</i>/<i>dt</i> = <i>γ</i>·<i>h</i>(<i>N</i>, <i>P</i>) − <i>δP</i></span></dd></div>
+          <div><dt><span class="m"><i>N</i>, <i>P</i></span></dt><dd>prey, predators</dd></div>
+          <div><dt><span class="m"><i>f</i>(<i>N</i>)</span></dt><dd>prey growth without predators</dd></div>
+          <div><dt><span class="m"><i>h</i>(<i>N</i>, <i>P</i>)</span></dt><dd>the rate predators kill prey (functional response)</dd></div>
+          <div><dt><span class="m"><i>γ</i></span></dt><dd>how many new predators one eaten prey makes</dd></div>
+          <div><dt><span class="m"><i>δ</i></span></dt><dd>predator death rate</dd></div>
+        </dl>
+      </div>
+    </header>
+
+    <!-- ---------------------------------------------------- the controls drive all three panels -->
+    <section class="sim-sec" id="phase-plane" aria-labelledby="h-phase">
+      <h2 class="sim-sec__title" id="h-phase" data-calm>Phase plane</h2>
+      <div class="sim-seg" id="model" role="group" aria-label="Model" data-calm><button type="button" data-value="LV" aria-pressed="true">Lotka–Volterra</button><button type="button" data-value="Vt">Volterra (logistic prey)</button><button type="button" data-value="RM">Rosenzweig–MacArthur</button></div>
+      <div class="sim-controls sim-controls--grid" data-calm>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>r</i></span></span><input type="range" id="r" min="0.1" max="3" step="0.01" value="1"><output id="r-out" for="r">1.00</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>β</i></span></span><input type="range" id="b" min="0.05" max="3" step="0.01" value="1"><output id="b-out" for="b">1.00</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>γ</i></span></span><input type="range" id="g" min="0.05" max="1.5" step="0.01" value="1"><output id="g-out" for="g">1.00</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>δ</i></span></span><input type="range" id="d" min="0.05" max="3" step="0.01" value="1"><output id="d-out" for="d">1.00</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>K</i></span></span><input type="range" id="K" min="1" max="100" step="0.5" value="10"><output id="K-out" for="K">10.0</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>N</i><sub>0</sub></span></span><input type="range" id="N0" min="1" max="30" step="0.1" value="10"><output id="N0-out" for="N0">10.0</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>N</i>(0)</span></span><input type="range" id="Ns" min="0" max="100" step="0.1" value="0.5"><output id="Ns-out" for="Ns">0.5</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>P</i>(0)</span></span><input type="range" id="Ps" min="0" max="100" step="0.1" value="0.5"><output id="Ps-out" for="Ps">0.5</output></label>
+        <label class="sim-ctl"><span class="sim-ctl__name"><span class="m"><i>t</i><sub>max</sub></span></span><input type="range" id="tmax" min="10" max="500" step="10" value="50"><output id="tmax-out" for="tmax">50</output></label>
+      </div>
+      <div class="sim-presets" id="presets" data-calm></div>
+      <div class="sim-panel sim-panel--wideterm">
+        <div class="sim-stack">
+          <figure class="sim-plot sim-plot--phase"><canvas id="cv-phase" role="img" aria-label="Phase plane of prey and predators"></canvas><figcaption class="sim-cap">Prey (across) and predators (up). Tap to add a start.</figcaption></figure>
+          <div class="sim-buttons" data-calm><button type="button" class="sim-btn" id="clear-taps">Clear my starts</button></div>
+        </div>
+        <div class="term" id="term-phase" aria-live="polite" aria-label="What the phase plane shows"></div>
+      </div>
+    </section>
+
+    <section class="sim-sec" id="time-series" aria-labelledby="h-time">
+      <div data-calm>
+        <h2 class="sim-sec__title" id="h-time">Time series</h2>
+        <p class="sim-sec__lead">Both populations from <span class="m">(<i>N</i>(0), <i>P</i>(0))</span>; a tap in the phase plane moves this start.</p>
+      </div>
+      <div class="sim-panel sim-panel--wideterm">
+        <figure class="sim-plot"><canvas id="cv-time" role="img" aria-label="Prey and predators over time"></canvas><figcaption class="sim-cap">Prey and predators over time: the predator peaks follow the prey peaks.</figcaption></figure>
+        <div class="term" id="term-time" aria-live="polite" aria-label="What the time series shows"></div>
+      </div>
+    </section>
+
+    <section class="sim-sec" id="enrichment" aria-labelledby="h-k" hidden>
+      <div data-calm>
+        <h2 class="sim-sec__title" id="h-k">Effect of enrichment <span class="m"><i>K</i></span></h2>
+        <p class="sim-sec__lead">Where the prey end up for every carrying capacity <span class="m"><i>K</i></span> from 1 to 100, with the other values as set above.</p>
+      </div>
+      <div class="sim-panel sim-panel--wideterm">
+        <figure class="sim-plot"><canvas id="cv-k" role="img" aria-label="The prey level against K"></canvas><figcaption class="sim-cap">The prey level against <span class="m"><i>K</i></span>: above the Hopf point it swings within the orange band.</figcaption></figure>
+        <div class="term" id="term-k" aria-live="polite" aria-label="What the enrichment scan shows"></div>
+      </div>
+    </section>
+
+    <section class="sim-sec sim-theory" id="theory" aria-labelledby="h-theory" data-calm>
+      <h2 class="sim-sec__title" id="h-theory">The theory, in short</h2>
+      <ul>
+        <li><b>General form.</b> Prey: growth without predators minus predation; predators: converted predation minus deaths.</li>
+        <li><b>Lotka–Volterra</b> (exponential prey, Holling I predation): <span class="m"><i>e</i><sub>1</sub> = (<i>δ</i>/(<i>γβ</i>), <i>r</i>/<i>β</i>)</span> is a centre; orbits are closed curves of <span class="m"><i>V</i></span>; cycles never decay or grow (neutral, Lyapunov stable but not asymptotically stable).</li>
+        <li><b>Volterra</b> (logistic prey): predators can live only if <span class="m"><i>K</i> &gt; <i>δ</i>/(<i>γβ</i>)</span>; then <span class="m"><i>e</i><sub>2</sub></span> is stable: a spiral for most values, a node when <span class="m"><i>K</i></span> is just above <span class="m"><i>δ</i>/(<i>γβ</i>)</span>.</li>
+        <li><b>Rosenzweig–MacArthur</b> (logistic prey, Holling II predation): <span class="m"><i>N</i>* = <i>δN</i><sub>0</sub>/(<i>γβ</i> − <i>δ</i>)</span>; <span class="m"><i>e</i><sub>2</sub></span> is stable for <span class="m"><i>K</i> &lt; <i>K</i><sub>H</sub> = <i>N</i><sub>0</sub> + 2<i>N</i>*</span>, where the top of the prey nullcline lies left of <span class="m"><i>N</i>*</span>; beyond <span class="m"><i>K</i><sub>H</sub></span> (a Hopf bifurcation) a stable limit cycle appears.</li>
+        <li><b>The paradox of enrichment.</b> Raising <span class="m"><i>K</i></span> (more food for the prey) destabilises the RM system: the opposite of the Volterra model.</li>
+        <li><b>Predators lag prey.</b> Predator peaks follow prey peaks (a quarter of a period for small LV cycles).</li>
+        <li><b>Classification</b> of equilibria from the Jacobian's eigenvalues, as in the README's table (spiral, node, saddle, centre; non-hyperbolic cases need the nonlinear terms).</li>
+      </ul>
+    </section>
+
+    <section class="sim-more" data-calm>
+      <a class="btn" href="https://github.com/ashutosh-shinde/Population-Dynamics/blob/master/Two_species_population_models/README.md#3-prey-predator-models" target="_blank" rel="noopener">Read the full write-up on GitHub <span aria-hidden="true">→</span></a>
+      <a class="btn" href="../../" data-collapse data-back="#pd-6"><span aria-hidden="true">←</span> Back to the simulations</a>
+    </section>
+  </main>
+</body>
+</html>

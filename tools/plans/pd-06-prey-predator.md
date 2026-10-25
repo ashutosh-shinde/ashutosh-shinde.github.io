@@ -198,6 +198,13 @@ Never NaN; plots always drawn.
 - RM cycle (when `K > K_H`): its prey min is below `N*` and its max above `N*`.
 - Orbits stay ≥ 0 and finite.
 
+(Found while building, now in the code: LV runs with both populations above 0 are integrated in log
+coordinates (`x = ln N`, `y = ln P`, `rtol = atol = 1e-12`): a big cycle takes the prey down to ~1e−80, far
+below any absolute tolerance in `N`, and V drifted by 70 % from (100, 100) in `N, P`. V's drift is measured
+against the size of its terms (`γβN + δ|ln N| + βP + r|ln P|`), since V itself can be near 0, and V is
+computed from the logs (deep in a cycle `e^x` underflows to 0). The K panel's threshold labels sit on two rows;
+the Volterra scan's y range follows `N*`. On a phone the long RM formula wraps.)
+
 ## 10. Screenshots to look at
 
 Each model at its default; every preset; RM `K 19` and `K 19.5` (decaying vs small cycle); a tapped start;

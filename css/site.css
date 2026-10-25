@@ -382,6 +382,7 @@ a.project-card:hover { background: rgb(var(--ink) / 0.06); border-color: rgb(var
 @media (max-width: 900px) { .sim-panel--wideterm { grid-template-columns: minmax(0, 1fr); } }
 .sim-eq__formula--small { font-size: clamp(16px, 0.8vw + 12px, 24px); white-space: normal; } /* three long equations */
 .sim-controls--grid > .sim-group { align-self: start; }
+@media (max-width: 600px) { .sim-eq__formula--wrap { white-space: normal; font-size: 19px; } } /* long equations on a phone */
 .sim-stack { display: grid; gap: 14px; min-width: 0; }
 .term__warn { color: #f0b27a; text-shadow: 0 0 6px rgb(240 178 122 / 0.35); }
 .term__why { color: #b4f7bb; opacity: 0.92; }
