@@ -437,6 +437,10 @@ def save_image(data, ext, stem, out_dir, used, check, where):
         name = f"{stem}-{h}.gif"; used.add(name)
         write_if_changed(os.path.join(out_dir, name), data, check)
         return name, im.width, im.height
+    if ext in (".jpg", ".jpeg") and im.width <= MAX_PHOTO and not im.getexif() and len(data) < 900_000:
+        name = f"{stem}-{h}.jpg"; used.add(name)      # already web-sized, no camera data: kept as it is (no second compression)
+        write_if_changed(os.path.join(out_dir, name), data, check)
+        return name, im.width, im.height
     im = ImageOps.exif_transpose(im)              # phone photos: turn upright before EXIF is dropped
     alpha = im.mode in ("RGBA", "LA", "P") and ext in (".png", ".gif", ".webp")
     out_ext = ".png" if alpha else ".jpg"
@@ -573,7 +577,11 @@ def convert(path, sec, check):
                     el["c"][1] = copy.deepcopy(named.get(ref) or [S(ref)])
                 return None
             if t == "Header":
-                el["c"][0] = max(2, min(6, el["c"][0] + shift)); return None
+                el["c"][0] = max(2, min(6, el["c"][0] + shift))
+                ins = [i for i in el["c"][2] if i.get("t") != "Space"]
+                if len(ins) == 1 and ins[0].get("t") == "Strong":   # a heading made bold by hand (common in Docs)
+                    el["c"][2] = ins[0]["c"]
+                return None
             if t in ("RawBlock", "RawInline") and el["c"][0] in ("tex", "latex"):
                 tex = el["c"][1].strip()
                 if re.match(r"\\begin\{" + MATH_ENVS + r"\}", tex):
