@@ -69,12 +69,15 @@
         <p class="collection__intro">Models from my <a href="https://github.com/ashutosh-shinde/Population-Dynamics" target="_blank" rel="noopener">Population Dynamics</a> project, from one species to two.</p>
       </div>
       <!-- HOW TO ADD A SIMULATION
-             1. Copy the folder population-dynamics/discrete-logistic/ to a new folder
-                (e.g. population-dynamics/continuous-logistic/) and write the page.
+             1. Copy a simulation folder to a new folder and write the page: population-dynamics/discrete-logistic/
+                for a map, or one of cards 3–6 (e.g. population-dynamics/harvesting/) for differential equations;
+                those pages also load the ODE solvers (js/lib/ode.js) and the shared page helpers (js/lib/simkit.js).
              2. Put its maths and wiring in js/sims/<name>.js, drawing with WQ.Plot (js/lib/plot.js).
-             3. Turn its "coming soon" card below into a link:
-                <a class="project-card" id="pd-2" href="population-dynamics/<folder>/index.html" data-collapse> … </a>
-                with "Open →" instead of the badge, and data-back="#pd-2" on the new page's back links. -->
+             3. Add its card below: copy an <li>, give it the next number and id (pd-7, …),
+                <a class="project-card" id="pd-7" href="population-dynamics/<folder>/index.html" data-collapse> … </a>,
+                and put data-back="#pd-7" on the new page's back links. A card for a page that is not ready yet is a
+                <div class="project-card project-card--soon" aria-disabled="true"> with
+                <span class="project-card__badge">Coming soon</span> in place of "Open →". -->
       <ol class="project-grid" data-calm>
         <li>
           <a class="project-card" id="pd-1" href="population-dynamics/discrete-logistic/index.html" data-collapse>
@@ -85,44 +88,44 @@
           </a>
         </li>
         <li>
-          <div class="project-card project-card--soon" id="pd-2" aria-disabled="true">
+          <a class="project-card" id="pd-2" href="population-dynamics/continuous-logistic/index.html" data-collapse>
             <span class="project-card__no">2</span>
             <span class="project-card__title">Continuous-time logistic model</span>
             <span class="project-card__text">Growth in continuous time, and what too large a time step does to it.</span>
-            <span class="project-card__badge">Coming soon</span>
-          </div>
+            <span class="project-card__go">Open <span aria-hidden="true">→</span></span>
+          </a>
         </li>
         <li>
-          <div class="project-card project-card--soon" id="pd-3" aria-disabled="true">
+          <a class="project-card" id="pd-3" href="population-dynamics/harvesting/index.html" data-collapse>
             <span class="project-card__no">3</span>
             <span class="project-card__title">Harvesting with Holling responses</span>
             <span class="project-card__text">Hunting or fishing a population: tipping points, collapse and recovery.</span>
-            <span class="project-card__badge">Coming soon</span>
-          </div>
+            <span class="project-card__go">Open <span aria-hidden="true">→</span></span>
+          </a>
         </li>
         <li>
-          <div class="project-card project-card--soon" id="pd-4" aria-disabled="true">
+          <a class="project-card" id="pd-4" href="population-dynamics/lv-competition/index.html" data-collapse>
             <span class="project-card__no">4</span>
             <span class="project-card__title">Lotka–Volterra competition</span>
             <span class="project-card__text">Two species sharing resources: who wins, and when can both survive?</span>
-            <span class="project-card__badge">Coming soon</span>
-          </div>
+            <span class="project-card__go">Open <span aria-hidden="true">→</span></span>
+          </a>
         </li>
         <li>
-          <div class="project-card project-card--soon" id="pd-5" aria-disabled="true">
+          <a class="project-card" id="pd-5" href="population-dynamics/consumer-resource/index.html" data-collapse>
             <span class="project-card__no">5</span>
             <span class="project-card__title">Consumer–resource model</span>
             <span class="project-card__text">Species competing for one resource: the lowest <span class="m"><i>R</i>*</span> wins.</span>
-            <span class="project-card__badge">Coming soon</span>
-          </div>
+            <span class="project-card__go">Open <span aria-hidden="true">→</span></span>
+          </a>
         </li>
         <li>
-          <div class="project-card project-card--soon" id="pd-6" aria-disabled="true">
+          <a class="project-card" id="pd-6" href="population-dynamics/prey-predator/index.html" data-collapse>
             <span class="project-card__no">6</span>
             <span class="project-card__title">Prey–predator models</span>
             <span class="project-card__text">Predators and prey in cycles, from Lotka–Volterra to Holling responses.</span>
-            <span class="project-card__badge">Coming soon</span>
-          </div>
+            <span class="project-card__go">Open <span aria-hidden="true">→</span></span>
+          </a>
         </li>
       </ol>
     </section>

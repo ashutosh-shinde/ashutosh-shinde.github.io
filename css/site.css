@@ -358,6 +358,35 @@ a.project-card:hover { background: rgb(var(--ink) / 0.06); border-color: rgb(var
 @media (prefers-reduced-motion: reduce) { .term__cursor { animation: none; } }
 @media (max-width: 520px) { .term { font-size: 12px; padding: 12px; } }
 
+/* shared pieces for the population-dynamics pages (cards 2–6): mode switches, presets, slider groups,
+   phase planes, and two more terminal colours */
+.sim [hidden] { display: none !important; } /* .sim-ctl, .sim-panel … set display, which would beat the hidden attribute */
+.sim-seg { display: inline-flex; flex-wrap: wrap; width: fit-content; max-width: 100%; align-self: flex-start; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.sim-seg button { padding: 7px 12px; border: 0; background: rgb(10 12 12 / 0.85); color: var(--ink-2); font: 500 13px/1.2 var(--sans); cursor: pointer; }
+.sim-seg button + button { border-left: 1px solid rgb(var(--ink) / 0.2); }
+.sim-seg button:hover { color: var(--ink-1); }
+.sim-seg button[aria-pressed="true"] { background: rgb(var(--ink) / 0.88); color: #111; }
+.sim-presets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.sim-presets__label { font: 500 12px/1 var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin-right: 4px; }
+.sim-presets button { padding: 6px 11px; border: 1px solid var(--line); border-radius: 999px; background: rgb(10 12 12 / 0.85); color: var(--ink-2); font: 500 12.5px/1.2 var(--sans); cursor: pointer; }
+.sim-presets button:hover { color: var(--ink-1); border-color: rgb(var(--ink) / 0.72); }
+.sim-group { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 8px; }
+.sim-group legend { padding: 0; margin-bottom: 4px; font: 600 12px/1.2 var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+.sim-controls--grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 10px 28px; }
+.sim-controls--grid .sim-ctl { max-width: none; }
+.sim-plot--phase canvas { height: clamp(300px, 46vw, 560px); cursor: crosshair; }
+.sim-btn--play { min-width: 5.5em; }
+.sim-sec > .sim-seg { margin-top: 14px; }
+.sim-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sim-panel--wideterm { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); } /* boxes with long table rows */
+@media (max-width: 900px) { .sim-panel--wideterm { grid-template-columns: minmax(0, 1fr); } }
+.sim-eq__formula--small { font-size: clamp(16px, 0.8vw + 12px, 24px); white-space: normal; } /* three long equations */
+.sim-controls--grid > .sim-group { align-self: start; }
+@media (max-width: 600px) { .sim-eq__formula--wrap { white-space: normal; font-size: 19px; } } /* long equations on a phone */
+.sim-stack { display: grid; gap: 14px; min-width: 0; }
+.term__warn { color: #f0b27a; text-shadow: 0 0 6px rgb(240 178 122 / 0.35); }
+.term__why { color: #b4f7bb; opacity: 0.92; }
+
 /* ---------------------------------------------------------------- 7. states */
 /* leaving for another page: the text fades fast while the drawings are pulled into the link */
 .wq-collapsing main, .wq-collapsing .page__main, .wq-collapsing .back { opacity: 0; transition: opacity .2s ease; }

@@ -15,6 +15,8 @@
    Labels: "X_t" is written as X with a subscript t (also "|E_t|", "R_m").
    Log axis: { log: true, y: [1e-16, 1] } (decades are labelled 10^k).
    hline/vline labels: { label: "x*" } (hline: labelAt: "left" puts it on the left).
+   Phase planes: p.field(fn), p.marker(x, y, "stable" | "unstable" | "saddle" | "center"),
+   p.line(..., { arrowAt: 0.3 }), p.fill(xs, ys, color), p.band(xs, lo, hi, color), p.onTap(cb).
    HOW TO EDIT: COLORS (data colours), FONT_* (tick and axis label fonts),
    the default padding in create().
    ============================================================================= */
@@ -45,7 +47,14 @@
     return out;
   }
   const decimals = (step) => Math.max(0, Math.min(6, -Math.floor(Math.log10(step) + 1e-9)));
-  const fmtTick = (v, d) => (v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
+  // tick labels; from 10⁵ up as m×10ⁿ, so a runaway value (a prey growing to 10⁹) still fits beside the axis
+  const SUP = { "-": "⁻", 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };
+  const fmtTick = (v, d) => {
+    const a = Math.abs(v), sign = v < 0 ? "−" : "";
+    if (a < 1e5) return sign + a.toFixed(d);
+    const e = Math.floor(Math.log10(a) + 1e-9), m = Number((a / Math.pow(10, e)).toPrecision(2));
+    return sign + (m === 1 ? "" : m + "×") + "10" + String(e).split("").map((c) => SUP[c]).join("");
+  };
 
   /* text with an optional subscript: "X_t" → X, small t; "|E_t|" → |E, t, | */
   function label(ctx, text, x, y, align = "left", color = `rgba(${INK},0.8)`, measure = false) {
@@ -169,6 +178,16 @@
       ctx.beginPath();
       for (let i = 0; i < n; i++) { const [px, py] = P.toPx(xs ? xs[i] : i, ys[i]); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
       ctx.stroke(); ctx.setLineDash([]);
+      if (o.arrowAt != null && n > 1) { // a small arrowhead along the path, at that share of its length
+        const pts = []; let total = 0;
+        for (let i = 0; i < n; i++) { const q = P.toPx(xs ? xs[i] : i, ys[i]); if (i) total += Math.hypot(q[0] - pts[i - 1][0], q[1] - pts[i - 1][1]); pts.push(q); }
+        let goal = total * Math.min(1, Math.max(0, o.arrowAt)), acc = 0;
+        for (let i = 1; i < n && total > 0; i++) {
+          const dl = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+          if (acc + dl >= goal && dl > 0) { const u = (goal - acc) / dl; arrowHead(pts[i - 1][0] + u * (pts[i][0] - pts[i - 1][0]), pts[i - 1][1] + u * (pts[i][1] - pts[i - 1][1]), pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1], 7); break; }
+          acc += dl;
+        }
+      }
       if (o.dots) {
         const r = o.dotR || (n > 150 ? 1.4 : n > 70 ? 2 : 2.6);
         for (let i = 0; i < n; i++) { const [px, py] = P.toPx(xs ? xs[i] : i, ys[i]); ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill(); }
@@ -227,6 +246,85 @@
       const [px, py] = P.toPx(x, y);
       ctx.save(); ctx.font = o.font || FONT_TICK; ctx.fillStyle = o.color || `rgba(${INK},0.7)`; ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "alphabetic";
       ctx.fillText(s, px + (o.dx || 0), py + (o.dy || 0)); ctx.restore();
+      return P;
+    };
+
+    /* an arrowhead at (px, py) pointing along (dx, dy), in pixels (uses the current stroke style) */
+    function arrowHead(px, py, dx, dy, size) {
+      const L = Math.hypot(dx, dy); if (!(L > 0)) return;
+      const ux = dx / L, uy = dy / L, s = size, w = s * 0.55;
+      ctx.beginPath();
+      ctx.moveTo(px - ux * s - uy * w, py - uy * s + ux * w); ctx.lineTo(px, py); ctx.lineTo(px - ux * s + uy * w, py - uy * s - ux * w);
+      ctx.stroke();
+    }
+    /* direction field: fn(x, y) → [dx, dy] in data units per unit time, on an n×n grid of cell centres */
+    P.field = function (fn, o = {}) {
+      const n = o.n || (P.W < 500 ? 11 : 15), a = P.area, cw = a.w / n, chh = a.h / n, L = (o.len || 0.4) * Math.min(cw, chh);
+      const sx = a.w / (P.x[1] - P.x[0]), sy = a.h / (P.y[1] - P.y[0]);
+      clip(); ctx.strokeStyle = o.color || `rgba(${INK},0.3)`; ctx.lineWidth = 1; ctx.lineCap = "round";
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+        const px = a.l + (i + 0.5) * cw, py = a.t + (j + 0.5) * chh, [x, y] = P.fromPx(px, py);
+        const v = fn(x, y); if (!v) continue;
+        const ddx = v[0] * sx, ddy = -v[1] * sy, sp = Math.hypot(ddx, ddy);
+        if (!(sp > 0) || !Number.isFinite(sp)) continue;
+        const ux = ddx / sp, uy = ddy / sp;
+        ctx.beginPath(); ctx.moveTo(px - ux * L / 2, py - uy * L / 2); ctx.lineTo(px + ux * L / 2, py + uy * L / 2); ctx.stroke();
+        arrowHead(px + ux * L / 2, py + uy * L / 2, ux, uy, Math.min(4, L * 0.35));
+      }
+      ctx.restore();
+      return P;
+    };
+    /* equilibrium marker: "stable" filled, "unstable" open, "saddle" half filled, "center"/"neutral" dashed ring */
+    P.marker = function (x, y, kind, o = {}) {
+      const [px, py] = P.toPx(x, y), r = o.r || 5, color = o.color || COLORS.white;
+      if (!Number.isFinite(px) || !Number.isFinite(py)) return P;
+      ctx.save(); ctx.lineWidth = 1.6; ctx.strokeStyle = color;
+      ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2);
+      if (kind === "stable") { ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = "#0d0f0f"; ctx.lineWidth = 1; ctx.stroke(); }
+      else if (kind === "saddle") {
+        ctx.fillStyle = "#0d0f0f"; ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(px, py, r, Math.PI / 2, (3 * Math.PI) / 2); ctx.closePath(); ctx.fillStyle = color; ctx.fill();
+      } else {
+        if (kind === "center" || kind === "neutral") ctx.setLineDash([2.5, 2]);
+        ctx.fillStyle = "#0d0f0f"; ctx.fill(); ctx.stroke();
+      }
+      ctx.restore();
+      if (o.label) {
+        ctx.save(); ctx.font = FONT_TICK; const w = ctx.measureText(o.label).width;
+        let lx = px + r + 3, ly = py - r - 2;
+        if (lx + w > P.area.r) lx = px - r - 3 - w;
+        if (ly - 10 < P.area.t) ly = py + r + 12;
+        ctx.fillStyle = `rgba(${INK},0.85)`; ctx.fillText(o.label, lx, ly); ctx.restore();
+      }
+      return P;
+    };
+    /* a filled polygon (data coordinates), clipped to the plot area */
+    P.fill = function (xs, ys, color) {
+      if (!xs.length) return P;
+      clip(); ctx.fillStyle = color; ctx.beginPath();
+      for (let i = 0; i < xs.length; i++) { const [px, py] = P.toPx(xs[i], ys[i]); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+      ctx.closePath(); ctx.fill(); ctx.restore();
+      return P;
+    };
+    /* the area between two curves lo(x) and hi(x) */
+    P.band = function (xs, lo, hi, color) {
+      const X = [], Y = [];
+      for (let i = 0; i < xs.length; i++) { X.push(xs[i]); Y.push(hi[i]); }
+      for (let i = xs.length - 1; i >= 0; i--) { X.push(xs[i]); Y.push(lo[i]); }
+      return P.fill(X, Y, color);
+    };
+    /* tap or click inside the plot area → cb(x, y) in data coordinates (a drag still scrolls the page) */
+    P.onTap = function (cb) {
+      let down = null;
+      canvas.addEventListener("pointerdown", (e) => { down = { x: e.clientX, y: e.clientY, t: Date.now(), id: e.pointerId }; });
+      canvas.addEventListener("pointercancel", () => { down = null; });
+      canvas.addEventListener("pointerup", (e) => {
+        const d = down; down = null;
+        if (!d || d.id !== e.pointerId || Date.now() - d.t > 500 || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 8) return;
+        const r = canvas.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+        if (!P.inside(px, py)) return;
+        const [x, y] = P.fromPx(px, py); cb(x, y);
+      });
       return P;
     };
 
