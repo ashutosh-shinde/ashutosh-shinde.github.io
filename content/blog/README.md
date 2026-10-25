@@ -1,3 +1,8 @@
+title: Three days on Kedarkantha
+date: 2026-10-20
+category: Trekking
+abstract: Knee-deep snow, a 3 a.m. summit push, and why I now carry two pairs of gloves.
+
 Continuous_time_logistic_model
 ================
 
