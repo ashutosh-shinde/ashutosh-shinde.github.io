@@ -79,9 +79,12 @@
       const a = cuts[i], b = cuts[i + 1], Pa = m.P(a), Pb = i === cuts.length - 2 ? 0 : m.P(b);
       if (!Number.isFinite(Pa) && !Number.isFinite(Pb)) continue;
       if ((p - Pa) * (p - Pb) <= 0) {
-        const u = (p === Pb) ? b : (p === Pa) ? a : ODE.bisect((x) => m.P(x) - p, a, b, 1e-15);
-        // (a root at the grid's left end is u = 0 itself, handled below)
-        if (u > 1e-9 * U && !out.some((e) => Math.abs(e.u - u) < 1e-9 * U)) out.push({ u });
+        // (near 0 in logs: with θ just above 1 the refuge can sit at 10⁻¹¹ k, and is then found to full precision)
+        const u = p === Pb ? b : p === Pa ? a
+          : a < 1e-6 * U ? Math.exp(ODE.bisect((w) => m.P(Math.exp(w)) - p, Math.log(a), Math.log(b), 1e-14)) : ODE.bisect((x) => m.P(x) - p, a, b, 1e-15);
+        // (a root at the search's left end, 10⁻¹² k, stands for u = 0 itself, handled below; a tiny root above it
+        // is kept: until this review roots below 10⁻⁹ k were dropped, so such a refuge went missing)
+        if (u > cuts[0] && !out.some((e) => Math.abs(e.u - u) <= 1e-9 * Math.max(e.u, u))) out.push({ u });
       }
     }
     for (const e of out) {
@@ -121,7 +124,8 @@
     const U = m.U, pOf = opts.pOf;
     const absorbing = pOf ? !m.lin && m.th < 1 : m.absorbing;
     const rhs = (t, y, d) => { d[0] = m.f(y[0], pOf ? pOf(t) : m.p); };
-    const o = { rtol: 1e-8, atol: 1e-10 * U, samples: opts.samples || 400, nonneg: true, hmax: opts.hmax || tmax / 50, maxSteps: 400000 };
+    // (θ > 1: y = 0 is never stable and a refuge can lie at 10⁻¹¹ k, so the error is kept relative down there)
+    const o = { rtol: 1e-8, atol: (!m.lin && m.th > 1 ? 1e-30 : 1e-10) * U, samples: opts.samples || 400, nonneg: true, hmax: opts.hmax || tmax / 50, maxSteps: 400000 };
     if (absorbing) o.stop = (t, y) => y[0] < 1e-9 * U;
     else if (opts.floor) o.floor = opts.floor;
     const res = ODE.solve(rhs, [u0], 0, tmax, o);
@@ -303,6 +307,7 @@
       else if (refugeTh && s.u < (lowFold ? lowFold.u : 0.15 * m.U)) {
         L.push(["> state: ", hi(`pushed down to the low refuge ${u}* = ${fmtSig(s.u, 4)}`)]);
         L.push(why(`${u} = 0 is never stable for θ > 1: at low density the harvest (∝ y^θ) is weaker than growth (∝ y)`));
+        if (s.u < 1e-6 * m.U) L.push(why("a refuge this low is extinction in practice"));
       } else {
         L.push(["> state: ", hi(`sustainable — settles at ${u}* = ${fmtSig(s.u, 4)} (${pct(s.u)})`)]);
         L.push(why("above the yellow curve the white one wins: the population rises"));

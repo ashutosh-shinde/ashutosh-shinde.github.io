@@ -223,6 +223,12 @@ Boxes and checks read one snapshot of the parameters taken when the runs are com
 state (the boxes are throttled, so they could otherwise mix two states). The panels use
 `.sim-panel--wideterm` (a wider box column) so the equilibrium rows fit on one line on desktop.)
 
+(Second review, before the merge to master: a start close to the separatrix can linger by the saddle and
+leave it only late, so at `t_max` it is on its way to a stable state but neither there nor by the saddle;
+the check called that a failure (21 of 1351 such runs in 1500 random states). Now a run still moving at
+`t_max` (with `t_max ≥ 10·τ` and away from the saddle) is continued for `20·t_max` and must then reach a
+stable state: all 1351 do.)
+
 ## 9. Screenshots to look at
 
 Every preset; `α_21 = 0`; `α_12 = 5, α_21 = 5` (strongly bistable); `K1 = 100, K2 = 1`; a tapped start in

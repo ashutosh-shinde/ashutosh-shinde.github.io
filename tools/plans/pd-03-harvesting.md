@@ -351,6 +351,14 @@ accepted when the run moves monotonically towards its destination without passin
 destination is the next equilibrium in the direction `f(u_end)` points. For `θ > 1` a refuge below
 `1e-12·k` is not searched: the box then says "a refuge below 10⁻¹² k: effectively extinct".)
 
+(Second review, before the merge to master: that check caught a real gap. The equilibria kept only roots
+above `1e-9·k`, so with `θ` just above 1 and a large `h` a refuge between `1e-12·k` and `1e-9·k` went
+missing (for example `θ 1.1, k 9.27, h 11.6`: `y* = 2.27e−11`, stable), and the page then had no stable
+state above 0. Every root above the search's `1e-12·k` is now kept, found by bisection in logs near 0
+(full precision however small); a sweep of 40 000 states finds no mismatch left. For `θ > 1` the runs keep
+their error relative (`atol 1e-30·k`), so they settle on such a refuge, and box A adds "a refuge this low
+is extinction in practice" below `1e-6·k`.)
+
 ## 10. Screenshots to look at
 
 Each type at its default; every preset; Type II `h = 1.05` (bistable, fan split); Type III `k 10 θ 2` with the

@@ -406,9 +406,11 @@
       const e3 = E.find((e) => e.name === "e3");
       for (const r of runs) {
         if (!r.end) {
-          // still moving: allowed when t_max < 10·τ, or when the run lingers by the saddle e3 (a start close to the separatrix)
+          // still moving: allowed when t_max < 10·τ, or when the run lingers by the saddle e3 (a start close to the
+          // separatrix); otherwise it may have left the saddle only lately, so it must get there when continued
           const n = r.R.t.length, nearSaddle = e3 && e3.type === "saddle" && Math.hypot(r.R.N1[n - 1] - e3.N1, r.R.N2[n - 1] - e3.N2) < 0.5 * Sc;
-          ck("runs end at a stable state (or move slowly)", P.tmax < 10 * tau || nearSaddle, `start ${r.R.start} end ${r.R.end}`);
+          const later = P.tmax < 10 * tau || nearSaddle ? null : run(P, r.R.end, 20 * P.tmax, 50);
+          ck("runs end at a stable state (or move slowly)", !later || !!endOf(P, later, E), `start ${r.R.start} end ${r.R.end}${later ? ` → after 20·t_max more ${later.end}` : ""}`);
           continue;
         }
         const want = OUT === "coexistence" ? "e3" : OUT === "sp1" ? "e1" : OUT === "sp2" ? "e2" : null;

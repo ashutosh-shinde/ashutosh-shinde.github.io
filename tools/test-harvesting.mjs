@@ -124,6 +124,14 @@ for (const k of [0.1, 1, 1.8, 5.196152, 10, 20]) for (const th of [0, 0.5, 0.95,
 ok(bad === 0, `slider sweep (k × θ × h): ${bad} bad cases`);
 r = H.run(T3(1, 0, 20), 0.9, 100);
 ok(r.extinctAt != null && r.extinctAt < 0.2, `θ 0, k 1, h 20 (immediate collapse): extinct at t′ = ${r.extinctAt}`);
+// θ just above 1 with a large h: the refuge is tiny but still an equilibrium (roots below 10⁻⁹ k were dropped
+// before the review), and a run settles on it
+let tinyE = H.equilibria(T3(9.27, 1.1, 11.598)).filter((x) => x.u > 0), thrE = H.equilibria(T3(17.97, 1.05, 3.46)).filter((x) => x.u > 0);
+r = H.run(T3(9.27, 1.1, 11.598), 0.9 * 9.27, 300);
+// (θ 1.05, k 17.97, h 3.46: the refuge, ~1.7e−11, lies just below the search's 10⁻¹² k: not listed, and the
+// page says "a refuge below 10⁻¹² k")
+ok(tinyE.length === 1 && tinyE[0].stab === "stable" && Math.abs(tinyE[0].u / 2.27075e-11 - 1) < 1e-4 && Math.abs(r.end / tinyE[0].u - 1) < 1e-3 && thrE.length === 2 && thrE[0].stab === "unstable" && near(thrE[1].u, 13.71, 0.01),
+  `tiny refuges: θ 1.1, k 9.27, h 11.6 → ${tinyE.map((x) => `${x.u.toExponential(5)} ${x.stab}`).join(", ")}, run ends at ${r.end.toExponential(5)}; θ 1.05, k 17.97, h 3.46 → ${thrE.map((x) => x.u.toPrecision(4)).join(", ")}`);
 
 console.log(fails ? `${fails} failed` : "all passed");
 process.exit(fails ? 1 : 0);
