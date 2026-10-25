@@ -378,9 +378,9 @@
   function mapBox() {
     const bd = borders(P), L = [`> borders: α_12 = K_2/K_1 = ${fmt(bd.b12)} · α_21 = K_1/K_2 = ${fmt(bd.b21)}`];
     L.push(["> now ", `(${fa(P.a12)}, ${fa(P.a21)}): `, hi(OUT_TEXT[OUT])]);
-    L.push(why("right of α_12 = K_2/K_1: SP1 presses SP2 harder than SP2 presses itself"));
-    L.push(why("above α_21 = K_1/K_2: SP2 presses SP1 harder than SP1 presses itself"));
-    L.push(why("the dotted curve α_12 α_21 = 1 is where e3 changes between stable and saddle"));
+    L.push(why("right of α_12 = K_2/K_1: SP1 limits SP2 more than it limits itself (α_12/K_2 > 1/K_1), so SP2 cannot invade"));
+    L.push(why("above α_21 = K_1/K_2: SP2 limits SP1 more than it limits itself (α_21/K_1 > 1/K_2), so SP1 cannot invade"));
+    L.push(why("the dotted curve α_12 α_21 = 1 runs through the corner where the borders cross: where e3 exists it is stable below the curve and a saddle above it"));
     if (bd.b12 > AMAX) L.push(`> the α_12 border (${fmt(bd.b12, 2)}) is off the map: SP1 cannot exclude SP2 for α_12 ≤ 5`);
     if (bd.b21 > AMAX) L.push(`> the α_21 border (${fmt(bd.b21, 2)}) is off the map: SP2 cannot exclude SP1 for α_21 ≤ 5`);
     if (bd.b12 < 0.05) L.push(why("the α_12 border is almost on the axis: K's are very unequal"));

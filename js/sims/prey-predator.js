@@ -15,7 +15,8 @@
       enrichment K), each with a green terminal box
    Reference: github.com/ashutosh-shinde/Population-Dynamics,
    Two_species_population_models/ (section 3).
-   HOW TO EDIT: DEFAULTS (per model), PRESETS, STARTS (panel A's default starts).
+   HOW TO EDIT: DEFAULTS (per model), PRESETS, STARTS (panel A's default starts), CYCLE (the limit
+   cycle's search limits), LV_LOOP (points on a drawn LV orbit).
    ============================================================================= */
 (function (G) {
   "use strict";
@@ -62,23 +63,103 @@
     return out;
   }
   const scaleOf = (p, s) => Math.max(1, s ? Math.max(s[0], s[1]) : 0, Number.isFinite(Nstar(p)) ? Nstar(p) : 0, p.model === "LV" ? p.r / p.b : p.K);
-  function run(p, s, tmax, samples = 800) {
-    if (p.model === "LV" && s[0] > 0 && s[1] > 0) return runLogLV(p, s, tmax, samples);
-    const S = scaleOf(p, s);
-    const r = ODE.solve(field(p), [s[0], s[1]], 0, tmax, { rtol: 1e-9, atol: 1e-11 * S, samples, nonneg: true, hmax: tmax / 100, maxSteps: 600000 });
-    const n = r.n;
-    return { t: r.t.subarray(0, n), N: r.y[0].subarray(0, n), P: r.y[1].subarray(0, n), n, status: r.status, start: s };
+  // a run from s = (N(0), P(0)). With both above 0 it is integrated in log coordinates x = ln N, y = ln P:
+  // the prey can fall to 1e−30 and far below (a big LV cycle, a predator boom, a rich RM cycle), far below
+  // any absolute tolerance in N, and a plain integration then lets it recover too early; in logs the
+  // relative accuracy holds all the way. LV orbits are closed, so one period is integrated and repeated
+  // (runLV). With a 0 start that one stays 0.
+  function run(p, s, tmax, samples = 800, opts = {}) {
+    if (s[0] > 0 && s[1] > 0) return p.model === "LV" ? runLV(p, s, tmax, samples, opts) : runLog(p, s, tmax, samples, opts);
+    return runAxis(p, s, tmax, samples);
   }
-  // LV in log coordinates x = ln N, y = ln P: dx/dt = r − βP, dy/dt = γβN − δ. A big LV cycle takes the prey
-  // down to ~e^(−V/δ) (1e−80 from (100, 100)), far below any absolute tolerance in N; in logs the relative
-  // accuracy holds all the way and V stays constant
-  function runLogLV(p, s, tmax, samples) {
-    const F = (t, y, d) => { d[0] = p.r - p.b * Math.exp(y[1]); d[1] = p.g * p.b * Math.exp(y[0]) - p.d; };
-    const r = ODE.solve(F, [Math.log(s[0]), Math.log(s[1])], 0, tmax, { rtol: 1e-12, atol: 1e-12, samples, nonneg: false, hmax: tmax / 100, maxSteps: 600000, big: 1e6 });
+  // LV: in logs (x = ln N, y = ln P) every orbit circles e1 = (ln N*, ln P*) anticlockwise (V is convex in x and
+  // y, so each ray from e1 meets an orbit once) and crosses the four half-axes through e1 in turn: those are its
+  // extremes (N is largest on y = ln P* right of e1, where dN/dt = 0; P is largest on x = ln N* above it; …).
+  // Five solves, each to the next crossing and the last back to the starting ray, give the period T and the
+  // extremes exactly; a second pass integrates [0, T] with output at each t mod T. The run is then periodic by
+  // construction (V cannot drift), costs one period however long t_max is, carries its exact extremes
+  // (run.cycle; the time series includes them, so even a sharp spike is drawn at its true height) and one
+  // finely sampled loop to draw. A start very close to e1, or a period longer than t_max: straight through.
+  const LV_LOOP = 1000;
+  function runLV(p, s, tmax, samples, opts) {
+    const x0 = Math.log(s[0]), y0 = Math.log(s[1]), xs = Math.log(p.d / (p.g * p.b)), ys = Math.log(p.r / p.b), ax0 = x0 - xs, ay0 = y0 - ys;
+    if (Math.hypot(ax0, ay0) < 1e-6) return runLog(p, s, tmax, samples, opts);
+    const tol = opts.rtol || 1e-12, F = logField(p), base = { rtol: tol, atol: tol, nonneg: false, maxSteps: 600000, big: 1e6, samples: 2, hmax: tmax / 100 };
+    // the quadrants around e1, anticlockwise, and the crossing that ends each: I → II is P's maximum, II → III
+    // N's minimum, III → IV P's minimum, IV → I N's maximum
+    const quad = (sx, sy) => (sx > 0 && sy >= 0 ? 0 : sx <= 0 && sy > 0 ? 1 : sx < 0 && sy <= 0 ? 2 : 3);
+    const ends = [(t, z) => z[0] <= xs, (t, z) => z[1] <= ys, (t, z) => z[0] >= xs, (t, z) => z[1] >= ys], names = ["Pmax", "Nmin", "Pmin", "Nmax"];
+    const back = (t, z) => ax0 * (z[1] - ys) - ay0 * (z[0] - xs) >= 0 && ax0 * (z[0] - xs) + ay0 * (z[1] - ys) > 0; // (the starting ray)
+    const q0 = quad(ax0, ay0), ev = {};
+    let z = [x0, y0], t = 0;
+    for (let k = 0; k <= 4; k++) {
+      if (!(tmax - t > 0)) return runLog(p, s, tmax, samples, opts);
+      const q = (q0 + k) % 4, r = ODE.solve(F, z, 0, tmax - t, Object.assign({ stop: k < 4 ? ends[q] : back }, base));
+      if (r.status !== "stopped") return runLog(p, s, tmax, samples, opts); // (no full turn by t_max)
+      t += r.tEnd; z = r.yEnd;
+      if (k < 4) ev[names[q]] = { t, x: z[0], y: z[1] };
+    }
+    const T = t, phase = (u) => Math.max(0, Math.min(T, u - T * Math.floor(u / T)));
+    for (const k of names) ev[k].ph = phase(ev[k].t);
+    // the time series: even samples (opts.perPeriod: at least that many per period, up to 20 000) and every
+    // crossing in [0, t_max]; the loop: one period at LV_LOOP even phases and the four crossings
+    const S = Math.max(2, samples | 0, Math.min(20000, Math.ceil(((opts.perPeriod || 0) * tmax) / T) + 1)), times = [];
+    for (let k = 0; k < S; k++) times.push((tmax * k) / (S - 1));
+    for (const k of names) for (let u = ev[k].ph; u <= tmax; u += T) times.push(u);
+    const tt = Float64Array.from(times).sort(), M = tt.length, L = LV_LOOP + 1, when = new Float64Array(M + L + 4);
+    for (let k = 0; k < M; k++) when[k] = phase(tt[k]);
+    for (let j = 0; j < L; j++) when[M + j] = (T * j) / (L - 1);
+    names.forEach((k, j) => { when[M + L + j] = ev[k].ph; });
+    const order = Array.from({ length: when.length }, (_, k) => k).sort((a, b) => when[a] - when[b]);
+    const B = ODE.solve(F, [x0, y0], 0, T, Object.assign({}, base, { times: order.map((k) => when[k]), hmax: T / 100 }));
+    if (B.n < when.length) return runLog(p, s, tmax, samples, opts);
+    const N = new Float64Array(M), P = new Float64Array(M), lx = new Float64Array(M), ly = new Float64Array(M), loop = { N: [], P: [] };
+    order.forEach((k, j) => { if (k < M) { lx[k] = B.y[0][j]; ly[k] = B.y[1][j]; } else { loop.N.push(Math.exp(B.y[0][j])); loop.P.push(Math.exp(B.y[1][j])); } });
+    for (let k = 0; k < M; k++) { N[k] = Math.exp(lx[k]); P[k] = Math.exp(ly[k]); }
+    const cycle = { T, Nmax: Math.exp(ev.Nmax.x), Nmin: Math.exp(ev.Nmin.x), lnNmin: ev.Nmin.x, Pmax: Math.exp(ev.Pmax.y), Pmin: Math.exp(ev.Pmin.y), tNmax: ev.Nmax.ph, tPmax: ev.Pmax.ph };
+    return { t: tt, N, P, lx, ly, n: M, status: "ok", start: s, period: T, loop, cycle };
+  }
+  // a start on an axis has an exact solution: no prey → P = P(0)e^(−δt); no predators → the prey grow
+  // exponentially (LV, stopped at 10⁹ as the solver would) or logistically to K (Vt, RM)
+  function runAxis(p, s, tmax, samples) {
+    const S = Math.max(2, samples | 0), t = new Float64Array(S), N = new Float64Array(S), P = new Float64Array(S);
+    let n = S, status = "ok";
+    for (let k = 0; k < S; k++) {
+      const tk = (tmax * k) / (S - 1); t[k] = tk;
+      if (s[0] === 0) { N[k] = 0; P[k] = s[1] * Math.exp(-p.d * tk); continue; }
+      P[k] = 0;
+      if (p.model === "LV") {
+        const v = s[0] * Math.exp(p.r * tk);
+        if (!(v <= 1e9)) { n = k; status = "blowup"; break; } // (the solvers' limit for a runaway state)
+        N[k] = v;
+      } else N[k] = p.K / (1 + (p.K / s[0] - 1) * Math.exp(-p.r * tk));
+    }
+    if (n < 1) { n = 1; N[0] = s[0]; } // (a start already above 10⁹)
+    return { t: t.subarray(0, n), N: N.subarray(0, n), P: P.subarray(0, n), n, status, start: s };
+  }
+  function logField(p) { // d(ln N)/dt and d(ln P)/dt: the per-head growth rates
+    if (p.model === "LV") return (t, y, d) => { d[0] = p.r - p.b * Math.exp(y[1]); d[1] = p.g * p.b * Math.exp(y[0]) - p.d; };
+    if (p.model === "Vt") return (t, y, d) => { const N = Math.exp(y[0]); d[0] = p.r * (1 - N / p.K) - p.b * Math.exp(y[1]); d[1] = p.g * p.b * N - p.d; };
+    return (t, y, d) => { const N = Math.exp(y[0]); d[0] = p.r * (1 - N / p.K) - (p.b * Math.exp(y[1])) / (p.N0 + N); d[1] = (p.g * p.b * N) / (p.N0 + N) - p.d; };
+  }
+  function runLog(p, s, tmax, samples, opts) { return runXY(p, [Math.log(s[0]), Math.log(s[1])], tmax, samples, opts, s); }
+  function runXY(p, xy, tmax, samples, opts, s) { // from (ln N, ln P)
+    const tol = opts.rtol || (p.model === "LV" ? 1e-12 : 1e-10); // (LV: tight, so V's drift stays far below 1e−6)
+    return pack(ODE.solve(logField(p), [xy[0], xy[1]], 0, tmax, { rtol: tol, atol: tol, samples, nonneg: false, hmax: tmax / 100, maxSteps: 600000, big: 1e6 }), s);
+  }
+  function pack(r, s) { // a solver result in (ln N, ln P, …) → a run
     const n = r.n, N = new Float64Array(n), P = new Float64Array(n);
     for (let i = 0; i < n; i++) { N[i] = Math.exp(r.y[0][i]); P[i] = Math.exp(r.y[1][i]); }
     // (the logs are kept: deep in a big cycle e^x underflows to 0, but V is still finite in x and y)
-    return { t: r.t.subarray(0, n), N, P, lx: r.y[0].subarray(0, n), ly: r.y[1].subarray(0, n), n, status: r.status, start: s };
+    return { t: r.t.subarray(0, n), N, P, lx: r.y[0].subarray(0, n), ly: r.y[1].subarray(0, n), n, status: r.status, start: s || [N[0], P[0]] };
+  }
+  // the value at an extremum near sample i, from a parabola through samples i − 1, i, i + 1 (in logs when the
+  // run has them: a tiny minimum such as 1e−30 is then refined without ever going below 0)
+  function extremeAt(R, which, i) {
+    if (i <= 0 || i >= R.n - 1) return which === "N" ? R.N[i] : R.P[i];
+    const L = which === "N" ? R.lx : R.ly;
+    if (L) return Math.exp(refine(R.t, L, i).v);
+    return Math.max(0, refine(R.t, which === "N" ? R.N : R.P, i).v);
   }
   // V along a run at sample i (from the logs when the run has them)
   const Vat = (p, R, i) => (R.lx ? p.g * p.b * Math.exp(R.lx[i]) - p.d * R.lx[i] + p.b * Math.exp(R.ly[i]) - p.r * R.ly[i] : V(p, R.N[i], R.P[i]));
@@ -111,34 +192,82 @@
     return { t: t[i] + off * (t[i + 1] - t[i]), v: b - 0.25 * (a - c) * off };
   }
   function measures(R) {
+    if (R.cycle) { // (a periodic LV run: exact)
+      const c = R.cycle, end = R.t[R.n - 1] + 1e-9, pN = [], pP = [];
+      for (let t = c.tNmax; t <= end; t += c.T) pN.push({ t, v: c.Nmax });
+      for (let t = c.tPmax; t <= end; t += c.T) pP.push({ t, v: c.Pmax });
+      return { peaksN: pN, peaksP: pP, period: c.T, lag: (((c.tPmax - c.tNmax) % c.T) + c.T) % c.T, min: c.Nmin, lnMin: c.lnNmin, max: c.Nmax };
+    }
     const pN = peaks(R.t, R.N), pP = peaks(R.t, R.P);
     if (pN.length < 2) return { peaksN: pN, peaksP: pP, period: null };
-    let gap = 0; for (let k = 1; k < pN.length; k++) gap += pN[k].t - pN[k - 1].t;
-    const period = gap / (pN.length - 1);
+    // period and lag from the last (up to) four cycles: the first swings can still be a transient (a predator
+    // boom, a run settling onto a cycle), while the last ones show where the run has settled
+    const k0 = Math.max(0, pN.length - 5);
+    let gap = 0; for (let k = k0 + 1; k < pN.length; k++) gap += pN[k].t - pN[k - 1].t;
+    const period = gap / (pN.length - 1 - k0);
     const lags = [];
-    for (const q of pN) { const nx = pP.find((x) => x.t > q.t); if (nx && nx.t - q.t < period) lags.push(nx.t - q.t); }
+    for (const q of pN.slice(k0)) { const nx = pP.find((x) => x.t > q.t); if (nx && nx.t - q.t < period) lags.push(nx.t - q.t); }
     const lag = lags.length ? lags.reduce((s, v) => s + v, 0) / lags.length : null;
     // the prey's swing over the last full period (between the last two prey peaks)
-    const t0 = pN[pN.length - 2].t, t1 = pN[pN.length - 1].t;
+    const t0 = pN[pN.length - 2].t, t1 = pN[pN.length - 1].t, L = R.lx; // (compared in logs when the run has them: a deep trough is 0 in N)
     let iMin = -1, mx = -Infinity;
-    for (let i = 1; i < R.n - 1; i++) if (R.t[i] >= t0 && R.t[i] <= t1) { if (iMin < 0 || R.N[i] < R.N[iMin]) iMin = i; if (R.N[i] > mx) mx = R.N[i]; }
-    const min = iMin > 0 ? refine(R.t, R.N, iMin).v : null;
-    return { peaksN: pN, peaksP: pP, period, lag, min, max: Math.max(mx, pN[pN.length - 2].v, pN[pN.length - 1].v) };
+    for (let i = 1; i < R.n - 1; i++) if (R.t[i] >= t0 && R.t[i] <= t1) { if (iMin < 0 || (L ? L[i] < L[iMin] : R.N[i] < R.N[iMin])) iMin = i; if (R.N[i] > mx) mx = R.N[i]; }
+    const min = iMin > 0 ? extremeAt(R, "N", iMin) : null, lnMin = iMin > 0 && L ? refine(R.t, L, iMin).v : null;
+    return { peaksN: pN, peaksP: pP, period, lag, min, lnMin, max: Math.max(mx, pN[pN.length - 2].v, pN[pN.length - 1].v) };
   }
-  // RM, K > K_H: the limit cycle from (1.05 N*, P*), the last 500 time units
-  function limitCycle(p, T = 1500) {
-    const Ns = Nstar(p), Ps = Pstar(p, Ns);
-    const R = run(p, [1.05 * Ns, Ps], T, 3000);
-    const from = T - 500; let i0 = 0; while (i0 < R.n && R.t[i0] < from) i0++;
-    let Nmin = Infinity, Nmax = -Infinity, Pmin = Infinity, Pmax = -Infinity;
-    for (let i = i0; i < R.n; i++) { Nmin = Math.min(Nmin, R.N[i]); Nmax = Math.max(Nmax, R.N[i]); Pmin = Math.min(Pmin, R.P[i]); Pmax = Math.max(Pmax, R.P[i]); }
-    const tail = { t: R.t.subarray(i0), N: R.N.subarray(i0) }, pk = peaks(tail.t, tail.N);
-    let a = i0, b = R.n - 1;
-    if (pk.length >= 2) { const ta = pk[pk.length - 2].t, tb = pk[pk.length - 1].t; a = i0; while (a < R.n && R.t[a] < ta) a++; b = a; while (b < R.n - 1 && R.t[b] < tb) b++; }
-    return { Nmin, Nmax, Pmin, Pmax, loop: { N: Array.from(R.N.subarray(a, b + 1)), P: Array.from(R.P.subarray(a, b + 1)) }, period: pk.length >= 2 ? (pk[pk.length - 1].t - pk[0].t) / (pk.length - 1) : null };
+  // RM, K > K_H: the limit cycle (there is only one). Its period can be a few time units or thousands (with a
+  // rich prey the cycle can crash it to 1e−180, and it takes that long to come back), so the cycle is found
+  // on a section, not in a fixed time window: the line N = N* below e2, which every orbit around e2 crosses
+  // once per turn, moving right (dN/dt > 0 there; above e2 it is < 0). A turn is two solves: until N < N* (the
+  // crossing above e2), then until N ≥ N* (back on the section). The first turn starts near e1 = (K, 0), as
+  // the predators invade: at the cycle's rim, where orbits close in on it within a few turns (from near e2
+  // they can spiral out for tens of thousands of time units). The turns are repeated until they agree; when
+  // they close in slowly (near the Hopf point) an Aitken step on the section's ln P jumps ahead (a planar
+  // flow's return map is increasing, so the steps shrink by a factor μ between 0 and 1). One more turn is
+  // then sampled finely: the extremes (P's are the two crossings, where dP/dt = 0), the loop and the period.
+  // settled: false if the turns had not agreed within the limits; null if no turn could be followed.
+  const CYCLE = { turns: 120, time: 1e6, loop: 1500 }; // (time: the slowest cycle in the slider ranges takes ~91 000 a turn)
+  function limitCycle(p, opts = {}) {
+    const tol = opts.rtol || 1e-10, F = logField(p), Ns = Nstar(p), xs = Math.log(Ns), yTop = Math.log(Pstar(p, Ns));
+    const o = { rtol: tol, atol: tol, nonneg: false, maxSteps: 200000, big: 1e6, samples: 2, hmax: 20, h0: 1e-3 };
+    const left = (t, z) => z[0] < xs, right = (t, z) => z[0] >= xs;
+    let budget = CYCLE.time;
+    const until = (z, stop) => { const r = ODE.solve(F, z, 0, budget, Object.assign({ stop }, o)); budget -= r.tEnd; return r.status === "stopped" ? r : null; };
+    // one turn from (x*, y) on the section: the next crossing, the crossing above e2 (hi) and the time it took
+    const turn = (y) => { const a = until([xs, y], left), b = a && until(a.yEnd, right); return b ? { y: b.yEnd[1], hi: a.yEnd[1], T: a.tEnd + b.tEnd } : null; };
+    const a0 = until([Math.log(0.999 * p.K), yTop + Math.log(1e-6)], left), b0 = a0 && until(a0.yEnd, right);
+    if (!b0) return null;
+    let y = b0.yEnd[1], T = null, hi = null, turns = 0, settled = false;
+    const close = 20 * tol;
+    while (turns < CYCLE.turns) {
+      const u = turn(y), v = u && turn(u.y);
+      if (!v) { if (T == null) return null; break; }
+      turns += 2; T = v.T; hi = v.hi;
+      const d1 = u.y - y, d2 = v.y - u.y, mu = d2 / d1;
+      // (y_k − y* ≈ μ^k: the limit is y + d2²/(d1 − d2), and that is how far the cycle still is)
+      const jump = mu > 0 && mu < 1 && Number.isFinite(d2 * d2 / (d1 - d2)) ? (d2 * d2) / (d1 - d2) : 0;
+      y = v.y;
+      if (Math.abs(jump || d2) <= close * Math.max(1, Math.abs(y))) { y += jump; settled = true; break; }
+      if (jump && y + jump < yTop - 0.5 * (yTop - y)) y += jump;
+    }
+    const S = Math.min(20001, Math.max(2001, Math.ceil(T / 0.02)));
+    const R = pack(ODE.solve(F, [xs, y], 0, T, Object.assign({}, o, { samples: S, hmax: Math.min(o.hmax, T / 100) })));
+    if (R.n < 3) return null;
+    let iNmin = 0, iNmax = 0;
+    for (let i = 1; i < R.n; i++) { if (R.lx[i] < R.lx[iNmin]) iNmin = i; if (R.lx[i] > R.lx[iNmax]) iNmax = i; }
+    const every = Math.ceil(R.n / CYCLE.loop), N = [], P = []; // (each chunk: its first sample and its predator peak, which is sharp)
+    for (let i = 0; i < R.n; i += every) {
+      let j = i; for (let k = i + 1; k < Math.min(R.n, i + every); k++) if (R.ly[k] > R.ly[j]) j = k;
+      N.push(R.N[i]); P.push(R.P[i]); if (j !== i) { N.push(R.N[j]); P.push(R.P[j]); }
+    }
+    N.push(R.N[R.n - 1]); P.push(R.P[R.n - 1]);
+    const lnNmin = iNmin > 0 && iNmin < R.n - 1 ? refine(R.t, R.lx, iNmin).v : R.lx[iNmin]; // (kept: e^x is 0 below 1e−308)
+    // P's extremes are the two crossings themselves (dP/dt = 0 on N = N*): exact, however sharp the peak
+    return { Nmin: Math.exp(lnNmin), lnNmin, Nmax: extremeAt(R, "N", iNmax), Pmin: Math.exp(y), Pmax: Math.exp(hi),
+      loop: { N, P }, period: T, settled, turns };
   }
 
-  const M = { MODELS, field, f, jac, Nstar, Pstar, KH, invasion, equilibria, run, runLogLV, V, Vat, Vscale, peaks, measures, limitCycle, scaleOf };
+  const M = { MODELS, field, logField, f, jac, Nstar, Pstar, KH, invasion, equilibria, run, V, Vat, Vscale, peaks, measures, limitCycle, scaleOf };
   (G.WQ = G.WQ || {}).PP = M;
   if (typeof document === "undefined") return; // (in node: the maths only)
 
@@ -164,52 +293,97 @@
     RM: ['<i>dN</i>/<i>dt</i> = <i>rN</i>(1 − <i>N</i>/<i>K</i>) − <i>βNP</i>/(<i>N</i><sub>0</sub> + <i>N</i>)', '<i>dP</i>/<i>dt</i> = <i>γβNP</i>/(<i>N</i><sub>0</sub> + <i>N</i>) − <i>δP</i>'],
   };
   const st = { model: "LV", v: JSON.parse(JSON.stringify(DEFAULTS)) };
-  let P, E, Ns, Ps, Kh, orbits = [], taps = [], tapRuns = [], main = null, meas = null, cyc = null, box = null, sliders = {}, plots = {}, loop;
-  let scan = { key: null, pts: [], done: false, timer: 0 };
+  let P, E, Ns, Ps, Kh, orbits = [], taps = [], tapRuns = [], main = null, meas = null, cyc = null, cycWait = false, box = null, sliders = {}, plots = {}, loop;
+  let scan = { key: null, pts: [], done: false, timer: 0, cycles: new Map() }, runs = { key: null, map: new Map() };
   const snap = () => Object.assign({ model: st.model }, st.v[st.model]);
   const p4 = (v) => { if (v === 0) return "0"; const a = Math.abs(v), sg = v < 0 ? "−" : ""; return a < 1e-3 || a >= 1e6 ? fmtSig(v, 4) : sg + (a >= 1 ? a.toPrecision(4) : a.toFixed(3)); };
+  // a prey minimum, from its log when it is below what a number can hold here (a cycle can reach 1e−400)
+  const tiny = (lnv) => { const e = lnv / Math.LN10; let k = Math.floor(e), m = Math.pow(10, e - k); if (m >= 9.9995) { m = 1; k++; } return `${m.toFixed(3)}e${k < 0 ? "−" + -k : k}`; };
+  const low = (v, lnv) => (v > 1e-300 || !Number.isFinite(lnv) ? p4(v) : tiny(lnv));
   const pt = (N, Pp) => `(${p4(N)}, ${p4(Pp)})`;
   const typeName = (t) => (t === "center" ? "centre" : t);
   const nearHopf = () => Kh != null && Math.abs(P.K - Kh) <= 1e-6 * Kh;
+  const wantsCycle = () => P.model === "RM" && Kh != null && P.K > Kh && !nearHopf();
 
+  // the faint orbits and your taps, kept until a parameter or t_max changes (dragging N(0), P(0) or tapping
+  // then costs one run); Vt and RM at 1e−8, plenty for lines (the main run, whose numbers are shown: 1e−10)
+  function fanRuns(starts) {
+    const key = [P.model, P.r, P.b, P.g, P.d, P.K, P.N0, P.tmax].join(",");
+    if (runs.key !== key) runs = { key, map: new Map() };
+    const keep = new Map(), out = starts.map((s) => {
+      const k = s.join(","); let R = runs.map.get(k) || keep.get(k);
+      if (!R) R = run(P, s, P.tmax, 500, P.model === "LV" ? {} : { rtol: 1e-8 });
+      keep.set(k, R); return R;
+    });
+    runs.map = keep; return out;
+  }
   function compute() {
     P = snap(); E = equilibria(P); Ns = Nstar(P); Ps = Number.isFinite(Ns) ? Pstar(P, Ns) : null; Kh = KH(P);
-    orbits = STARTS[P.model].map((s) => run(P, s, P.tmax, 500));
-    tapRuns = taps.map((s) => run(P, s, P.tmax, 500));
-    main = run(P, [P.Ns, P.Ps], P.tmax);
+    const fan = fanRuns(STARTS[P.model].concat(taps)), n = STARTS[P.model].length;
+    orbits = fan.slice(0, n); tapRuns = fan.slice(n);
+    main = run(P, [P.Ns, P.Ps], P.tmax, 800, { perPeriod: 12 });
     meas = P.Ns > 0 && P.Ps > 0 ? measures(main) : null;
-    cyc = P.model === "RM" && Kh != null && P.K > Kh && !nearHopf() ? limitCycle(P) : null;
+    if (P.model === "RM") startScan();
+    pickCycle();
+  }
+  // the cycle at the current K comes from the K scan's cache (the same computation as the band), so moving K
+  // along a finished scan costs nothing; until the scan has it, the boxes say it is being computed
+  function pickCycle() {
+    cyc = null; cycWait = false;
+    if (wantsCycle()) { const c = scan.key === scanKey(P) ? scan.cycles.get(P.K) : undefined; if (c === undefined) cycWait = true; else cyc = c; }
+    axes();
+  }
+  function axes() {
+    // the axes: from the default orbits, the cycle, N*, P* (and K), then your runs; a run that grows without
+    // limit (LV prey with no predators, stopped at 10⁹) only stretches them to 3× the rest
+    const ext = (R) => { const c = R.loop || R; let a = 0, b = 0; for (let i = 0; i < c.N.length; i++) { if (c.N[i] > a) a = c.N[i]; if (c.P[i] > b) b = c.P[i]; } return [a, b]; };
     let Nm = 0, Pm = 0;
-    for (const R of orbits.concat(tapRuns, [main])) for (let i = 0; i < R.n; i++) { if (R.N[i] > Nm) Nm = R.N[i]; if (R.P[i] > Pm) Pm = R.P[i]; }
+    for (const R of orbits) { const [a, b] = ext(R); Nm = Math.max(Nm, a); Pm = Math.max(Pm, b); }
     if (cyc) { Nm = Math.max(Nm, cyc.Nmax); Pm = Math.max(Pm, cyc.Pmax); }
     if (Number.isFinite(Ns)) Nm = Math.max(Nm, Ns);
     if (P.model !== "LV") Nm = Math.max(Nm, P.K);
     if (Ps != null && Ps > 0) Pm = Math.max(Pm, Ps);
+    for (const R of tapRuns.concat([main])) {
+      let [a, b] = ext(R);
+      if (R.status === "blowup") { a = Math.min(a, Math.max(3 * Nm, 1.5 * R.start[0])); b = Math.min(b, Math.max(3 * Pm, 1.5 * R.start[1])); }
+      Nm = Math.max(Nm, a); Pm = Math.max(Pm, b);
+    }
     box = { X: 1.08 * Math.max(Nm, 1e-6), Y: 1.08 * Math.max(Pm, 1e-6) };
-    if (P.model === "RM") startScan(); else if (P.model === "Vt") scan = { key: "Vt", pts: [], done: true, timer: 0 };
   }
 
-  /* ---------------------------------------------------- C. the K scan (RM: progressive, cached) */
+  /* ---------------------------------------------------- C. the K scan (RM: debounced, progressive, cached) */
+  // K from 1 to 100 in steps of 0.5 (the K slider's own steps), for one (r, β, γ, δ, N₀): it starts 200 ms after
+  // the last change of those, computes the current K first, then the rest in slices of 25 ms; each cycle is
+  // kept (scan.cycles), so moving K only looks it up. Paused while another model is shown.
+  const KS = []; for (let K = 1; K <= 100 + 1e-9; K += 0.5) KS.push(K);
+  const scanKey = (q) => [q.r, q.b, q.g, q.d, q.N0].join(",");
+  const CYC = { rtol: 1e-8 }; // (the cycle's tolerance: checked against scipy, 5e−5 or better)
+  function cycleAt(K) { // (null if the cycle could not be followed)
+    if (!scan.cycles.has(K)) scan.cycles.set(K, limitCycle(Object.assign({}, scan.q, { K }), CYC));
+    return scan.cycles.get(K);
+  }
   function startScan() {
-    const key = [P.r, P.b, P.g, P.d, P.N0].join(",");
-    if (scan.key === key) return;
-    clearTimeout(scan.timer);
-    scan = { key, pts: [], done: false, timer: 0 };
-    const q = Object.assign({}, P), Nq = Nstar(q), Kq = KH(q), Ks = []; for (let K = 1; K <= 100 + 1e-9; K += 0.5) Ks.push(K);
-    let i = 0;
-    const step = () => {
-      if (scan.key !== key) return;
-      const t0 = Date.now();
-      while (i < Ks.length && Date.now() - t0 < 25) {
-        const K = Ks[i++], qq = Object.assign({}, q, { K });
-        if (!Number.isFinite(Nq) || K <= Nq) scan.pts.push({ K, kind: "noP", N: K });
-        else if (Kq == null || K <= Kq) scan.pts.push({ K, kind: "stable", N: Nq });
-        else { const c = limitCycle(qq, 1500); scan.pts.push({ K, kind: "cycle", N: Nq, lo: c.Nmin, hi: c.Nmax }); }
-      }
-      if (i >= Ks.length) scan.done = true; else scan.timer = setTimeout(step, 0);
-      loop.want("scan");
-    };
-    scan.timer = setTimeout(step, 0);
+    const key = scanKey(P);
+    if (scan.key !== key) {
+      clearTimeout(scan.timer);
+      const q = { model: "RM", r: P.r, b: P.b, g: P.g, d: P.d, N0: P.N0 };
+      scan = { key, q, Nq: Nstar(q), Kq: KH(q), pts: [], i: 0, done: false, timer: setTimeout(scanStep, 200), cycles: new Map() };
+    } else if (!scan.timer && (!scan.done || (wantsCycle() && !scan.cycles.has(P.K)))) scan.timer = setTimeout(scanStep, 0); // (resumed, or a K off the grid)
+  }
+  function scanStep() {
+    const s = scan; s.timer = 0;
+    if (P.model !== "RM" || s.key !== scanKey(P)) return; // (paused: startScan resumes it)
+    const t0 = Date.now();
+    if (wantsCycle() && !s.cycles.has(P.K)) cycleAt(P.K);
+    while (s.i < KS.length && Date.now() - t0 < 25) {
+      const K = KS[s.i++];
+      if (!Number.isFinite(s.Nq) || K <= s.Nq) s.pts.push({ K, kind: "noP", N: K });
+      else if (s.Kq == null || K <= s.Kq) s.pts.push({ K, kind: "stable", N: s.Nq });
+      else { const c = cycleAt(K); if (c) s.pts.push({ K, kind: "cycle", N: s.Nq, lo: c.Nmin, hi: c.Nmax }); }
+    }
+    s.done = s.i >= KS.length;
+    if (!s.done) s.timer = setTimeout(scanStep, 0);
+    loop.want("scan");
   }
 
   /* ---------------------------------------------------- A. phase plane */
@@ -224,9 +398,10 @@
     p.line(xs, ys, C.yellow, nc);
     p.line([0, X], [0, 0], C.pink, nc);
     if (Number.isFinite(Ns)) p.line([Ns, Ns], [0, Y], C.pink, nc);
-    for (const R of orbits) p.line(Array.from(R.N), Array.from(R.P), "rgba(246,244,236,0.75)", { width: 1.1, arrowAt: 0.3 });
-    for (const R of tapRuns) p.line(Array.from(R.N), Array.from(R.P), C.white, { width: 2.2, arrowAt: 0.3 });
-    p.line(Array.from(main.N), Array.from(main.P), C.white, { width: 2.4, arrowAt: 0.3 });
+    const curve = (R, colour, width) => { const c = R.loop || R; p.line(Array.from(c.N), Array.from(c.P), colour, { width, arrowAt: 0.3 }); }; // (LV: its closed loop)
+    for (const R of orbits) curve(R, "rgba(246,244,236,0.75)", 1.1);
+    for (const R of tapRuns) curve(R, C.white, 2.2);
+    curve(main, C.white, 2.4);
     if (cyc) p.line(cyc.loop.N, cyc.loop.P, C.orange, { width: 2 });
     for (const s of taps) p.marker(s[0], s[1], "unstable", { r: 3.5 });
     for (const e of E) p.marker(e.N, e.P, e.stable ? "stable" : e.type === "saddle" ? "saddle" : e.type === "center" ? "center" : "unstable", { label: e.name });
@@ -266,7 +441,8 @@
         L.push(why(`e2 = ${pt(e2.N, e2.P)}, eigenvalues ${ev}`));
       } else {
         L.push(["> regime: ", hi("e2 is a stable node: no oscillation")]);
-        L.push(why("K is just above δ/(γβ): too little prey to drive a swing"));
+        L.push(why(`prey crowding damps faster than the swing can turn: tr² = ${fmtSig(e2.eig.tr * e2.eig.tr, 3)} ≥ 4·det = ${fmtSig(4 * e2.eig.det, 3)}`));
+        L.push(why("this happens when K is just above δ/(γβ) (little prey to drive a swing) or when the prey grows very fast"));
       }
       return L;
     }
@@ -280,7 +456,8 @@
     L.push(["> regime: ", hi("a limit cycle (sustained oscillations)")]);
     L.push(why("e2 is an unstable spiral: orbits spiral out to the orange cycle"));
     L.push(why("the paradox of enrichment: more food for the prey destabilises the system"));
-    if (cyc && cyc.Nmin < 0.01 * P.K) L.push(warn(`> the prey falls to ${p4(cyc.Nmin)} each cycle: in a real population that risks extinction`));
+    if (cycWait) L.push(dim("  computing the cycle…"));
+    if (cyc && cyc.Nmin < 0.01 * P.K) L.push(warn(`> the prey falls to ${low(cyc.Nmin, cyc.lnNmin)} each cycle: in a real population that risks extinction`));
     return L;
   }
 
@@ -299,7 +476,10 @@
     const L = [];
     if (P.Ns === 0 && P.Ps === 0) return ["> no prey and no predators: nothing happens"];
     if (P.Ns === 0) return [`> no prey: the predators starve (P halves every ln 2/δ = ${fmt(Math.LN2 / P.d, 2)})`];
-    if (P.Ps === 0) return [`> no predators: the prey grow (${P.model === "LV" ? "without limit" : `to K = ${fmt(P.K, 1)}`})`];
+    if (P.Ps === 0) {
+      if (P.model !== "LV") return [`> no predators: the prey grow to K = ${fmt(P.K, 1)}`];
+      return [main.status === "blowup" ? `> no predators: the prey grow without limit (past 10⁹ by t = ${fmt(main.t[main.n - 1], 2)})` : "> no predators: the prey grow without limit"];
+    }
     const e2 = E.find((x) => x.name === "e2");
     if (P.model !== "LV" && !e2) {
       const rate = invasion(P);
@@ -311,10 +491,17 @@
       const list = meas.peaksN.slice(0, 3).map((x) => fmt(x.t, 2)).join(", ") + (meas.peaksN.length > 3 ? ", …" : "");
       L.push(`> period ≈ ${fmt(meas.period, 2)} (prey peaks at t = ${list})`);
       if (meas.lag != null) { L.push(`> predator peaks lag the prey by ≈ ${fmt(meas.lag, 2)} (${fmt(meas.lag / meas.period, 2)} of a period)`); L.push(why("predators multiply while prey are plenty, then overeat them")); }
-      if (meas.min != null) L.push(`> prey swing between ${p4(meas.min)} and ${p4(meas.max)}`);
+      if (meas.min != null) L.push(`> prey swing between ${low(meas.min, meas.lnMin)} and ${p4(meas.max)}`);
     } else L.push("> no oscillation within t_max");
-    if (e2 && e2.stable && e2.eig.complex) L.push(`> the swings shrink ×${p4(Math.exp((2 * Math.PI * e2.eig.re1) / Math.abs(e2.eig.im1)))} per cycle near e2`);
-    if (cyc) L.push(`> it settles on the cycle: prey between ${p4(cyc.Nmin)} and ${p4(cyc.Nmax)}`);
+    if (e2 && e2.stable && e2.eig.complex) {
+      L.push(`> the swings shrink ×${p4(Math.exp((2 * Math.PI * e2.eig.re1) / Math.abs(e2.eig.im1)))} per cycle near e2`);
+      L.push(why(`near e2 they repeat every 2π/|Im λ| = ${fmt((2 * Math.PI) / Math.abs(e2.eig.im1), 2)}`));
+    }
+    if (cyc) {
+      L.push(`> it settles on the cycle: prey between ${low(cyc.Nmin, cyc.lnNmin)} and ${p4(cyc.Nmax)}`);
+      if (!meas || meas.period == null || Math.abs(meas.period - cyc.period) > 0.02 * cyc.period) L.push(why(`by t_max it is still on its way there: one turn of the cycle takes ${fmt(cyc.period, cyc.period < 100 ? 2 : 0)}`));
+    }
+    else if (cycWait) L.push(dim("> computing the cycle…"));
     if (P.model === "LV") {
       const V0 = Vat(P, main, 0), V1 = Vat(P, main, main.n - 1), drift = Math.abs(V1 - V0) / Vscale(P, main.N[0], main.P[0]);
       L.push(`> V stays ${V0.toFixed(6)} → ${V1.toFixed(6)} (drift ${drift < 1e-6 ? "< 1e−6" : fmtSig(drift, 2)})`);
@@ -326,7 +513,7 @@
   /* ---------------------------------------------------- C. effect of enrichment */
   function drawK() {
     const p = plots.k;
-    let top = 1; for (const q of scan.pts) top = Math.max(top, q.hi != null ? q.hi : q.N);
+    let top = 1; if (P.model === "RM") for (const q of scan.pts) top = Math.max(top, q.hi != null ? q.hi : q.N);
     if (P.model === "Vt") top = Math.max(1.6 * Math.min(Ns, 100), 2);
     p.set({ x: [0, 100], y: [0, 1.08 * top], xLabel: "K", yLabel: "prey N" }).clear();
     if (P.model === "Vt") {
@@ -352,7 +539,7 @@
     p.vline(P.K, C.yellow, { alpha: 0.6, width: 1 });
     p.marker(P.K, level, "stable", { color: C.yellow });
     if (cyc) { p.marker(P.K, cyc.Nmin, "stable", { color: C.yellow, r: 3 }); p.marker(P.K, cyc.Nmax, "stable", { color: C.yellow, r: 3 }); }
-    if (!scan.done) p.text(`computing the cycles… ${scan.pts.length}/199`, 98, 0.98 * 1.08 * top, { align: "right", baseline: "top", color: "rgba(246,244,236,0.6)" });
+    if (P.model === "RM" && !scan.done) p.text(`computing the cycles… ${scan.pts.length}/199`, 98, 0.98 * 1.08 * top, { align: "right", baseline: "top", color: "rgba(246,244,236,0.6)" });
   }
   function kBox() {
     if (P.model === "LV") return [];
@@ -367,12 +554,14 @@
     L.push(`> Hopf point K_H = N_0 + 2N* = ${fmt(Kh, 2)}`);
     const now = `> now K = ${fmt(P.K, 1)}: `;
     if (P.K <= Ns) L.push([now, hi("no predators, prey at K")]);
-    else if (cyc) {
-      L.push([now, hi(`a limit cycle, prey between ${p4(cyc.Nmin)} and ${p4(cyc.Nmax)}`)]);
+    else if (wantsCycle()) {
+      L.push([now, hi(cyc ? `a limit cycle, prey between ${low(cyc.Nmin, cyc.lnNmin)} and ${p4(cyc.Nmax)}` : "a limit cycle")]);
+      if (cycWait) L.push(dim("  computing the cycle…"));
+      else if (cyc) L.push(why(`one turn of the cycle takes ${fmt(cyc.period, cyc.period < 100 ? 2 : 0)} time units${cyc.settled ? "" : " (still settling: the numbers are approximate)"}`));
       L.push(why("a richer prey peak feeds a predator boom, which crashes the prey: the swings grow"));
       L.push(why("Type II predation saturates, so predators cannot hold a rich prey population steady"));
     } else L.push([now, hi(nearHopf() ? "at the Hopf point" : `a stable equilibrium at N* = ${p4(Ns)}`)]);
-    if (Kh <= 100 && Math.abs(P.K - Kh) < 0.1 * Kh) L.push(why("the band near K_H is approximate: the cycle grows or dies very slowly there"));
+    if (Kh <= 100 && Math.abs(P.K - Kh) < 0.1 * Kh) L.push(why("near K_H the swings grow or die very slowly: a run takes long to reach the band"));
     if (!scan.done) L.push(dim(`  computing the band… ${scan.pts.length}/199`));
     return L;
   }
@@ -408,8 +597,12 @@
     if (Sim.checking) runChecks(P.model === "LV" ? boxes().slice(0, 2) : boxes());
   }, 150);
   function render(dirty) {
+    // (a slice of the K scan only redraws panel C, unless it brought the current K's cycle)
+    let all = !(dirty.size === 1 && dirty.has("scan"));
     if (dirty.has("data")) compute();
-    drawPhase(); drawTime(); if (P.model !== "LV") drawK();
+    else if (cycWait) { pickCycle(); if (!cycWait) all = true; }
+    if (all) { drawPhase(); drawTime(); }
+    if (P.model !== "LV") drawK();
     writeBoxes();
   }
   function showModel() {

@@ -163,7 +163,7 @@
       if (p === 2) L.push([head, hi("settles on a 2-cycle around K: a pure artifact")]);
       else if (pow2) L.push([head, hi(`settles on a ${p}-cycle: artifact`)]);
       else L.push([head, hi(`a period-${p} window (as in card 1's chaos)`)]);
-      L.push(why(`Euler's step is card 1's map with R = 1 + r_mΔt = ${fmt(R)}; R > 3 doubles`));
+      L.push(why(`Euler's step is card 1's map with R = 1 + r_mΔt = ${fmt(R)} (in z = r_mΔt·x/R); R > 3 doubles`));
     } else if (lr && lr.kind === "chaos") { L.push([head, hi(`chaos: an artifact of the step (λ = ${fmt(lr.lambda)})`)]); L.push(why(`R = 1 + r_mΔt = ${fmt(R)} > 3.5699`)); }
     else if (lr && lr.kind === "escapes") L.push([head, warn("runs off to −∞: R = 1 + r_mΔt > 4")]);
     else if (lr && lr.kind === "slow") L.push(head + "settles very slowly (r_mΔt is close to a threshold)");
@@ -236,7 +236,7 @@
       L.push(why("numbers (x) times room left (1 − x) is largest at x = ½"));
       L.push(why("that moment is the S-curve's inflection: growth speeds up before it and slows after"));
     }
-    if (r > 0) L.push(why(`r_m/4 = ${fmtSig(r / 4, 3)} is also the largest constant harvest this population can survive (card 3, Type 0)`));
+    if (r > 0) L.push(why(`r_m/4 = ${fmtSig(r / 4, 3)} is also the largest constant catch this population can survive (card 3, θ = 0)`));
     return L;
   }
 

@@ -14,9 +14,13 @@
 
    f(t, y, dy) writes dy/dt into dy (Float64Array); jac(t, y, J) fills J, a flat
    Float64Array of n·n entries, row-major (J[i*n + j] = ∂f_i/∂y_j).
-   Both solvers return { t, y: [Float64Array per component], n, status, tEnd, steps }
-   where status is "ok" | "stopped" | "maxsteps" | "blowup" and n counts the filled
-   output samples (evenly spaced from t0 to t1).
+   Options: rtol, atol (a number, or one per component), samples, times, nonneg, floor (a
+   number or one per component), stop(t, y), hmax, h0, maxSteps, big.
+   Both solvers return { t, y: [Float64Array per component], n, status, tEnd, yEnd, steps }
+   where status is "ok" | "stopped" | "maxsteps" | "blowup", yEnd is the state at tEnd (where
+   it stopped or broke off, or at t1), and n counts the filled
+   output samples: evenly spaced from t0 to t1, or at `times` (sorted, starting at t0,
+   none past t1) when it is given.
 
    HOW TO EDIT: the default tolerances and step limits in DEFAULTS / STIFF_DEFAULTS.
    ============================================================================= */
@@ -45,10 +49,10 @@
     const n = y0.length, span = t1 - t0;
     if (o.h0 == null) o.h0 = span * 1e-4;
     if (o.hmax == null) o.hmax = span / 20;
-    const S = Math.max(2, o.samples | 0);
+    const S = o.times ? o.times.length : Math.max(2, o.samples | 0);
     const out = { t: new Float64Array(S), y: [], n: 0, status: "ok", tEnd: t0, steps: 0 };
     for (let i = 0; i < n; i++) out.y.push(new Float64Array(S));
-    for (let k = 0; k < S; k++) out.t[k] = t0 + (span * k) / (S - 1);
+    for (let k = 0; k < S; k++) out.t[k] = o.times ? o.times[k] : t0 + (span * k) / (S - 1);
     let floor = null;
     if (o.floor != null) { floor = new Float64Array(n); for (let i = 0; i < n; i++) floor[i] = Array.isArray(o.floor) || ArrayBuffer.isView(o.floor) ? o.floor[i] : o.floor; }
     return { o, n, S, out, floor };
@@ -58,9 +62,9 @@
     if (floor) for (let i = 0; i < n; i++) if (y[i] < floor[i]) y[i] = floor[i];
   }
   function bad(y, n, big) { for (let i = 0; i < n; i++) if (!Number.isFinite(y[i]) || Math.abs(y[i]) > big) return true; return false; }
-  function errNorm(err, y, ynew, n, o) {
-    let s = 0;
-    for (let i = 0; i < n; i++) { const sc = o.atol + o.rtol * Math.max(Math.abs(y[i]), Math.abs(ynew[i])); const r = err[i] / sc; s += r * r; }
+  function errNorm(err, y, ynew, n, o) { // (atol: one number, or one per component)
+    let s = 0; const per = Array.isArray(o.atol) || ArrayBuffer.isView(o.atol);
+    for (let i = 0; i < n; i++) { const sc = (per ? o.atol[i] : o.atol) + o.rtol * Math.max(Math.abs(y[i]), Math.abs(ynew[i])); const r = err[i] / sc; s += r * r; }
     return Math.sqrt(s / n);
   }
 
@@ -74,8 +78,8 @@
     let t = t0, h = Math.min(o.h0, o.hmax), k = 0;
     const put = (yy) => { for (let i = 0; i < n; i++) out.y[i][k] = yy[i]; k++; };
     put(y); out.tEnd = t0;
-    if (bad(y, n, o.big)) { out.n = k; out.status = "blowup"; return out; }
-    if (o.stop && o.stop(t, y)) { out.n = k; out.status = "stopped"; return out; }
+    if (bad(y, n, o.big)) { out.n = k; out.status = "blowup"; out.yEnd = Float64Array.from(y); return out; }
+    if (o.stop && o.stop(t, y)) { out.n = k; out.status = "stopped"; out.yEnd = Float64Array.from(y); return out; }
     f(t, y, K[0]);
     let tries = 0;
     while (k < S) {
@@ -101,15 +105,17 @@
         for (let i = 0; i < n; i++) dst[i] = h00 * y[i] + h10 * h * fN[i] + h01 * yn[i] + h11 * h * K[6][i];
         bound(dst, n, o, floor);
       };
-      let tStop = tNew;
+      let tStop = tNew, bStop = 1;
       if (o.stop && o.stop(tNew, yn)) { // locate the first moment the stop condition holds inside this step
         let a = 0, b = 1;
         for (let it = 0; it < 40; it++) { const m = 0.5 * (a + b); interp(m, yi); if (o.stop(t + m * h, yi)) b = m; else a = m; }
-        tStop = t + b * h; stopped = true;
+        tStop = t + b * h; bStop = b; stopped = true;
       }
       // fill the samples in (t, tStop] by interpolation
       while (k < S && out.t[k] <= tStop + 1e-12 * Math.max(1, Math.abs(tStop))) { interp((out.t[k] - t) / h, yi); put(yi); }
-      if (stopped) { interp((tStop - t) / h, yi); out.steps++; out.tEnd = tStop; out.status = "stopped"; y.set(yi); break; }
+      // (the final state at the very point the bisection tested, so it satisfies the stop condition: from
+      // (tStop − t)/h the rounding could put it a hair on the other side)
+      if (stopped) { interp(bStop, yi); out.steps++; out.tEnd = tStop; out.status = "stopped"; y.set(yi); break; }
       t = tNew; out.steps++;
       const swap = y; y = yn; yn = swap;
       const clampedBefore = Float64Array.from(y); bound(y, n, o, floor);
@@ -127,6 +133,7 @@
       while (k < S) { for (let i = 0; i < n; i++) out.y[i][k] = y[i]; k++; }
       out.n = k;
     }
+    out.yEnd = Float64Array.from(y); // (the state at tEnd)
     return out;
   }
 
@@ -155,8 +162,8 @@
     let t = t0, h = Math.min(o.h0, o.hmax), k = 0, tries = 0;
     const put = (yy) => { for (let i = 0; i < n; i++) out.y[i][k] = yy[i]; k++; };
     put(y); out.tEnd = t0;
-    if (bad(y, n, o.big)) { out.n = k; out.status = "blowup"; return out; }
-    if (o.stop && o.stop(t, y)) { out.n = k; out.status = "stopped"; return out; }
+    if (bad(y, n, o.big)) { out.n = k; out.status = "blowup"; out.yEnd = Float64Array.from(y); return out; }
+    if (o.stop && o.stop(t, y)) { out.n = k; out.status = "stopped"; out.yEnd = Float64Array.from(y); return out; }
     while (k < S) {
       if (tries >= o.maxSteps) { out.status = "maxsteps"; break; }
       tries++;
@@ -191,6 +198,7 @@
     }
     out.n = k;
     if (out.status === "ok" && k < S) { while (k < S) { for (let i = 0; i < n; i++) out.y[i][k] = y[i]; k++; } out.n = k; }
+    out.yEnd = Float64Array.from(y); // (the state at tEnd)
     return out;
   }
 

@@ -111,7 +111,7 @@ Euler line `> Euler: r_mΔt = a → …` (first match), each with one why bullet
 - not `crossedK` → `monotone like the exact curve, slightly off`.
 - long run `"fixed"` and `crossedK` → `crosses K, then damped wiggles`; why: `· the wiggles are the method's: the true curve never crosses K`.
 - long run `"cycle"`, period 2 → `settles on a 2-cycle around K: a pure artifact`; why:
-  `· Euler's step is card 1's map with R = 1 + r_mΔt = …; R > 3 doubles`.
+  `· Euler's step is card 1's map with R = 1 + r_mΔt = … (in z = r_mΔt·x/R); R > 3 doubles`.
 - `"cycle"` 4 / 8 / ≥ 16 power of 2 → `settles on a p-cycle: artifact`; same why with the R value.
 - `"cycle"`, other period → `a period-p window (as in card 1's chaos)`.
 - `"chaos"` → `chaos: an artifact of the step (λ = …)`; why `· R = 1 + r_mΔt = … > 3.5699`.
@@ -153,7 +153,7 @@ Box:
 > peak r_m/4 = 0.0275 at t = 10.98, when x = ½
   · numbers (x) times room left (1 − x) is largest at x = ½
   · that moment is the S-curve's inflection: growth speeds up before it and slows after
-  · r_m/4 is also the largest constant harvest this population can survive (card 3, Type 0)
+  · r_m/4 is also the largest constant catch this population can survive (card 3, θ = 0)
 ```
 Cases: `½ ≤ x0 ≤ 1` → `> the peak was before t = 0 (x_0 ≥ ½): growth only slows`;
 `x0 > 1` → `> dx/dt < 0: the population shrinks toward K, fastest at the start`;
@@ -173,7 +173,7 @@ Cases: `½ ≤ x0 ≤ 1` → `> the peak was before t = 0 (x_0 ≥ ½): growth o
 5. **Fastest growth** is `r_m/4`, at `x = ½`, reached at `t = ln((1 − x_0)/x_0)/r_m` (for `x_0 < ½`).
 6. **No oscillations.** Unlike card 1 (non-overlapping generations), the continuous model cannot overshoot:
    its only change of behaviour is at `r_m = 0`, where 0 and `K` swap stability.
-7. **The Euler method** `x_{n+1} = x_n + r_m Δt x_n(1 − x_n)` is card 1's map with `R = 1 + r_m Δt`. A large
+7. **The Euler method** `x_{n+1} = x_n + r_m Δt x_n(1 − x_n)` is card 1's map with `R = 1 + r_m Δt` (in the rescaled `z = r_mΔt·x/R`). A large
    step therefore shows overshoot, cycles and chaos that belong to the method, not to the model; keep
    `r_m Δt` well below 1.
 8. **Negative `r_m`.** The README allows `r_m < 0` (then `K < 0` in its notation); the sliders keep `r_m ≥ 0`,

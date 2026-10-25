@@ -26,6 +26,7 @@ double-click blocks the fonts.
 | Section pages (blank for now) | `about/`, `blogs/` → each has an `index.html` |
 | Simulations: the list of collections and their numbered cards | `simulations/index.html` |
 | A simulation page (one folder each), e.g. the discrete-time logistic model | `simulations/population-dynamics/discrete-logistic/index.html` |
+| A simulation's maths and controls (one file per simulation) | `js/sims/`, e.g. `js/sims/logistic.js` (tested by `node tools/test-logistic.mjs`) |
 | Card 2: the continuous-time logistic model | `simulations/population-dynamics/continuous-logistic/` + `js/sims/continuous-logistic.js` (tested by `node tools/test-continuous-logistic.mjs`) |
 | Card 3: harvesting with Holling responses | `simulations/population-dynamics/harvesting/` + `js/sims/harvesting.js` (tested by `node tools/test-harvesting.mjs`) |
 | Card 4: Lotka–Volterra competition | `simulations/population-dynamics/lv-competition/` + `js/sims/lv-competition.js` (tested by `node tools/test-lv-competition.mjs`) |
@@ -35,7 +36,6 @@ double-click blocks the fonts.
 | ODE solvers: Dormand–Prince, ROS2 for stiff models, 2×2 eigenvalues | `js/lib/ode.js` (tested by `node tools/test-ode.mjs`) |
 | Shared page helpers for the simulations: sliders, boxes, runtime checks | `js/lib/simkit.js` |
 | Checking tools: screenshots, slider sweeps, error pass, page changes, preview | `tools/dev/` (see its README) |
-| A simulation's maths and controls (one file per simulation) | `js/sims/`, e.g. `js/sims/logistic.js` (tested by `node tools/test-logistic.mjs`) |
 | Elementary Mathematics: title, index and the list of chapters | `elementary-mathematics/index.html` |
 | A chapter (one folder each) | `elementary-mathematics/what-is-infinity/index.html` |
 | Comments page | `comments/index.html` |
@@ -82,12 +82,17 @@ Every file starts with a comment that explains what it does and has a
   3. In `elementary-mathematics/index.html`, add a line to the index and copy
      a `<section class="chapter">` for it (a comment there shows how).
 - **Add a simulation:**
-  1. Copy the folder `simulations/population-dynamics/discrete-logistic/` to a
-     new folder and write the page.
+  1. Copy a simulation folder to a new folder and write the page:
+     `simulations/population-dynamics/discrete-logistic/` for a map, or one of
+     cards 3–6 (e.g. `harvesting/`) for differential equations. Those pages
+     also load the ODE solvers (`js/lib/ode.js`, `WQ.ODE`) and the shared
+     sliders and boxes (`js/lib/simkit.js`, `WQ.Sim`).
   2. Put its maths and wiring in `js/sims/<name>.js`, drawing with `WQ.Plot`
-     (`js/lib/plot.js`), and load both scripts in the page before `site.js`.
-  3. In `simulations/index.html`, turn its "coming soon" card into a link
-     (`<a class="project-card" … data-collapse>`; a comment there shows how).
+     (`js/lib/plot.js`), and load the scripts in the page before `site.js`.
+     Test the maths with a `tools/test-<name>.mjs` and check the page with the
+     tools in `tools/dev/`.
+  3. In `simulations/index.html`, add its card: copy an `<li>` and give it the
+     next number and id (a comment there shows how).
 - **Write maths in a chapter** (it is set in Latin Modern, like LaTeX):
   - inline: `<span class="m"><i>f</i> : ℕ → ℝ</span>`, with letters in
     `<i>` and `<sub>` / `<sup>` for indices and powers
@@ -135,7 +140,8 @@ build one from scratch, it needs all of these:
    shows the plain blackboard.
 
 Paths are relative to the page's folder: `../` from a page one folder deep
-(like `about/`), `../../` from two folders deep (like a chapter).
+(like `about/`), `../../` from two folders deep (like a chapter), `../../../`
+from three (like a simulation).
 
 ## Behaviour notes
 

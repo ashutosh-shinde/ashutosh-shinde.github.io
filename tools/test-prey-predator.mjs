@@ -58,6 +58,18 @@ const rr = (x, y) => Math.abs(x - y) <= 0.02 * Math.abs(y);
 const cyc = [19.5, 30, 60].map((K) => PP.limitCycle(RM(K)));
 ok(rr(cyc[0].Nmin, 2.879) && rr(cyc[0].Nmax, 6.757) && rr(cyc[1].Nmin, 0.145) && rr(cyc[1].Nmax, 22.97) && cyc[2].Nmin < 0.0002 && rr(cyc[2].Nmax, 57.98),
   `RM cycles: ${cyc.map((c) => `${c.Nmin.toPrecision(4)} – ${c.Nmax.toPrecision(4)}`).join(" / ")}`);
+// slow RM cycles (checked against long scipy runs): a period of 783 with the prey down to e^−425; and a corner
+// (r 0.1, δ 0.05) where orbits from near e2 need far over 10⁴ time units to reach the cycle
+const slow = PP.limitCycle({ model: "RM", r: 0.6, b: 2.79, g: 1.34, d: 0.18, K: 73, N0: 3.5 });
+ok(slow && slow.settled && near(slow.period, 783.349, 0.005) && near(slow.lnNmin, -425.409, 0.005) && near(slow.Nmax, 73, 1e-3) && near(slow.Pmax, 99.875, 0.01) && near(Math.log(slow.Pmin), -128.0805, 1e-3),
+  `RM, period 783: prey e^${slow?.lnNmin.toFixed(3)} – ${slow?.Nmax.toFixed(4)}, predators e^${Math.log(slow?.Pmin).toFixed(4)} – ${slow?.Pmax.toFixed(3)}, period ${slow?.period.toFixed(3)}, ${slow?.turns} turns`);
+const corner = PP.limitCycle({ model: "RM", r: 0.1, b: 3, g: 1.5, d: 0.05, N0: 30, K: 40 });
+ok(corner && corner.settled && near(corner.period, 493.113, 0.005) && near(Math.log(corner.Pmin), -18.7558, 1e-3),
+  `RM slow corner: period ${corner?.period.toFixed(3)}, predators down to e^${Math.log(corner?.Pmin).toFixed(4)}, ${corner?.turns} turns`);
+// LV runs repeat one period exactly: the run's period, and its prey peaks (refined from samples) as far apart
+R = PP.run(LV(1, 1, 1, 1), [0.5, 0.5], 50); m = PP.measures(R);
+const gaps = m.peaksN.slice(1).map((x, k) => x.t - m.peaksN[k].t);
+ok(near(R.period, 6.69393, 1e-4) && gaps.every((g) => near(g, R.period, 2e-4)), `LV from (0.5, 0.5): period ${R.period?.toFixed(6)}; prey peak gaps ${gaps.map((g) => g.toFixed(5)).join(", ")}`);
 // RM γβ ≤ δ: the predator can never grow
 p = { model: "RM", r: 1, b: 0.05, N0: 10, g: 0.05, d: 0.5, K: 60 };
 ok(PP.Nstar(p) === Infinity && PP.KH(p) === null && !eq(p, "e2"), "RM γβ ≤ δ: N* = ∞, no K_H, no e2");

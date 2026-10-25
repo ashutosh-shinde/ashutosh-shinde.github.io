@@ -194,7 +194,10 @@ its `C*` on the way, because climbing back takes about `ln(1e9)/λ`, longer than
 comes out 7.1448 rather than 7.1475 (the stiff solver interpolates linearly between its steps); the exclusion
 time 9.89 is unaffected. In panel C an intercept is capped at 3× the larger of that axis's equilibrium and
 start: in the stiff corner one intercept is ~10⁶ and would flatten the plot. With `I = 0` there are no
-balance lines.)
+balance lines. In the review, a present consumer is integrated as `c = ln C` (`dc/dt = γu(R) − δ`; ROS2 with
+`atol = [1e-7, 1e-7, 1e-8]`, now allowed per component in ode.js): a big rival can eat the food down and push
+the eventual winner to 1e−12 and far below, and in plain `C` its comeback was 10 % late against scipy's Radau;
+in logs every case agrees to 1e−4. An absent consumer stays exactly 0.)
 
 ## 10. Screenshots to look at
 

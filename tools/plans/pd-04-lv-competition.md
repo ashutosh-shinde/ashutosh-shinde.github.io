@@ -158,9 +158,9 @@ Box C:
 ```
 > borders: α_12 = K_2/K_1 = 0.800 · α_21 = K_1/K_2 = 1.250
 > now (0.40, 0.60): stable coexistence
-  · right of α_12 = K_2/K_1: SP1 presses SP2 harder than SP2 presses itself
-  · above α_21 = K_1/K_2: SP2 presses SP1 harder than SP1 presses itself
-  · the dotted curve α_12 α_21 = 1 is where e3 changes between stable and saddle
+  · right of α_12 = K_2/K_1: SP1 limits SP2 more than it limits itself (α_12/K_2 > 1/K_1), so SP2 cannot invade
+  · above α_21 = K_1/K_2: SP2 limits SP1 more than it limits itself (α_21/K_1 > 1/K_2), so SP1 cannot invade
+  · the dotted curve α_12 α_21 = 1 runs through the corner where the borders cross: where e3 exists it is stable below the curve and a saddle above it
 ```
 If `K2/K1 > 5`: `> the α_12 border (…) is off the map: SP1 cannot exclude SP2 for α_12 ≤ 5`; if `K1/K2 > 5`:
 the mirror. If a border is below 0.05: `· the … border is almost on the axis: K's are very unequal`.
@@ -180,7 +180,7 @@ the mirror. If a border is below 0.05: `· the … border is almost on the axis:
 7. **No spirals.** In competition the Jacobian at `e3` has real eigenvalues, so populations approach without
    oscillating.
 8. **Growth rates** set the speed and the shape of the paths, not the outcome.
-9. **Degenerate cases.** `α_12α_21 = 1` with matching `K`'s gives a line of equilibria (neutral); near it the
+9. **Degenerate cases.** `α_12 = K_2/K_1` and `α_21 = K_1/K_2` (so `α_12α_21 = 1`) make the nullclines coincide: a line of equilibria (neutral); near it the
    approach is extremely slow.
 
 GitHub button → `https://github.com/ashutosh-shinde/Population-Dynamics/blob/master/Two_species_population_models/README.md#1-lotka-volterra-competition-model`

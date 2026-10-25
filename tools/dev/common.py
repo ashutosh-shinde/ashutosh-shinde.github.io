@@ -1,9 +1,10 @@
 """common.py — shared helpers for the checking tools in tools/dev/ (not part of the site).
 
-  serve(root)              a quiet local web server for the site folder; returns its base URL
-  open_page(p, url, ...)   a Playwright page at desktop or phone size, with console errors collected
-  ready(page)              wait until the board engine and the fonts are ready
-  pages(root)              every page of the site (folders with an index.html), as paths
+  serve(root)                         a quiet local web server for the site folder; returns its base URL
+  new_context(browser, phone, ...)    a Playwright browser context at desktop or phone size
+  watch(page, errors, checks)         collect console errors and page errors (and "[check]" lines)
+  ready(page)                         wait until the board engine and the fonts are ready
+  pages(root)                         every page of the site (folders with an index.html), as paths
 """
 import functools, http.server, os, socketserver, threading
 

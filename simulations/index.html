@@ -69,12 +69,15 @@
         <p class="collection__intro">Models from my <a href="https://github.com/ashutosh-shinde/Population-Dynamics" target="_blank" rel="noopener">Population Dynamics</a> project, from one species to two.</p>
       </div>
       <!-- HOW TO ADD A SIMULATION
-             1. Copy the folder population-dynamics/discrete-logistic/ to a new folder
-                (e.g. population-dynamics/continuous-logistic/) and write the page.
+             1. Copy a simulation folder to a new folder and write the page: population-dynamics/discrete-logistic/
+                for a map, or one of cards 3–6 (e.g. population-dynamics/harvesting/) for differential equations;
+                those pages also load the ODE solvers (js/lib/ode.js) and the shared page helpers (js/lib/simkit.js).
              2. Put its maths and wiring in js/sims/<name>.js, drawing with WQ.Plot (js/lib/plot.js).
-             3. Turn its "coming soon" card below into a link:
-                <a class="project-card" id="pd-2" href="population-dynamics/<folder>/index.html" data-collapse> … </a>
-                with "Open →" instead of the badge, and data-back="#pd-2" on the new page's back links. -->
+             3. Add its card below: copy an <li>, give it the next number and id (pd-7, …),
+                <a class="project-card" id="pd-7" href="population-dynamics/<folder>/index.html" data-collapse> … </a>,
+                and put data-back="#pd-7" on the new page's back links. A card for a page that is not ready yet is a
+                <div class="project-card project-card--soon" aria-disabled="true"> with
+                <span class="project-card__badge">Coming soon</span> in place of "Open →". -->
       <ol class="project-grid" data-calm>
         <li>
           <a class="project-card" id="pd-1" href="population-dynamics/discrete-logistic/index.html" data-collapse>

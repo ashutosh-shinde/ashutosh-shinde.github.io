@@ -56,10 +56,26 @@
     if (Number.isFinite(R1) && Number.isFinite(R2) && Math.abs(R1 - R2) <= 1e-6 * Math.max(R1, R2)) return "tie";
     return R1 < R2 ? "1" : "2";
   }
+  // a run from s = (C1(0), C2(0), R(0)). A consumer that is present is integrated as c = ln C, so that
+  // dc/dt = γu(R) − δ: when a big rival eats the food down, the eventual winner can be pushed to 1e−12 and far
+  // below, far below any absolute tolerance in C, and must still come back on time. An absent consumer stays 0.
   function run(p, s, tmax, samples = 600) {
-    const r = ODE.solveStiff(field(p), jacobian(p), [s[0], s[1], s[2]], 0, tmax, { rtol: 1e-5, atol: 1e-8, samples, nonneg: true, maxSteps: 100000 });
-    const n = r.n;
-    return { t: r.t.subarray(0, n), C1: r.y[0].subarray(0, n), C2: r.y[1].subarray(0, n), R: r.y[2].subarray(0, n), status: r.status, tEnd: r.tEnd, steps: r.steps, n };
+    const on = [s[0] > 0, s[1] > 0];
+    const F = (t, y, d) => {
+      const R = y[2], u1 = u(p, 1, R), u2 = u(p, 2, R), C1 = on[0] ? Math.exp(y[0]) : 0, C2 = on[1] ? Math.exp(y[1]) : 0;
+      d[0] = on[0] ? p.g1 * u1 - p.d1 : 0; d[1] = on[1] ? p.g2 * u2 - p.d2 : 0; d[2] = p.I - u1 * C1 - u2 * C2;
+    };
+    const J = (t, y, M) => {
+      const R = y[2], u1 = u(p, 1, R), u2 = u(p, 2, R), d1 = du(p, 1, R), d2 = du(p, 2, R), C1 = on[0] ? Math.exp(y[0]) : 0, C2 = on[1] ? Math.exp(y[1]) : 0;
+      M[0] = 0; M[1] = 0; M[2] = on[0] ? p.g1 * d1 : 0;
+      M[3] = 0; M[4] = 0; M[5] = on[1] ? p.g2 * d2 : 0;
+      M[6] = -u1 * C1; M[7] = -u2 * C2; M[8] = -d1 * C1 - d2 * C2;
+    };
+    const y0 = [on[0] ? Math.log(s[0]) : 0, on[1] ? Math.log(s[1]) : 0, s[2]];
+    const r = ODE.solveStiff(F, J, y0, 0, tmax, { rtol: 1e-5, atol: [1e-7, 1e-7, 1e-8], samples, nonneg: false, floor: [-Infinity, -Infinity, 0], maxSteps: 100000 });
+    const n = r.n, C1 = new Float64Array(n), C2 = new Float64Array(n);
+    for (let i = 0; i < n; i++) { C1[i] = on[0] ? Math.exp(r.y[0][i]) : 0; C2[i] = on[1] ? Math.exp(r.y[1][i]) : 0; }
+    return { t: r.t.subarray(0, n), C1, C2, R: r.y[2].subarray(0, n), status: r.status, tEnd: r.tEnd, steps: r.steps, n };
   }
   // the loser's exclusion: after its peak, the first time it is below 1 % of that peak (linear between samples)
   function exclusion(R, which) {
@@ -170,7 +186,13 @@
     if (P.I === 0) { L.push(["> ", hi("no food input: the food runs out and both consumers starve")]); return L; }
     if (P.C1s === 0 && P.C2s === 0) { L.push(["> ", hi("no consumers: food piles up at rate I")]); return L; }
     for (const i of [1, 2]) if (!Number.isFinite(Rstar(P, i)) && (i === 1 ? P.C1s : P.C2s) > 0 && W !== "none") L.push(`> species ${i} cannot persist (γ_${i}β_${i} ≤ δ_${i})`);
-    if (W === "none") { L.push(["> ", hi("neither can persist: both die out and the food piles up (dR/dt → I)")]); absent(L); return L; }
+    if (W === "none") {
+      // nobody present can persist: either neither species can, or the one that could is absent
+      const can = [1, 2].filter((i) => Number.isFinite(Rstar(P, i)));
+      if (!can.length) L.push(["> ", hi("neither can persist: both die out and the food piles up (dR/dt → I)")]);
+      else L.push(["> ", hi(`species ${3 - can[0]} cannot persist (γ_${3 - can[0]}β_${3 - can[0]} ≤ δ_${3 - can[0]}) and species ${can[0]} is absent: the food piles up (dR/dt → I)`)]);
+      absent(L); return L;
+    }
     if (W === "tie") {
       L.push(["> ", hi("a tie: R_1* = R_2*")]);
       L.push(why("both sit at zero growth: any amount of each on a line of equilibria"));

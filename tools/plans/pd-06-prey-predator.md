@@ -61,13 +61,14 @@ Default starts for panel A (as in the README): LV `(0.5, 0.5), (1.5, 1.5), (2, 0
   small cycles have period `2π/√(rδ)`. Conserved quantity `V(N, P) = γβN − δ ln N + βP − r ln P`.
 - Vt: `e0` saddle; `e1 = (K, 0)` with eigenvalues `−r` and `γβK − δ` (stable iff `K < δ/(γβ)`: predators starve);
   `e2 = (N*, P*)`, `N* = δ/(γβ)`, `P* = (r/β)(1 − N*/K)`, exists iff `N* < K`; there `tr = −rN*/K < 0`,
-  `det = γβ²N*P* > 0` → always stable; a spiral when `tr² < 4·det`, a node otherwise (`K` just above `N*`).
+  `det = γβ²N*P* > 0` → always stable; a spiral when `tr² < 4·det`, a node otherwise (`K` just above `N*`, or a very large `r`).
 - RM: `N* = δN₀/(γβ − δ)` if `γβ > δ` (else the predator can never grow); `P* = (r/β)(1 − N*/K)(N₀ + N*)`;
   `e1 = (K, 0)` eigenvalues `−r` and `γβK/(N₀ + K) − δ`; `e2` exists iff `0 < N* < K`; **stable iff
   `K < K_H = N₀ + 2N*`** (Hopf point); for `K > K_H` the orbits approach a stable limit cycle.
 - Integration: `WQ.ODE.solve`, `rtol 1e-9`, `atol 1e-11·scale`, `samples 800`, `nonneg`.
 - Limit cycle (RM, `K > K_H`): integrate from `(1.05·N*, P*)` for `t ∈ [0, 1500]` (`samples 3000`), keep the
   last 500 time units: their min/max of `N` and `P`, and one loop (from one prey peak to the next) to draw.
+  (Replaced in the review: the period can be far longer than that window, see the note at the end.)
 - Measures from a run (panel B): prey peaks = local maxima of `N` (samples where `N[i−1] < N[i] ≥ N[i+1]`,
   ignoring peaks smaller than 1 % of the run's range); period = mean gap between successive peaks; lag = mean time
   from a prey peak to the next predator peak, as a fraction of the period; amplitude = max − min of `N` over the
@@ -100,7 +101,7 @@ Regimes and their why bullets:
   γβK − δ = … < 0`.
 - Vt spiral → `> regime: damped oscillations into e2 (stable spiral)`; `· prey crowding (logistic growth) takes
   energy out of each swing`; `· e2 = (…, …), eigenvalues −0.200 ± 0.748i` (defaults).
-- Vt node → `> regime: e2 is a stable node: no oscillation`; `· K is just above δ/(γβ): too little prey to drive a swing`.
+- Vt node → `> regime: e2 is a stable node: no oscillation`; `· prey crowding damps faster than the swing can turn: tr² = … ≥ 4·det = …`, `· this happens when K is just above δ/(γβ) (little prey to drive a swing) or when the prey grows very fast`.
 - RM `γβ ≤ δ` → `> the predator can never grow: γβ ≤ δ even with endless prey`.
 - RM `K ≤ N*` → like Vt.
 - RM `N* < K < K_H` → `> regime: damped oscillations into e2`; `· K < K_H = N_0 + 2N* = …`; if
@@ -148,8 +149,8 @@ Box C (RM defaults; real numbers):
   · Type II predation saturates, so predators cannot hold a rich prey population steady
 ```
 Vt: `> predators can live once K > N* = …`, `> no Hopf point: e2 stays stable for every K > N*`,
-`· with Type I predation, enrichment never destabilises`. Near `K_H`: `· the band near K_H is approximate:
-the cycle grows or dies very slowly there`.
+`· with Type I predation, enrichment never destabilises`. Near `K_H`: `· near K_H the swings grow or die very
+slowly: a run takes long to reach the band` (the band itself is exact there: see the note at the end).
 
 ## 6. Theory bullets
 
@@ -157,7 +158,7 @@ the cycle grows or dies very slowly there`.
 2. **Lotka–Volterra** (exponential prey, Holling I predation): `e1 = (δ/(γβ), r/β)` is a centre; orbits are
    closed curves of `V`; cycles never decay or grow (neutral, Lyapunov stable but not asymptotically stable).
 3. **Volterra** (logistic prey): predators can live only if `K > δ/(γβ)`; then `e2` is stable: a spiral for most
-   values, a node when `K` is just above `δ/(γβ)`.
+   values, a node when `K` is just above `δ/(γβ)` or the prey grows very fast.
 4. **Rosenzweig–MacArthur** (logistic prey, Holling II predation): `N* = δN₀/(γβ − δ)`; `e2` is stable for
    `K < K_H = N₀ + 2N*`, where the top of the prey nullcline lies left of `N*`; beyond `K_H` (a Hopf bifurcation)
    a stable limit cycle appears.
@@ -198,12 +199,47 @@ Never NaN; plots always drawn.
 - RM cycle (when `K > K_H`): its prey min is below `N*` and its max above `N*`.
 - Orbits stay ≥ 0 and finite.
 
-(Found while building, now in the code: LV runs with both populations above 0 are integrated in log
-coordinates (`x = ln N`, `y = ln P`, `rtol = atol = 1e-12`): a big cycle takes the prey down to ~1e−80, far
-below any absolute tolerance in `N`, and V drifted by 70 % from (100, 100) in `N, P`. V's drift is measured
-against the size of its terms (`γβN + δ|ln N| + βP + r|ln P|`), since V itself can be near 0, and V is
-computed from the logs (deep in a cycle `e^x` underflows to 0). The K panel's threshold labels sit on two rows;
-the Volterra scan's y range follows `N*`. On a phone the long RM formula wraps.)
+(Found while building and in the review, now in the code: every run with both populations above 0 is
+integrated in log coordinates (`x = ln N`, `y = ln P`; `rtol = atol = 1e-12` for LV, `1e-10` for Vt and RM,
+`1e-8` for the RM scan): the prey can fall to 1e−30 and far below (a big LV cycle, a predator boom, a rich RM
+cycle), far below any absolute tolerance in `N`, and a plain integration then let it recover tens of time
+units too early (checked against scipy's DOP853), and LV's V drifted by 70 % from (100, 100). A start on an
+axis uses the exact solution (`P(0)e^(−δt)`; the prey's exponential, stopped at 10⁹ as the solvers do, or its
+logistic). V's drift is measured against the size of its terms (`γβN + δ|ln N| + βP + r|ln P|`), since V itself
+can be near 0, and V is computed from the logs. The limit cycle runs 1000 time units to settle, then samples
+the last 500 every 0.1, and its extremes are refined by a parabola through the logs (they match scipy to
+4 digits). A run that grows without limit only stretches the phase plane's axes to 3× the rest. The K panel's
+threshold labels sit on two rows; the Volterra scan's y range follows `N*`. On a phone the long RM formula
+wraps. Period and lag come from the last (up to) four cycles, so a transient does not skew them, and box B
+also gives the linear period `2π/|Im λ|` near a stable spiral. Tick labels from 10⁵ up are written `m×10ⁿ`
+(plot.js), so a prey stopped at 10⁹ still has readable axes.)
+
+(Second review, before the merge to master:
+- **The RM limit cycle is found on a section.** Its period can be a few time units or ~91 000 (r 0.1, δ 0.05,
+  N₀ 1, K 100: the prey fall to e^−8978), and the fixed window above was then wrong: for r 0.6, β 2.79,
+  γ 1.34, δ 0.18, K 73, N₀ 3.5 (period 783) it reported prey between 1e−141 and 2e−11 instead of 1.8e−185 and
+  73. Now: the section is `N = N*` below e2 (every orbit around e2 crosses it once per turn, moving right); a
+  turn is two solves (until `N < N*`, then `N ≥ N*`); the first starts near `e1 = (K, 0)` (`0.999K`,
+  `10⁻⁶P*`), at the cycle's rim, where orbits close in within a few turns (from near e2 they can spiral out for
+  tens of thousands of time units); turns repeat until two agree, with an Aitken step on the section's ln P
+  when they close in slowly (near the Hopf point); one more turn is sampled for `N`'s extremes and the loop,
+  while `P`'s extremes are the two crossings themselves (dP/dt = 0 on `N = N*`). Checked against long scipy
+  runs on 70 cases (worst 5e−5) and from scipy started on the fixed point. A prey minimum below 1e−300 is
+  printed from its log. The page's cycle comes from the K scan's cache (the same computation as the band),
+  the scan starts 200 ms after the last change of `r, β, γ, δ, N₀` with the current `K` first, and the boxes say
+  "computing the cycle…" meanwhile; box B says when the run is still on its way to the cycle by `t_max`.
+- **LV runs are one period, repeated.** In logs every orbit circles e1 anticlockwise and crosses the four
+  half-axes through e1 in turn, at its extremes; five solves give the period and the extremes exactly, and a
+  second pass gives the samples at `t mod T`. V cannot drift, a long `t_max` costs one period, the time series
+  contains every extreme (a big cycle's sharp spike is drawn at its true height: 95.74 from (50, 50), where
+  even samples gave 78–93), and the phase plane draws each orbit as its one closed loop (a fast cycle sampled
+  every unit of time had become a starburst). Period, lag and the prey's swing in box B are exact for them.
+- **Speed.** The faint orbits and taps are kept until a parameter or `t_max` changes (Vt, RM at `rtol 1e−8`);
+  a drag now redraws within a frame or two (LV corner r 3, δ 3, t_max 500: 190 → ~100 ms; RM default drag r:
+  110 → 33 ms).
+- **ode.js:** a stopped run now ends exactly where the bisection found the stop condition true (from
+  `(tStop − t)/h` the rounding could put it a hair on the other side: 32 of 60 runs from t = 10⁴), returns
+  `yEnd`, and takes output `times`.)
 
 ## 10. Screenshots to look at
 

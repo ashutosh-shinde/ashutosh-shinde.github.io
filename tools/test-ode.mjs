@@ -31,8 +31,21 @@ r = ODE.solve((t, y, d) => { d[0] = y[0] - y[0] * y[1]; d[1] = y[0] * y[1] - y[1
 let drift = 0; for (let k = 0; k < r.n; k++) drift = Math.max(drift, Math.abs(V(r.y[0][k], r.y[1][k]) - V(0.5, 0.5)));
 ok(near(V(0.5, 0.5), 2.386294, 1e-6) && drift < 1e-6, `Lotka–Volterra: V = ${V(0.5, 0.5).toFixed(6)}, largest drift ${drift.toExponential(2)}`);
 
+const at = [0, 0.3, 0.3, 1.7, 2.95];
+r = ODE.solve((t, y, d) => { d[0] = -y[0]; }, [1], 0, 3, { ...tight, times: at });
+ok(r.n === at.length && at.every((t, k) => r.t[k] === t && near(r.y[0][k], Math.exp(-t), 1e-6)) /* (cubic Hermite between steps) */, `output at given times ${at.join(", ")}: ${Array.from(r.y[0]).map((v) => v.toFixed(6)).join(", ")}`);
+
 r = ODE.solve((t, y, d) => { d[0] = -y[0]; }, [1], 0, 5, { stop: (t, y) => y[0] < 0.5 });
-ok(r.status === "stopped" && near(r.tEnd, Math.LN2, 1e-3), `stop when y < 0.5: status ${r.status}, tEnd ${r.tEnd.toFixed(4)} (ln 2 = 0.6931)`);
+ok(r.status === "stopped" && near(r.tEnd, Math.LN2, 1e-3) && r.yEnd[0] < 0.5 && near(r.yEnd[0], 0.5, 1e-6), `stop when y < 0.5: status ${r.status}, tEnd ${r.tEnd.toFixed(4)} (ln 2 = 0.6931), yEnd ${r.yEnd[0]}`);
+// the stopped state must satisfy the stop condition itself (late in time, rounding t + b·h − t used to break this)
+let unmet = 0;
+for (let k = 0; k < 60; k++) {
+  const rr = ODE.solve((t, y, d) => { d[0] = y[1]; d[1] = -y[0]; }, [0.3 + 0.01 * k, 0], 1e4, 1e4 + 10, { ...tight, nonneg: false, stop: (t, y) => y[0] < 0 });
+  if (!(rr.status === "stopped" && rr.yEnd[0] < 0)) unmet++;
+}
+ok(unmet === 0, `stopped states meet the stop condition (60 runs from t = 10⁴): ${unmet} do not`);
+r = ODE.solve((t, y, d) => { d[0] = -y[0]; }, [1], 0, 2, tight);
+ok(r.status === "ok" && r.yEnd[0] === r.y[0][r.n - 1] && near(r.yEnd[0], Math.exp(-2), 1e-8), `yEnd at t1: ${r.yEnd[0]}`);
 
 let threw = false;
 try { r = ODE.solve((t, y, d) => { d[0] = y[0] * y[0]; }, [1], 0, 2); } catch (e) { threw = true; }

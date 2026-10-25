@@ -47,7 +47,14 @@
     return out;
   }
   const decimals = (step) => Math.max(0, Math.min(6, -Math.floor(Math.log10(step) + 1e-9)));
-  const fmtTick = (v, d) => (v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
+  // tick labels; from 10⁵ up as m×10ⁿ, so a runaway value (a prey growing to 10⁹) still fits beside the axis
+  const SUP = { "-": "⁻", 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };
+  const fmtTick = (v, d) => {
+    const a = Math.abs(v), sign = v < 0 ? "−" : "";
+    if (a < 1e5) return sign + a.toFixed(d);
+    const e = Math.floor(Math.log10(a) + 1e-9), m = Number((a / Math.pow(10, e)).toPrecision(2));
+    return sign + (m === 1 ? "" : m + "×") + "10" + String(e).split("").map((c) => SUP[c]).join("");
+  };
 
   /* text with an optional subscript: "X_t" → X, small t; "|E_t|" → |E, t, | */
   function label(ctx, text, x, y, align = "left", color = `rgba(${INK},0.8)`, measure = false) {

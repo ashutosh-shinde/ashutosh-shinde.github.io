@@ -1,5 +1,20 @@
 # Card 3 — Harvesting with Holling responses
 
+> **Revision (after step 6, at the owner's request): two models instead of four types.**
+> In the θ model `dy/dt′ = y(1 − y/k) − h·y^θ/(1 + y^θ)`, `θ = 1` is Type II exactly and `θ = 0` gives
+> `y⁰ = 1`, a constant catch `h/2` for every `y > 0`: Type 0 in rescaled units (`c = r_m h/(2k)`, so the
+> README's `r_m 1.5, c 0.3` is `k 10, h 4`, and `c_c = r_m/4` is `h_c = k/2`). Type I is **not** in the family
+> (`y^θ/(1 + y^θ) ≤ 1`, while `h₀x` grows without limit; Type I is only Type II far below `N₀`), so it stays a
+> mode of its own. The page therefore has a two-way switch `#type`: `theta` ("θ model · Types 0, II, III",
+> default, opening at `θ = 1, k 1.8, h 0.8`: the Type II README case) and `linear` ("Type I · linear").
+> Sliders: θ model `k` (0.1–20), `h` (0–20), `θ` (0–10, default 1); Type I `rm`, `h0`; both `s0`, `tmax`. The
+> `c` slider is gone. θ-model presets: `θ = 1 · Type II (README)` (k 1.8, h 0.8), `θ = 1 · bistable` (h 1.05),
+> `θ = 1 · no fold (k 0.5)`, `θ = 0 · Type 0 (constant)` (k 10, h 4), `θ = 2 · Type III (README)` (k 5, h 1.5),
+> `θ = 2 · bistable` (k 10, h 2.2), `θ = 5 · steep` (k 20, h 3), `θ = 0.5 · extinction possible` (k 10, h 1);
+> Type I presets as in §3. In `WQ.Harvest`, `model("theta", { k, h, theta })` and `model("linear", { r, h0 })`
+> replace the type numbers 0–3; the Type 0 tests of §8 are run as `θ = 0` (equilibria `k·x*`, times `r_m·t`;
+> the ramp crash is then `h ≈ 5.36`, in 5 – 5.6). Where the rest of this plan says Type 0, read `θ = 0`.
+
 Read `pd-00-foundation.md` first. Steps 0 and 2 must be done.
 Reference: `/tmp/pd/Holling_functional_harvesting_model/` (`README.md`, `Harvester_trajectory.R`,
 `Equilibria_and_stability.R`).
