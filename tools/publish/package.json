@@ -1,0 +1,8 @@
+{
+  "name": "wildquant-publish",
+  "private": true,
+  "description": "MathJax for tools/publish/build.py (typesets the maths of content/ into SVG). Install: npm install --prefix tools/publish",
+  "dependencies": {
+    "mathjax": "3.2.2"
+  }
+}
