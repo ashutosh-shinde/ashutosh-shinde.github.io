@@ -1,0 +1,107 @@
+# =============================================================================
+# Publish the site
+# -----------------------------------------------------------------------------
+# On every push to master (yours, the Drive sync's, or a merge from your main
+# branch work) and from the Actions tab ("Run workflow"):
+#   1. tools/publish/build.py turns the files in content/ into pages
+#      (blogs/<name>/, elementary-mathematics/<name>/) and rebuilds the two lists
+#   2. those pages are committed back to master, so the repo always holds them
+#   3. the whole site is deployed to GitHub Pages
+# A post that fails to convert never stops the others: the site is published,
+# then the run ends red so GitHub emails you; the run's summary page says what
+# to fix.
+# ONE-TIME SETTING: Settings → Pages → Build and deployment → Source:
+# "GitHub Actions".
+# HOW TO EDIT: the pandoc version below (keep it the one you test with).
+# =============================================================================
+name: Publish the site
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # commit the made pages
+  pages: write      # deploy them
+  id-token: write   # (needed by the deploy step)
+
+concurrency:        # one run at a time; a newer push waits, then publishes everything
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      problems: ${{ steps.build.outputs.problems }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: master        # the newest master, even if this run waited behind another
+          fetch-depth: 100   # (a file without a date: line gets the date of its last commit)
+
+      - uses: pandoc/actions/setup@v1
+        with:
+          version: 3.9.0.2
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Install the build tools
+        run: |
+          pip install --quiet -r tools/publish/requirements.txt
+          pip install --quiet pillow-heif || echo "pillow-heif not installed: iPhone HEIC photos will be skipped"
+          npm install --prefix tools/publish --no-audit --no-fund --no-package-lock
+          sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null || echo "no pdftocairo: PDF figures will be skipped"
+
+      - name: Make the pages
+        id: build
+        run: python3 tools/publish/build.py
+
+      - name: Commit the made pages
+        run: |
+          git config user.name "WildQuant publish"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A blogs elementary-mathematics
+          if git diff --cached --quiet; then
+            echo "No page changed."
+          else
+            git commit --quiet -m "Publish: pages made from content/"
+            for i in 1 2 3; do
+              git push --quiet origin HEAD:master && break
+              echo "master moved on: rebasing and trying again"; git pull --quiet --rebase origin master
+            done
+          fi
+
+      - name: Pack the site
+        run: |
+          mkdir _site
+          tar --exclude=./.git --exclude=./.github --exclude=./content --exclude=./_site --exclude=node_modules -cf - . | tar -xf - -C _site
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
+
+      - name: Report problems with posts
+        if: needs.build.outputs.problems != '0'
+        run: |
+          echo "::error::${{ needs.build.outputs.problems }} problem(s) with posts: open the 'build' job's summary to see what to fix. Everything else is published."
+          exit 1

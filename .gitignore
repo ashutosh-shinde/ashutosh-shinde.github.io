@@ -1,1 +1,5 @@
 __pycache__/
+# publishing build (tools/publish): MathJax install and the packed site
+tools/publish/node_modules/
+tools/publish/package-lock.json
+_site/
