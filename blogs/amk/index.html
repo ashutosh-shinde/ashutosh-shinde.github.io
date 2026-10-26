@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>test trek — Blogs — WildQuant</title>
+  <meta name="description" content="Push past you limits.">
+  <meta name="author" content="Ashutosh Shinde">
+  <meta name="theme-color" content="#0d0f0f">
+  <meta name="generator" content="wq-publish">
+  <link rel="canonical" href="https://ashutosh-shinde.github.io/blogs/amk/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="test trek">
+  <meta property="og:description" content="Push past you limits.">
+  <meta property="og:url" content="https://ashutosh-shinde.github.io/blogs/amk/">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0f0f'/%3E%3Cpath d='M16 16m-9 0a9 9 0 1 0 18 0a7 7 0 1 0-14 0a5 5 0 1 0 10 0a3 3 0 1 0-6 0' fill='none' stroke='%23f6f4ec' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preload" href="../../fonts/lm-roman-regular.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="../../css/site.css">
+  <link rel="stylesheet" href="../../css/writing.css">
+  <!-- arriving from another page of the site: the quick flash starts with the first paint (.wq-arrive in
+       site.css), and the page opens in the right place: a back link (data-back) returns to where you left
+       this page; any other link opens it at the top, or at the #section it names -->
+  <script>
+    (function (e) {
+      var go = location.hash ? location.hash.slice(1) : null, n, p, k = location.pathname.replace(/index\.html$/, "");
+      try { var u = JSON.parse(sessionStorage.getItem("wq-unfold") || "null");
+        if (u && Date.now() - u.t < 6000 && !matchMedia("(prefers-reduced-motion: reduce)").matches) { e.classList.add("wq-arrive"); e.style.setProperty("--fx", (u.x * 100).toFixed(1) + "%"); e.style.setProperty("--fy", (u.y * 100).toFixed(1) + "%"); }
+        n = JSON.parse(sessionStorage.getItem("wq-nav") || "null");
+        if (n && n.to == k && Date.now() - n.t < 10000) { sessionStorage.removeItem("wq-nav"); p = n.back != null && JSON.parse(sessionStorage.getItem("wq-pos:" + k) || "null");
+          go = p && Math.abs(p.w - innerWidth) < 3 ? p.y : n.back != null ? n.back.slice(1) || 0 : go || 0; }
+      } catch (x) {}
+      if (go === null) return;
+      var user = false, fixes = 0, place = function () { try { if (typeof go == "number") scrollTo(0, go); else { var t = document.getElementById(decodeURIComponent(go)); if (t) t.scrollIntoView(); } } catch (x) {} };
+      e.style.scrollBehavior = "auto";
+      ["wheel", "touchstart", "keydown", "pointerdown"].forEach(function (v) { addEventListener(v, function () { user = true; }, { capture: true, passive: true }); });
+      document.addEventListener("readystatechange", function () { if (document.readyState == "interactive" && !user) place(); });
+      addEventListener("load", function () { if (!user) place(); var end = Date.now() + 1500; // and keep it there until the visitor moves
+        addEventListener("scroll", function hold() { if (user || Date.now() > end || ++fixes > 8) removeEventListener("scroll", hold); else place(); }, { passive: true });
+        setTimeout(function () { e.style.scrollBehavior = ""; }, 300); });
+    })(document.documentElement);
+  </script>
+  <script defer src="../../js/lib/core.js"></script>
+  <script defer src="../../js/lib/chalk.js"></script>
+  <script defer src="../../js/lib/snowfall.js"></script>
+  <script defer src="../../js/lib/explorer.js"></script>
+  <script defer src="../../js/engine/engine.js"></script>
+  <script defer src="../../js/scenes/snowfield.js"></script>
+  <script defer src="../../js/scenes/summit.js"></script>
+  <script defer src="../../js/site.js"></script>
+</head>
+<body class="page page--article page--post" data-scene="summit">
+  <!-- the board: still mountains over a sea of clouds, an eagle now and then, faint snow, grass (js/scenes/summit.js) -->
+  <!-- MADE BY tools/publish/build.py from content/blog/amk/index.md: edit that file (or the template
+       tools/publish/templates/post.html), not this page. It is rewritten on every publish. -->
+  <canvas id="board-tex" aria-hidden="true"></canvas>
+  <canvas id="board-fx" aria-hidden="true"></canvas>
+  <a class="back" href="../" data-collapse data-back="#amk"><span aria-hidden="true">←</span> Blogs</a>
+  <main class="page__main">
+    <article class="article post" data-calm="0.8"><!-- (0.8: the mountains stay faintly visible behind the text) -->
+      <header class="article__head">
+        <p class="article__kicker">Trekking</p>
+        <h1 class="page__title article__title"><span class="chalk-text">test trek</span></h1>
+        <p class="article__by">Ashutosh Shinde · <time datetime="2021-08-21">August 21, 2021</time></p>
+        <p class="post__abstract">Push past you limits.</p>
+      </header>
+
+      <div class="post__body">
+<p>This is test file </p>
+      </div>
+
+      <p class="article__end" aria-hidden="true">⁂</p>
+      <nav class="post-nav" aria-label="More"><a class="post-nav__prev" href="../a-winter-night-on-kalsubai/" data-collapse><span class="post-nav__label">← Previous </span><span class="post-nav__title">A winter night on Kalsubai</span></a><span class="post-nav__next"></span></nav>
+      <p class="article__back"><a class="btn" href="../" data-collapse data-back="#amk"><span aria-hidden="true">←</span> Back to Blogs</a></p>
+    </article>
+  </main>
+</body>
+</html>

@@ -13,6 +13,19 @@
    "chapter": null,
    "draft": false,
    "card": "      <li>\n        <a class=\"post-card\" id=\"a-winter-night-on-kalsubai\" href=\"a-winter-night-on-kalsubai/\" data-collapse>\n          <span class=\"post-card__meta\"><span class=\"post-card__cat\">Trekking</span> · <time datetime=\"2026-01-18\">January 18, 2026</time></span>\n          <span class=\"post-card__title\">A winter night on Kalsubai</span>\n          <span class=\"post-card__abstract\">The highest point of Maharashtra by headtorch, a night of wind at the summit temple, and a sunrise that made every frozen finger worth it. (A demo story, written in Google Docs, to show how a post looks.)</span>\n          <span class=\"post-card__go\">Read <span aria-hidden=\"true\">→</span></span>\n        </a>\n      </li>"
+  },
+  {
+   "src": "content/blog/amk/index.md",
+   "slug": "amk",
+   "title": "test trek",
+   "date": "2021-08-21",
+   "category": "Trekking",
+   "abstract": "Push past you limits.",
+   "url": "blogs/amk/",
+   "image": null,
+   "chapter": null,
+   "draft": false,
+   "card": "      <li>\n        <a class=\"post-card\" id=\"amk\" href=\"amk/\" data-collapse>\n          <span class=\"post-card__meta\"><span class=\"post-card__cat\">Trekking</span> · <time datetime=\"2021-08-21\">August 21, 2021</time></span>\n          <span class=\"post-card__title\">test trek</span>\n          <span class=\"post-card__abstract\">Push past you limits.</span>\n          <span class=\"post-card__go\">Read <span aria-hidden=\"true\">→</span></span>\n        </a>\n      </li>"
   }
  ]
 }
