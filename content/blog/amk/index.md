@@ -6,4 +6,4 @@ abstract: Push past you limits.
 ---
 
 This is test file
-![photo](pic.jpg)
+![photo](pic.png)
