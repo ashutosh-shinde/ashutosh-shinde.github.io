@@ -4,21 +4,23 @@
    A band fixed to the bottom of the screen (#strip in blogs/index.html; styles
    in css/writing.css). The explorer (js/lib/explorer.js) runs along the chalk
    ground and stops for his activities; the ground scrolls by, so it works on
-   any screen width. One loop, about 75 s:
-     pull-ups on a bar → skipping rope → reading on a rock under a pine →
-     the leopard: darted, GPS-collared, wakes and bounds away → an ice boulder
-     climbed with two axes → the dance on top → a dive into the lake →
-     swimming across → out on the far bank, shake off → and on again
-   Reduced motion: one still drawing (reading). The pause button stops it.
+   any screen width. One loop, about 68 s:
+     pull-ups on a bar → reading on a rock under a pine → the leopard: darted,
+     GPS-collared, wakes and bounds away → straight on to a big, concave wall
+     of ice, climbed with two axes (the view rises with him) → the dance on
+     top → a high dive into the lake → a long swim across → out on the far
+     bank, shake off → and on again
+   Reduced motion: one still drawing (reading).
    Test hook: ?capture=1 stops the clock; WQ.strip.at(t) draws the loop at t s.
    HOW TO EDIT: ACTS (order, run distances, durations), MS (his size),
-   V (running speed), the scenery sizes at the top of each act.
+   V (running speed), the scenery sizes at the top of each act (WALL: the
+   wall's height, how concave it is, the length of the lake).
    ============================================================================= */
 (function (G) {
   "use strict";
   const WQ = G.WQ;
   if (!WQ || !WQ.SM || !WQ.L) return;
-  const { L, SM, C } = WQ, { lerp, clamp, smooth, Ease, TAU, M2, Rig, drawOutline, mulberry32, fract } = L;
+  const { L, SM, C } = WQ, { lerp, clamp, smooth, Ease, TAU, DEG, M2, Rig, drawOutline, mulberry32, fract } = L;
   const INK = "246,244,236", BG = "#0d0f0f";
   const HD = 120, GY = 106;          // design units: strip height, ground line
   const MS = 0.74, LS = 0.32;        // explorer and leopard scale (design units per figure unit)
@@ -31,7 +33,6 @@
     hang: { h: 38, lean: 0, nk: -4, look: 0, arm: [[176, 178], [172, 176]], leg: [[26, -40, 50], [16, -52, 40]] },
     crouch: { h: 27, lean: 20, nk: 4, look: 0, arm: [[-36, 10], [-26, 20]], leg: [[64, -36, 90], [56, -44, 90]] },
     land: { h: 30, lean: 12, nk: 4, look: 0, arm: [[46, 80], [36, 70]], leg: [[52, -26, 90], [44, -34, 90]] },
-    skip: { h: 37.5, lean: 2, nk: 2, look: 0, arm: [[16, 74], [8, 66]], leg: [[4, -4, 88], [-2, -6, 88]] },
     sit: { h: 19.5, lean: 8, nk: 22, look: 0, arm: [[40, 100], [30, 96]], leg: [[88, 2, 92], [82, -4, 90]] },
     swim: { h: 38, lean: 90, nk: -24, look: 0, arm: [[90, 90], [-90, -90]], leg: [[-92, -92, -100], [-86, -86, -96]] },
     wave: { h: 38, lean: 0, nk: 0, look: 1, arm: [[150, 170], [-20, -12]], leg: [[9, 4, 70], [-9, -4, -70]] },
@@ -86,47 +87,7 @@
     },
   });
 
-  /* --- 2. skipping rope (seen from the front: the rope is an arc from hand to hand
-     that swings over his head, down in front, under his feet, and up behind) */
-  const SKIP = { t0: 0.8, t1: 6.0, hz: 1.45 };
-  const ropeAngle = (u) => TAU * SKIP.hz * (u - SKIP.t0) - 0.5 * Math.PI; // 0 = over his head, π = under his feet
-  const SKIPF = { h: 37.5, lean: 0, nk: 0, look: 1, arm: [[34, 84], [-34, -84]], leg: [[6, 2, 70], [-6, -2, -70]] };
-  function rope(m, J, front) {
-    if (!m.props || m.props.rope == null) return;
-    const th = m.props.th, inFront = Math.sin(th) > 0;
-    if (inFront !== front) return;
-    const hR = D.inv(J.arms[0][2]), hL = D.inv(J.arms[1][2]), mid = [(hR[0] + hL[0]) / 2, (hR[1] + hL[1]) / 2];
-    const head = D.inv(J.head), top = head[1] - 15, bot = m.ry + 1.5, c = Math.cos(th);
-    const apex = c > 0 ? lerp(mid[1], top, c) : lerp(mid[1], bot, -c), cp = [mid[0], 2 * apex - mid[1]];
-    const pts = [];
-    for (let i = 0; i <= 16; i++) { const s = i / 16; pts.push([(1 - s) * (1 - s) * hL[0] + 2 * (1 - s) * s * cp[0] + s * s * hR[0], (1 - s) * (1 - s) * hL[1] + 2 * (1 - s) * s * cp[1] + s * s * hR[1]]); }
-    D.ln(pts, 1.0, (front ? 0.92 : 0.45) * m.props.rope);
-    if (front) for (const h of [hL, hR]) D.ln([[h[0], h[1] - 1.8], [h[0], h[1] + 1.8]], 2.2, 0.9); // the handles
-  }
-  ACTS.push({
-    name: "skipping", run: 320, dur: 6.6, dxEnd: 0,
-    scenery() {},
-    man(u, A) {
-      if (u < 0.35) return { p: SM.mix(runPose(A), P.stand, sm(0, 0.35, u)), rx: A, ry: GY, dir: 1 };
-      if (u < SKIP.t0) { // turn to face us, rope out of the bag
-        const k = seg(u, 0.35, SKIP.t0), p = k < 0.5 ? SM.mix(P.stand, P.reachBag, sm(0, 0.5, k)) : SM.mix(P.reachBag, SKIPF, sm(0.5, 1, k));
-        return { p, rx: A, ry: GY, dir: 1, props: { rope: sm(0.6, 1, k), th: ropeAngle(SKIP.t0) } };
-      }
-      if (u < SKIP.t1) {
-        const th = ropeAngle(u), d = Math.atan2(Math.sin(th - Math.PI), Math.cos(th - Math.PI)), hop = 6.5 * Math.exp(-((d / 0.7) ** 2));
-        const p = SM.clone(SKIPF), w = Math.sin(th);
-        p.arm[0][1] += 14 * w; p.arm[1][1] -= 14 * w; p.arm[0][0] += 4 * w; p.arm[1][0] -= 4 * w; // the wrists turn the rope
-        const land = 1 - hop / 6.5; p.h -= 2.4 * land * land; p.leg[0][1] -= 12 * land * land; p.leg[1][1] += 12 * land * land;
-        return { p, rx: A, ry: GY - hop, dir: 1, props: { rope: 1, th } };
-      }
-      const k = seg(u, SKIP.t1, 6.6), p = k < 0.5 ? SM.mix(SKIPF, P.reachBag, sm(0, 0.5, k)) : SM.mix(P.reachBag, P.stand, sm(0.5, 1, k));
-      return { p, rx: A, ry: GY, dir: 1, props: { rope: 1 - sm(0, 0.5, k), th: ropeAngle(SKIP.t1) } };
-    },
-    back(A, u, m, J) { rope(m, J, false); },
-    extra(A, u, m, J) { rope(m, J, true); },
-  });
-
-  /* --- 3. reading on a rock under a pine ---------------------------------- */
+  /* --- 2. reading on a rock under a pine ---------------------------------- */
   const BOOK = { open: 1.45, close: 6.5, turns: [2.9, 4.7] };
   ACTS.push({
     name: "reading", run: 320, dur: 7.6, dxEnd: 15,
@@ -169,7 +130,7 @@
     },
   });
 
-  /* --- 4. the leopard: darted, collared, released ------------------------- */
+  /* --- 3. the leopard: darted, collared, released ------------------------- */
   const LEO = { x0: 300, xs: 125, walkEnd: 3.0, hit: 3.6, lie: 5.2, wake: 9.6, run: 10.7 };
   const rig = new Rig();
   function leopardState(u, A) {
@@ -262,49 +223,77 @@
     ctx.restore();
   }
 
-  /* --- 5. ice boulder, dance, dive, swim, out ------------------------------ */
-  const ICE = { face: 16, top: 70, lip: 18, edge: 108, wy: 108, lake1: 112, lake2: 330, bank: 342 };
-  const CL = { t0: 1.4, t1: 5.4, moves: 4 };
-  function climb(u, A) { // hip and limbs on the boulder's face
-    const face = A + ICE.face, k = seg(u, CL.t0, CL.t1) * CL.moves, m = Math.min(CL.moves - 1, Math.floor(k)), f = Math.min(1, k - m);
-    const hip0 = GY - 38 * MS, hip1 = ICE.top - 4;
+  /* --- 4. the big wall: a tall, concave wall of ice climbed with two axes, the dance on top, the high
+     dive, a long swim across the lake, out on the far bank. The wall is far taller than the strip: the
+     view rises with him as he climbs and drops with him in the dive (see camY in render).            */
+  const WALL = { face: 18, h: 156, bulge: 30, over: 9, edge: 130, wy: 108, lake: 520, swim: 34, dance: 62, entry: 194 }; // (swim: units/s, as before)
+  WALL.top = GY - WALL.h;                       // the top of the wall (y is down: above the strip's top edge)
+  WALL.lip = WALL.face - WALL.over;             // where the face meets the top: it overhangs the foot
+  WALL.end = WALL.edge + 3 + WALL.lake;         // the far end of the lake
+  WALL.bank = WALL.end + 12;                    // where he stands again, on the far bank
+  // the face (x from the act's anchor) at height y: concave, like the inside of a bowl: it leans back at
+  // the foot, stands upright half-way up and leans out over him near the top
+  const faceX = (y) => { const s = clamp((GY - y) / WALL.h, 0, 1); return WALL.face + WALL.bulge * Math.sin(Math.PI * s) * (1 - 0.25 * s) - WALL.over * s * s; };
+  const faceLean = (y) => Math.atan2(faceX(y - 6) - faceX(y + 6), 12) / DEG; // degrees: + leans back, − overhangs
+  const CL = { t0: 1.4, moves: 12, per: 0.8, dist: 9 }; // the climb: moves, seconds per move, hip's distance from the face
+  CL.t1 = CL.t0 + CL.moves * CL.per;
+  // the rest of the act, in seconds from its start
+  const TW = { m1: CL.t1 + 0.8 };               // over the lip
+  TW.d0 = TW.m1 + 0.4; TW.d1 = TW.d0 + SM.DANCE_LEN; TW.e1 = TW.d1 + 0.4; // to the dance, the dance, to the edge
+  TW.v1 = TW.e1 + 1.7; TW.w0 = TW.v1 + 0.5;    // the dive, under water
+  TW.s1 = TW.w0 + (WALL.end - 14 - (WALL.entry + 8)) / WALL.swim; TW.b1 = TW.s1 + 0.9; TW.end = TW.b1 + 0.5; // swim, out, shake off
+  function climb(u, A) { // hip and limbs on the concave face
+    const fx = (y) => A + faceX(y), k = seg(u, CL.t0, CL.t1) * CL.moves, m = Math.min(CL.moves - 1, Math.floor(k)), f = Math.min(1, k - m);
+    const hip0 = GY - 38 * MS, hip1 = WALL.top + 6;
     const hipAt = (j) => lerp(hip0, hip1, j / CL.moves), hy = lerp(hipAt(m), hipAt(m + 1), Ease.inOut(clamp((f - 0.35) / 0.5, 0, 1)));
-    const p = SM.clone(P.climb); p.lean = -6; p.nk = -16; p.h = 36;
-    const rx = face - 12, ry = hy + p.h * MS;
+    const p = SM.clone(P.climb); p.lean = -6 + 0.85 * faceLean(hy); p.nk = -16; p.h = 36;
+    const rx = fx(hy) - CL.dist, ry = hy + p.h * MS;
     const pick = (i) => { const up = (j) => hipAt(j + 1) - 27, init = hip0 - (i ? 24 : 30); let y, w = 1;
       if (m % 2 === i) { w = clamp(f / 0.4, 0, 1); y = lerp(m >= 2 ? up(m - 2) : init, up(m), Ease.inOut(w)); } else y = m >= 1 ? up(m - 1) : init;
-      return [face - 0.5 - 6 * Math.sin(Math.PI * w) * (w < 1 ? 1 : 0), Math.max(ICE.top + 3, y)]; };
+      y = Math.max(WALL.top + 3, y);
+      return [fx(y) - 0.5 - 6 * Math.sin(Math.PI * w) * (w < 1 ? 1 : 0), y]; };
     const foot = (i) => { const at = (j) => hipAt(j + 1) + 20 + (i ? 5 : 0), init = GY - (i ? 2 : 6); let y, w = 1;
       if ((m + 1) % 2 === i) { w = clamp((f - 0.55) / 0.4, 0, 1); y = lerp(m >= 2 ? at(m - 2) : init, at(m), Ease.inOut(w)); } else y = m >= 1 ? at(m - 1) : init;
-      return [face - 1 - 3 * Math.sin(Math.PI * w) * (w < 1 ? 1 : 0), Math.min(GY, y)]; };
+      y = Math.min(GY, y);
+      return [fx(y) - 1 - 3 * Math.sin(Math.PI * w) * (w < 1 ? 1 : 0), y]; };
     const kA = pick(0), kB = pick(1), grip = (kp) => [kp[0] - 6, kp[1] + 9];
     SM.reach(p, "arm", 0, D.toFig(grip(kA), rx, ry, 1), 1); SM.reach(p, "arm", 1, D.toFig(grip(kB), rx, ry, 1), 1);
     for (const i of [0, 1]) { SM.reach(p, "leg", i, D.toFig(foot(i), rx, ry, 1), 1); p.leg[i][2] = p.leg[i][1] + 75; }
     return { p, rx, ry, dir: 1, props: { axes: [[grip(kA), kA], [grip(kB), kB]] } };
   }
   ACTS.push({
-    name: "ice", run: 320, dur: 18.4, dxEnd: ICE.bank,
-    gap: [ICE.lake1, ICE.lake2],
-    scenery(A, u) {
-      const f = A + ICE.face, top = ICE.top, e = A + ICE.edge;
-      // a serac: a block of ice with a slightly lumpy top (he walks on it, so only a little), streaks down
-      // the face he climbs, cracks, and icicles where it drops into the lake
-      const topLine = [[A + ICE.lip, top], [A + 27, top - 0.8], [A + 40, top - 0.2], [A + 52, top - 0.9], [A + 64, top - 0.3], [A + 80, top - 0.9], [A + 94, top - 0.2], [e, top]];
-      D.fill([[f, GY], [f - 1.5, GY - 12], [f + 1, GY - 24], ...topLine, [e + 2.5, ICE.wy + 12], [f, ICE.wy + 12]]);
-      D.ln([[f, GY], [f - 1.5, GY - 12], [f + 1, GY - 24], [A + ICE.lip, top]], 1.7, 0.9);
-      D.ln(topLine, 1.6, 0.9);
-      D.ln([[e, top], [e + 1.5, top + 14], [e + 0.5, top + 26], [e + 2.5, ICE.wy]], 1.6, 0.85);
-      for (let i = 0; i < 4; i++) D.ln([[f + 4 + i * 1.6, GY - 3], [f + 3 + i * 1.8, GY - 22 - i * 3]], 0.8, 0.25); // ice streaks
-      D.ln([[A + 38, top + 7], [A + 45, top + 12], [A + 43, top + 20]], 0.8, 0.22); D.ln([[A + 76, top + 5], [A + 71, top + 15]], 0.8, 0.2); // cracks
-      for (const [x, y, l] of [[e + 0.6, top + 1.5, 7], [e - 2.6, top + 1, 4.5], [e + 1.8, top + 15, 5.5], [e + 1, top + 27, 4]]) D.ln([[x - 0.9, y], [x + 0.2, y + l], [x + 1.1, y]], 0.9, 0.6); // icicles
-      // the lake: water from the boulder to the far bank, which climbs back to the ground
-      const x0 = A + ICE.lake1 - 4, x1 = A + ICE.lake2, t = D.t;
+    name: "wall", run: 160, dur: TW.end, dxEnd: WALL.bank, span: WALL.bank + 60,
+    gap: [WALL.edge + 2, WALL.end],
+    scenery(A) {
+      const fx = (y) => A + faceX(y), top = WALL.top, e = A + WALL.edge, wy = WALL.wy, lip = [A + WALL.lip, top];
+      const face = []; for (let y = GY; y > top + 3; y -= 6) face.push([fx(y), y]); face.push(lip);
+      // the top: snow, a little lumpy (he walks and dances on it), a small cornice over the lip
+      const topLine = [lip, [lip[0] - 2.5, top - 1.6], [lip[0] + 4, top - 3], [A + 26, top - 1.4], [A + 44, top - 2], [A + 62, top - 0.6],
+        [A + 80, top - 1.7], [A + 98, top - 0.5], [A + 116, top - 1.4], [e, top]];
+      // the far side: an ice cliff straight down into the lake
+      const side = [[e, top], [e + 2, top + 26], [e + 0.5, top + 60], [e + 3, top + 96], [e + 1.2, top + 128], [e + 3.5, wy]];
+      D.fill([...face, ...topLine.slice(1), ...side.slice(1), [e + 3.5, wy + 14], [A + WALL.face, GY + 14]]);
+      // inside: bands of old ice that follow the curve of the face, so the hollow reads as a hollow
+      for (const [d, a, s0, s1] of [[10, 0.2, 0.06, 0.9], [23, 0.15, 0.14, 0.97], [39, 0.11, 0.03, 0.8], [58, 0.08, 0.22, 0.95], [80, 0.06, 0.1, 0.7]]) {
+        const pts = []; for (let s = s0; s <= s1 + 1e-6; s += 0.04) { const y = GY - s * WALL.h; pts.push([fx(y) + d * (0.55 + 0.45 * Math.sin(Math.PI * s)), y]); }
+        D.ln(pts, 0.8, a);
+      }
+      for (let i = 0; i < 9; i++) { // streaks of ice running down the face
+        const s = 0.08 + i * 0.1, y = GY - s * WALL.h, l = 10 + 7 * ((i * 37) % 5);
+        D.ln([[fx(y) + 3 + (i % 3), y], [fx(y + l) + 3.5 + (i % 3), y + l]], 0.8, 0.22);
+      }
+      D.ln([[A + 58, top + 16], [A + 64, top + 23], [A + 61, top + 33]], 0.8, 0.2); D.ln([[A + 96, top + 52], [A + 90, top + 64], [A + 94, top + 71]], 0.8, 0.18); // cracks
+      D.ln([[A + 44, top + 96], [A + 51, top + 104]], 0.8, 0.16);
+      for (const s of [0.9, 0.94, 0.975]) { const y = GY - s * WALL.h, x = fx(y), l = 4 + 10 * (s - 0.88) * 10; D.ln([[x - 0.9, y], [x + 0.2, y + l], [x + 1.1, y]], 0.9, 0.6); } // icicles under the overhang
+      for (const [x, y, l] of [[e + 0.6, top + 1.5, 7], [e - 2.6, top + 1, 4.5], [e + 1.8, top + 26, 6], [e + 1, top + 61, 5], [e + 2.4, top + 97, 4]]) D.ln([[x - 0.9, y], [x + 0.2, y + l], [x + 1.1, y]], 0.9, 0.6); // and on the far side
+      D.ln(face, 1.7, 0.9); D.ln(topLine, 1.6, 0.9); D.ln(side, 1.6, 0.85);
+      // the lake: long, from the foot of the cliff to the far bank, which climbs back to the ground
+      const x0 = e + 1, x1 = A + WALL.end, t = D.t;
       const wave = (y0, amp, a, w) => { const pts = []; for (let x = x0; x <= x1; x += 3) pts.push([x, y0 + amp * Math.sin(x * 0.2 + t * 2.4)]); D.ln(pts, w, a); };
-      wave(ICE.wy, 1.1, 0.6, 1.2); wave(ICE.wy + 6, 0.8, 0.22, 1); wave(ICE.wy + 11, 0.6, 0.12, 1);
-      D.ln([[x1 - 2, ICE.wy + 10], [x1 + 4, ICE.wy + 2], [A + ICE.bank, GY], [A + ICE.bank + 6, GY]], 1.5, 0.85);
+      wave(wy, 1.1, 0.6, 1.2); wave(wy + 6, 0.8, 0.22, 1); wave(wy + 11, 0.6, 0.12, 1);
+      D.ln([[x1 - 2, wy + 10], [x1 + 4, wy + 2], [A + WALL.bank, GY], [A + WALL.bank + 6, GY]], 1.5, 0.85);
     },
     man(u, A) {
-      const f = A + ICE.face;
       if (u < 0.4) return { p: SM.mix(runPose(A), P.stand, sm(0, 0.4, u)), rx: A, ry: GY, dir: 1 };
       if (u < 0.8) return { p: SM.clone(P.reachBag), rx: A, ry: GY, dir: 1 };
       if (u < CL.t0) { const p = SM.clone(P.axes); p.nk = 14 * Math.sin((u - 0.8) * 3); return { p, rx: A + 1, ry: GY, dir: 1, props: { axesV: true } }; }
@@ -313,58 +302,75 @@
         if (u < CL.t0 + 0.3) { const e = sm(CL.t0, CL.t0 + 0.3, u); c.p = SM.mix(P.axes, c.p, e); c.rx = lerp(A + 1, c.rx, e); c.ry = lerp(GY, c.ry, e); }
         return c;
       }
-      if (u < 6.2) { // mantle over the top
-        const e = seg(u, CL.t1, 6.2), A0 = climb(CL.t1 - 0.001, A), lip = [A + ICE.lip, ICE.top];
-        const hipA = [A0.rx, A0.ry - A0.p.h * MS], hipB = [lip[0] + 2, ICE.top - 30], hipC = [A + 30, ICE.top - 38 * MS];
-        const hip = e < 0.5 ? [lerp(hipA[0], hipB[0], Ease.inOut(e / 0.5)), lerp(hipA[1], hipB[1], Ease.inOut(e / 0.5))] : [lerp(hipB[0], hipC[0], Ease.inOut((e - 0.5) / 0.5)), lerp(hipB[1], hipC[1], Ease.inOut((e - 0.5) / 0.5))];
-        const p = SM.mix(A0.p, P.stand, sm(0.45, 1, e)); p.lean = e < 0.5 ? lerp(-6, 34, Ease.inOut(e / 0.5)) : lerp(34, 2, Ease.inOut((e - 0.5) / 0.5));
+      if (u < TW.m1) { // over the lip: the axes swing over onto the snow on top, he pulls up close to the lip, presses
+        // up on the axes (a mantle), steps up, puts the axes away and stands
+        const e = seg(u, CL.t1, TW.m1), A0 = climb(CL.t1 - 0.001, A), lx = A + WALL.lip, top = WALL.top;
+        const hips = [[A0.rx, A0.ry - A0.p.h * MS], [lx - 2, top + 2], [lx + 8, top - 7], [A + 30, top - 38 * MS]];
+        const k1 = Ease.inOut(seg(e, 0, 0.3)), k2 = Ease.inOut(seg(e, 0.3, 0.6)), k3 = Ease.inOut(seg(e, 0.6, 1));
+        const hip = e < 0.3 ? SM.mix(hips[0], hips[1], k1) : e < 0.6 ? SM.mix(hips[1], hips[2], k2) : SM.mix(hips[2], hips[3], k3);
+        const p = e < 0.6 ? SM.mix(A0.p, POSE.crouch, 0.3 * seg(e, 0, 0.6)) : SM.mix(SM.mix(A0.p, POSE.crouch, 0.3), P.stand, k3);
+        p.lean = e < 0.3 ? lerp(A0.p.lean, 40, k1) : e < 0.6 ? lerp(40, 55, k2) : lerp(55, 2, k3);
         const rx = hip[0], ry = hip[1] + p.h * MS;
-        if (e < 0.7) { SM.reach(p, "arm", 0, D.toFig([lip[0] + 6, ICE.top], rx, ry, 1), 1); SM.reach(p, "arm", 1, D.toFig([lip[0] + 2, ICE.top], rx, ry, 1), 1); }
-        return { p, rx, ry, dir: 1, props: { axes: e < 0.35 ? A0.props.axes : null } };
+        const onTop = [[lx + 13, top - 1.5], [lx + 10, top - 1.5]].map((q) => [q, [q[0] + 7, top + 2]]);
+        const ax = A0.props.axes.map((a, i) => [SM.mix(a[0], onTop[i][0], k1), SM.mix(a[1], onTop[i][1], k1)]);
+        const hold = 1 - sm(0.6, 0.78, e); // his hands stay on the axes until he is up
+        if (hold > 0) { const q = SM.clone(p); SM.reach(q, "arm", 0, D.toFig(ax[0][0], rx, ry, 1), 1); SM.reach(q, "arm", 1, D.toFig(ax[1][0], rx, ry, 1), 1); p.arm = SM.mix(p.arm, q.arm, hold); }
+        if (e < 0.75) { // his feet: on the face below the lip, then one comes up onto the top
+          const q = SM.clone(p);
+          for (const i of [0, 1]) {
+            const y = Math.min(GY, hip[1] + 22 + 4 * i), onFace = [A + faceX(y) - 1, y], step = [lx + 9 - 3 * i, top];
+            const up = i === 0 ? sm(0.45, 0.62, e) : sm(0.6, 0.75, e);
+            SM.reach(q, "leg", i, D.toFig(SM.mix(onFace, step, up), rx, ry, 1), 1); q.leg[i][2] = q.leg[i][1] + 75;
+          }
+          p.leg = SM.mix(q.leg, p.leg, sm(0.6, 0.75, e));
+        }
+        return { p, rx, ry, dir: 1, props: { axes: ax, axesA: 1 - sm(0.6, 0.78, e) } };
       }
-      if (u < 6.6) { const x = lerp(A + 30, A + 58, sm(6.2, 6.6, u)); const p = runPose(x - A); p.lean = 6; return { p, rx: x, ry: ICE.top, dir: 1 }; }
-      if (u < 11.0) return { p: SM.dance(u - 6.6), rx: A + 58, ry: ICE.top, dir: 1 };
-      if (u < 11.4) { const x = lerp(A + 58, A + ICE.edge - 4, sm(11.0, 11.4, u)); return { p: runPose(x - A), rx: x, ry: ICE.top, dir: 1 }; }
-      if (u < 12.4) { // the dive
-        const e = seg(u, 11.4, 12.4), hx = lerp(A + ICE.edge - 4, A + 168, e), hy0 = ICE.top - 38 * MS, hy = hy0 - 26 * e * (1 - e) * 1.2 + (ICE.wy + 6 - hy0) * e * e;
-        const p = SM.mix(P.stand, P.dive, sm(0, 0.35, e)); p.lean = lerp(14, 172, Ease.inOut(e));
+      if (u < TW.d0) { const x = lerp(A + 30, A + WALL.dance, sm(TW.m1, TW.d0, u)); const p = runPose(x - A); p.lean = 6; return { p, rx: x, ry: WALL.top, dir: 1 }; }
+      if (u < TW.d1) return { p: SM.dance(u - TW.d0), rx: A + WALL.dance, ry: WALL.top, dir: 1 };
+      if (u < TW.e1) { const x = lerp(A + WALL.dance, A + WALL.edge - 4, sm(TW.d1, TW.e1, u)); return { p: runPose(x - A), rx: x, ry: WALL.top, dir: 1 }; }
+      if (u < TW.v1) { // the high dive: a small spring up and out, then a long fall, head first
+        const e = seg(u, TW.e1, TW.v1), hy0 = WALL.top - 38 * MS, drop = WALL.wy + 6 - hy0, rise = 18;
+        const b = 2 * rise + 2 * Math.sqrt(rise * rise + rise * drop), hy = hy0 - b * e + (drop + b) * e * e; // (a parabola: up by `rise`, down by `drop`)
+        const hx = lerp(A + WALL.edge - 4, A + WALL.entry, e);
+        const p = SM.mix(P.stand, P.dive, sm(0, 0.3, e)); p.lean = lerp(14, 176, Ease.inOut(seg(e, 0.04, 0.62)));
         return { p, rx: hx, ry: hy + p.h * MS, dir: 1, water: true };
       }
-      if (u < 12.9) return { p: SM.clone(POSE.swim), rx: A + 172, ry: ICE.wy + 8 + 38 * MS, dir: 1, alpha: 0, water: true }; // under water
-      if (u < 17.0) { // swimming across
-        const e = seg(u, 12.9, 17.0), x = lerp(A + 176, A + ICE.lake2 - 14, e), ph = (u - 12.9) * 0.95, p = SM.clone(POSE.swim);
+      if (u < TW.w0) return { p: SM.clone(POSE.swim), rx: A + WALL.entry + 4, ry: WALL.wy + 8 + 38 * MS, dir: 1, alpha: 0, water: true }; // under water
+      if (u < TW.s1) { // the long swim across
+        const e = seg(u, TW.w0, TW.s1), x = lerp(A + WALL.entry + 8, A + WALL.end - 14, e), ph = (u - TW.w0) * 0.95, p = SM.clone(POSE.swim);
         for (const i of [0, 1]) { const a = 90 - 360 * fract(ph + i * 0.5); p.arm[i] = [a, a - 14 * Math.sin(TAU * (ph + i * 0.5))]; }
         for (const i of [0, 1]) { const th = -90 + 9 * Math.sin(TAU * ph * 3 + i * Math.PI); p.leg[i] = [th, th - 6, -102]; }
         p.nk = -24 + 10 * Math.sin(TAU * ph);
-        const hipY = ICE.wy + 3 + 0.8 * Math.sin(TAU * ph * 2);
-        return { p, rx: x, ry: hipY + p.h * MS, dir: 1, water: true, alpha: sm(12.9, 13.2, u) };
+        const hipY = WALL.wy + 3 + 0.8 * Math.sin(TAU * ph * 2);
+        return { p, rx: x, ry: hipY + p.h * MS, dir: 1, water: true, alpha: sm(TW.w0, TW.w0 + 0.3, u) };
       }
-      if (u < 17.9) { // up the far bank
-        const e = seg(u, 17.0, 17.9), sw = SM.clone(POSE.swim), p = e < 0.5 ? SM.mix(sw, POSE.crouch, sm(0, 0.5, e)) : SM.mix(POSE.crouch, P.stand, sm(0.5, 1, e));
-        const hip0 = [A + ICE.lake2 - 14, ICE.wy + 3], hip1 = [A + ICE.bank, GY - 38 * MS], hx = lerp(hip0[0], hip1[0], Ease.inOut(e)), hy = lerp(hip0[1], hip1[1], Ease.inOut(e)) - 4 * Math.sin(Math.PI * e);
+      if (u < TW.b1) { // up the far bank
+        const e = seg(u, TW.s1, TW.b1), sw = SM.clone(POSE.swim), p = e < 0.5 ? SM.mix(sw, POSE.crouch, sm(0, 0.5, e)) : SM.mix(POSE.crouch, P.stand, sm(0.5, 1, e));
+        const hip0 = [A + WALL.end - 14, WALL.wy + 3], hip1 = [A + WALL.bank, GY - 38 * MS], hx = lerp(hip0[0], hip1[0], Ease.inOut(e)), hy = lerp(hip0[1], hip1[1], Ease.inOut(e)) - 4 * Math.sin(Math.PI * e);
         return { p, rx: hx, ry: hy + p.h * MS, dir: 1, water: e < 0.6 };
       }
-      const p = SM.clone(P.stand), w = 1 - seg(u, 17.9, 18.4); p.lean += 9 * Math.sin((u - 17.9) * 40) * w; p.nk = 10 * Math.sin((u - 17.9) * 34) * w;
-      return { p, rx: A + ICE.bank, ry: GY, dir: 1, drip: w };
+      const p = SM.clone(P.stand), w = 1 - seg(u, TW.b1, TW.end); p.lean += 9 * Math.sin((u - TW.b1) * 40) * w; p.nk = 10 * Math.sin((u - TW.b1) * 34) * w;
+      return { p, rx: A + WALL.bank, ry: GY, dir: 1, drip: w };
     },
     extra(A, u, m, J) {
       const pr = m && m.props || {};
       if (pr.axesV) for (const [i, tilt, pd] of [[0, 0.32, 1], [1, -0.32, -1]]) { const h = D.inv(J.arms[i][2]), top = [h[0] + Math.sin(tilt) * 15, h[1] - Math.cos(tilt) * 15]; D.ln([[h[0] - Math.sin(tilt) * 2, h[1] + Math.cos(tilt) * 2], top], 1.6, 0.95); D.ln([top, [top[0] + pd * 5, top[1] + 2.5]], 1.6, 0.95); D.ln([top, [top[0] - pd * 2.5, top[1] - 0.5]], 1.9, 0.9); }
-      if (pr.axes) for (const [g, k] of pr.axes) axe(g, k);
-      if (u > 12.35 && u < 13.6) { // splash: rings and drops
-        const e = (u - 12.35) / 1.25, x = A + 170;
-        for (let r = 1; r <= 3; r++) { const rr = (5 + 30 * e) * (0.5 + r * 0.25); D.ctx.beginPath(); D.ctx.ellipse(D.X(x), D.Y(ICE.wy + 1), rr * D.k, rr * 0.22 * D.k, 0, 0, TAU); D.ctx.strokeStyle = `rgba(${INK},${0.55 * (1 - e) / r})`; D.ctx.lineWidth = D.k; D.ctx.stroke(); }
+      if (pr.axes) pr.axes.forEach(([g, k], i) => { const h = D.inv(J.arms[i][2]); axe(h, [k[0] + h[0] - g[0], k[1] + h[1] - g[1]], pr.axesA ?? 1); });
+      if (u > TW.v1 - 0.05 && u < TW.v1 + 1.2) { // splash: rings and drops
+        const e = (u - TW.v1 + 0.05) / 1.25, x = A + WALL.entry + 2;
+        for (let r = 1; r <= 3; r++) { const rr = (5 + 30 * e) * (0.5 + r * 0.25); D.ctx.beginPath(); D.ctx.ellipse(D.X(x), D.Y(WALL.wy + 1), rr * D.k, rr * 0.22 * D.k, 0, 0, TAU); D.ctx.strokeStyle = `rgba(${INK},${0.55 * (1 - e) / r})`; D.ctx.lineWidth = D.k; D.ctx.stroke(); }
         const rr = mulberry32(5); D.ctx.fillStyle = `rgba(${INK},${0.8 * (1 - e)})`;
-        for (let i = 0; i < 14; i++) { const vx = (rr() - 0.5) * 50, vy = 40 + rr() * 50, tt = e * 0.9, dx = x + vx * tt, dy = ICE.wy - vy * tt + 90 * tt * tt; if (dy < ICE.wy + 1) D.ctx.fillRect(D.X(dx), D.Y(dy), 1.6 * D.k, 1.6 * D.k); }
+        for (let i = 0; i < 18; i++) { const vx = (rr() - 0.5) * 60, vy = 50 + rr() * 60, tt = e * 0.9, dx = x + vx * tt, dy = WALL.wy - vy * tt + 90 * tt * tt; if (dy < WALL.wy + 1) D.ctx.fillRect(D.X(dx), D.Y(dy), 1.6 * D.k, 1.6 * D.k); }
       }
       if (m && m.drip > 0) { const h = D.inv(J.hip), rr = mulberry32(9); D.ctx.fillStyle = `rgba(${INK},${0.7 * m.drip})`; for (let i = 0; i < 6; i++) { const x = h[0] + (rr() - 0.5) * 10, y = h[1] + fract(rr() + u * 1.7) * 26; D.ctx.fillRect(D.X(x), D.Y(y), 1.2 * D.k, 1.6 * D.k); } }
     },
   });
-  function axe(grip, pick) { // handle from the grip to the pick (planted at `pick`)
-    D.ln([grip, pick], 1.5, 0.95);
+  function axe(grip, pick, a = 1) { // handle from the grip to the pick (planted at `pick`)
+    D.ln([grip, pick], 1.5, 0.95 * a);
     const dx = pick[0] - grip[0], dy = pick[1] - grip[1], d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d, px = -uy, py = ux;
-    D.ln([pick, [pick[0] + px * 3.5 - ux, pick[1] + py * 3.5 - uy], [pick[0] + px * 6 - ux * 3, pick[1] + py * 6 - uy * 3]], 1.6, 0.95);
-    D.ln([pick, [pick[0] - px * 3, pick[1] - py * 3]], 2, 0.9);
+    D.ln([pick, [pick[0] + px * 3.5 - ux, pick[1] + py * 3.5 - uy], [pick[0] + px * 6 - ux * 3, pick[1] + py * 6 - uy * 3]], 1.6, 0.95 * a);
+    D.ln([pick, [pick[0] - px * 3, pick[1] - py * 3]], 2, 0.9 * a);
   }
 
   /* ------------------------------------------------------------------ the loop's timeline */
@@ -401,23 +407,23 @@
   /* ------------------------------------------------------------------ drawing */
   function start() {
     const el = document.getElementById("strip"); if (!el) return;
-    const cv = el.querySelector("canvas"), btn = el.querySelector(".strip__pause"), ctx = cv.getContext("2d");
+    const cv = el.querySelector("canvas"), ctx = cv.getContext("2d");
     const qs = new URLSearchParams(G.location.search), capture = qs.get("capture") === "1";
     const mq = G.matchMedia ? G.matchMedia("(prefers-reduced-motion: reduce)") : null, still = (mq && mq.matches) || qs.get("still") === "1";
-    let W = 0, H = 0, dpr = 1, k = 1, cam = 0, anchor = 160, tNow = 0, paused = false, last = 0;
+    let W = 0, H = 0, dpr = 1, k = 1, cam = 0, camY = 0, anchor = 160, tNow = 0, last = 0;
     const grain = WQ.CH ? WQ.CH.grain() : null;
-    try { paused = G.localStorage.getItem("wq-strip-paused") === "1"; } catch (e) { /* storage blocked */ }
+    try { G.localStorage.removeItem("wq-strip-paused"); } catch (e) { /* storage blocked */ } // (the pause button is gone: forget a pause)
 
     D = {
       ctx, grain, get k() { return k; }, get t() { return tNow; },
-      X: (x) => (x - cam) * k, Y: (y) => y * k,
-      inv: (s) => [s[0] / k + cam, s[1] / k],
+      X: (x) => (x - cam) * k, Y: (y) => (y - camY) * k,
+      inv: (s) => [s[0] / k + cam, s[1] / k + camY],
       toFig: (pt, rx, ry, dir) => [(pt[0] - rx) / (dir * MS), (pt[1] - ry) / MS],
-      rootM: (rx, ry, dir) => new M2().translate((rx - cam) * k, ry * k).scale(dir * MS * k, MS * k),
-      ln(pts, w = 1.4, a = 0.85) { SM.line(ctx, pts.map(([x, y]) => [(x - cam) * k, y * k]), w * k, a, INK); },
+      rootM: (rx, ry, dir) => new M2().translate((rx - cam) * k, (ry - camY) * k).scale(dir * MS * k, MS * k),
+      ln(pts, w = 1.4, a = 0.85) { SM.line(ctx, pts.map(([x, y]) => [(x - cam) * k, (y - camY) * k]), w * k, a, INK); },
       lnS(pts, w, a) { SM.line(ctx, pts, w * k, a, INK); },
       poly(pts, w, a, fill) { if (fill) D.fill(pts); D.ln(pts, w, a); },
-      fill(pts) { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo((x - cam) * k, y * k) : ctx.moveTo((x - cam) * k, y * k))); ctx.closePath(); ctx.fillStyle = BG; ctx.fill(); },
+      fill(pts) { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo((x - cam) * k, (y - camY) * k) : ctx.moveTo((x - cam) * k, (y - camY) * k))); ctx.closePath(); ctx.fillStyle = BG; ctx.fill(); },
     };
 
     function resize() {
@@ -439,24 +445,34 @@
         else if (a < 0.5) { ctx.beginPath(); ctx.ellipse(D.X(x), D.Y(GY - 1), 2.4 * k, 1.3 * k, 0, 0, TAU); ctx.strokeStyle = `rgba(${INK},0.35)`; ctx.lineWidth = 0.9 * k; ctx.stroke(); }
       }
     }
-    function ridge(x0, x1) { // far hills, moving slower than the ground
+    function ridge(x0, x1) { // far hills, moving slower than the ground (and than the view, when it rises)
       const pts = [];
-      for (let sx = 0; sx <= W / k + 8; sx += 8) { const xw = cam * 0.3 + sx; pts.push([sx + cam, 64 + 8 * Math.sin(xw * 0.011) + 5 * Math.sin(xw * 0.027 + 1.3) + 3 * Math.sin(xw * 0.061 + 0.4)]); }
+      for (let sx = 0; sx <= W / k + 8; sx += 8) { const xw = cam * 0.3 + sx; pts.push([sx + cam, 0.7 * camY + 64 + 8 * Math.sin(xw * 0.011) + 5 * Math.sin(xw * 0.027 + 1.3) + 3 * Math.sin(xw * 0.061 + 0.4)]); }
       D.ln(pts, 1.1, 0.07);
     }
+    // the view follows him up the wall and down the dive: it keeps his hips at most 58 units below the top
+    // edge of the strip (it never looks below the ground), averaged over the last 0.6 s like the side-to-side
+    // view, and always keeps him between 22 and 112 (of 120)
+    const hipOf = (m) => Math.min(m.ry - m.p.h * MS, GY - 20);
     function render(tAll) {
       tNow = tAll;
       const S = stateAt(tAll);
-      let cx = 0, n = 0;
-      for (let i = 0; i < 6; i++) { const q = i === 0 ? S : stateAt(Math.max(0, tAll - 0.1 * i)); if (q && q.man) { cx += q.man.rx; n++; } }
+      let cx = 0, cy = 0, n = 0;
+      for (let i = 0; i < 6; i++) { const q = i === 0 ? S : stateAt(Math.max(0, tAll - 0.1 * i)); if (q && q.man) { cx += q.man.rx; cy += hipOf(q.man); n++; } }
       cam = (n ? cx / n : S.camX) - anchor;
+      const hipNow = S.man ? hipOf(S.man) : GY - 28;
+      let top = hipNow - 40, low = hipNow + 40; // and all of him: his highest and lowest points (in the water, only what is above it)
+      if (S.man) { const Jd = SM.joints(S.man.p, new M2().translate(S.man.rx, S.man.ry).scale(S.man.dir * MS, MS)); top = Jd.head[1] - U.r * MS; low = -1e9;
+        for (const q of [Jd.hip, Jd.sh, Jd.head, ...Jd.arms.flat(), ...Jd.legs.flat()]) { top = Math.min(top, q[1]); low = Math.max(low, q[1]); }
+        if (S.man.water) low = Math.min(low, WALL.wy + 2); }
+      camY = clamp(Math.min(0, (n ? cy / n : hipNow) - 58), Math.max(hipNow - 112, low - 116), Math.min(hipNow - 22, top - 3));
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.lineCap = ctx.lineJoin = "round";
       const x0 = cam - 40, x1 = cam + W / k + 40;
       // every station near the view (this loop and its neighbours)
       const stations = [];
       for (let n = S.n - 1; n <= S.n + 1; n++) for (const s of TL) if (s.kind === "act") {
-        const A = s.A + n * LEN; if (A + 420 < x0 || A - 120 > x1) continue;
+        const A = s.A + n * LEN; if (A + (s.act.span || 420) < x0 || A - 120 > x1) continue;
         stations.push({ s, A, active: n === S.n && S.seg === s });
       }
       ridge(x0, x1);
@@ -468,7 +484,7 @@
       if (m && (m.alpha ?? 1) > 0.01) {
         const M = D.rootM(m.rx, m.ry, m.dir), opt = { width: Math.max(1.2, 1.5 * k), alpha: m.alpha ?? 1, frames: "rect" };
         if (m.water) { // under the water line he shows faintly
-          const wy = D.Y(ICE.wy - 0.5);
+          const wy = D.Y(WALL.wy - 0.5);
           ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, wy); ctx.clip(); J = SM.draw(ctx, m.p, M, opt); ctx.restore();
           ctx.save(); ctx.beginPath(); ctx.rect(0, wy, W, H - wy); ctx.clip(); SM.draw(ctx, m.p, M, { ...opt, alpha: opt.alpha * 0.28 }); ctx.restore();
         } else J = SM.draw(ctx, m.p, M, opt);
@@ -482,33 +498,21 @@
       ctx.restore();
     }
     function loop(now) {
-      if (paused || still) return;
+      if (still) return;
       G.requestAnimationFrame(loop);
       const dt = (now - last) / 1000; if (dt < 1 / 64) return;
       last = now; tNow += Math.min(dt, 0.05); render(tNow);
-    }
-    function setPaused(v) {
-      paused = v;
-      if (btn) {
-        btn.setAttribute("aria-pressed", v ? "true" : "false");
-        const label = v ? "Play the animation" : "Pause the animation"; btn.setAttribute("aria-label", label); btn.title = label;
-        btn.innerHTML = v ? '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M4 2.5l7 4.5-7 4.5z" fill="currentColor"/></svg>'
-          : '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M4 2.5v9M10 2.5v9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>';
-      }
-      try { G.localStorage.setItem("wq-strip-paused", v ? "1" : "0"); } catch (e) { /* storage blocked */ }
-      if (!v && !still && !capture) { last = performance.now(); G.requestAnimationFrame(loop); }
     }
     resize();
     const STILL_T = TL.find((s) => s.kind === "act" && s.act.name === "reading").t0 + 3.6;
     if (still) { tNow = STILL_T; render(tNow); }
     G.addEventListener("resize", () => { resize(); render(tNow); });
     if ("ResizeObserver" in G) new ResizeObserver(() => { resize(); render(tNow); }).observe(cv);
-    if (btn) btn.addEventListener("click", () => setPaused(!paused));
-    WQ.strip = { at(t) { render(t); return stateAt(t); }, LOOP, acts: TL.filter((s) => s.kind === "act").map((s) => [s.act.name, +s.t0.toFixed(2), +s.t1.toFixed(2)]) };
+    WQ.strip = { at(t) { render(t); return stateAt(t); }, view: () => ({ cam, camY, k, anchor }), LOOP,
+      acts: TL.filter((s) => s.kind === "act").map((s) => [s.act.name, +s.t0.toFixed(2), +s.t1.toFixed(2)]) };
     if (capture) { render(0); return; }
     if (still) return;
-    setPaused(paused);
-    if (paused) render(tNow);
+    last = performance.now(); G.requestAnimationFrame(loop);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })(window);

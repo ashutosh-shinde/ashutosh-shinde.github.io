@@ -6,6 +6,9 @@
    the bottom of the board. The grass sways a little and carries a dusting of
    snow. The article text calms the drawings behind it, and the nearest flakes
    thin out around it.
+   Other scenes can use it underneath their own drawings (the blog posts'
+   mountains, js/scenes/summit.js): WQ.scenes.snowfield(env, { snowDensity,
+   snowAlpha }) — a share of DENSITY, and how bright the snow is (0–1).
    HOW TO EDIT: DENSITY (how much snow), GRASS (how tall, how many blades).
    ============================================================================= */
 (function (G) {
@@ -16,7 +19,8 @@
   const DENSITY = 0.75;                    // share of the Feedback scene's snow
   const GRASS = { h: 0.085, blades: 300 }; // tallest blade (share of the screen height), blades on a 1440 px wide screen
 
-  (G.WQ.scenes = G.WQ.scenes || {}).snowfield = function (env0) {
+  (G.WQ.scenes = G.WQ.scenes || {}).snowfield = function (env0, opts = {}) {
+    const dens = opts.snowDensity ?? DENSITY, sa = opts.snowAlpha ?? 1;
     let env = env0, W = 0, H = 0, S = 1, GY = 0, box = null, snow = null, blades = [], tips = [], t = 0, built = false;
     const clear = G.WQ.Snowfall.clearOf(() => box, true);
 
@@ -30,7 +34,7 @@
         blades.push({ x, h, lean: (r() - 0.45) * h * 0.5, ph: r() * 6.283, g: (r() * 3) | 0 }); // g: brightness group
         if (r() < 0.32) tips.push(blades.length - 1); // a little snow caught on this blade
       }
-      snow = G.WQ.Snowfall.make(env, { density: DENSITY, seed: 9 });
+      snow = G.WQ.Snowfall.make(env, { density: dens, seed: 9 });
       built = true;
     }
     const sway = (b) => b.lean + 3 * S * Math.sin(t * 1.1 + b.ph) + 1.5 * S * Math.sin(t * 2.7 + b.ph * 2);
@@ -41,8 +45,8 @@
       update(dt, tt) { if (!built) return; t = tt; snow.step(dt, t); },
       draw(ctx, a, pass) {
         if (!built) return;
-        if (pass === "top") { snow.drawNear(ctx, a, clear); return; } // the nearest flakes, clear of the text
-        snow.draw(ctx, a, 0);
+        if (pass === "top") { snow.drawNear(ctx, a * sa, clear); return; } // the nearest flakes, clear of the text
+        snow.draw(ctx, a * sa, 0);
         // the grass: chalk blades in a few brightness groups
         ctx.save(); ctx.lineCap = "round"; ctx.lineWidth = Math.max(1, 1.2 * S);
         for (const [g, al] of [[0, 0.3], [1, 0.45], [2, 0.6]]) {
@@ -58,7 +62,7 @@
         ctx.fillStyle = `rgba(${INK},${0.6 * a})`;
         for (const i of tips) { const b = blades[i], s = sway(b); ctx.beginPath(); ctx.arc(b.x + s, GY - b.h, 1.3 * Math.max(0.8, S), 0, 6.283); ctx.fill(); }
         ctx.restore();
-        snow.draw(ctx, a, 1);
+        snow.draw(ctx, a * sa, 1);
       },
       points(out, n) { // for the page change: the grass line and the board above it
         const p = PTS.begin(out, n), line = [];

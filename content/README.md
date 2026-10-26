@@ -95,8 +95,10 @@ like maths. Equations made with the Docs equation tool (Insert → Equation) wor
 | **knitted HTML** (RStudio *Knit*, Quarto *Render*) | the `.html` | title, date and abstract come from its header; plots come along; RStudio's styling is replaced by the chalkboard; interactive widgets (plotly, leaflet) don't carry over |
 | **LaTeX** `.tex` | the file (+ figures as PNG/JPG/PDF in the same folder) | standard LaTeX converts: sections, maths, theorems, macros, figures. TikZ and unusual packages don't: export those as images |
 | **Word** `.docx`, **LibreOffice** `.odt` | the file | like a Google Doc |
+| **Apple Pages** | the `.docx` you export from it (File → Export To → Word) | a `.pages` file can't be read, and renaming it to `.docx` doesn't change what is inside |
 
-Google Sheets and Slides can't become pages (the sync skips them and says so).
+Google Sheets and Slides can't become pages (the sync skips them and says so). Give each
+post a name of its own: a file called `README` is taken for notes and never published.
 
 ## 5. Where things go
 
@@ -125,7 +127,8 @@ published (the Publish now link doesn't wait).
 ## 7. If something goes wrong
 
 - **A post that can't be converted** (or a missing photo, or a formula MathJax can't
-  read) never stops the others: everything else is published, then the GitHub run
+  read, or a file the site can't use: a Pages file, an old `.doc`, slides, a file named
+  `README`) never stops the others: everything else is published, then the GitHub run
   turns red and GitHub emails you. Open the repository's **Actions** tab → the latest
   *Publish the site* → *build*: the summary says what to fix. A post that had a page
   keeps its last good page until it is fixed.
