@@ -99,11 +99,5 @@ mjx-assistive-mml[display="block"] { width: 100% !important; }
 .strip canvas { display: block; width: 100%; height: var(--strip-h); }
 .wq-ready .strip { opacity: 1; }
 .wq-collapsing .strip { opacity: 0; transition-duration: .25s; }
-.strip__pause { pointer-events: auto; position: absolute; top: 8px; right: max(10px, env(safe-area-inset-right, 0px)); width: 34px; height: 34px; display: grid; place-items: center;
-  padding: 0; border: 1px solid rgb(var(--ink) / 0.35); border-radius: 50%; background: rgb(13 15 15 / 0.8); color: var(--ink-2); cursor: pointer; transition: border-color .2s, color .2s; }
-.strip__pause:hover, .strip__pause:focus-visible { border-color: rgb(var(--ink) / 0.8); color: var(--ink-1); }
-.strip__pause:focus-visible { outline: 2px solid rgb(var(--ink) / 0.8); outline-offset: 2px; }
-.strip__pause svg { width: 14px; height: 14px; }
-.wq-still .strip__pause { display: none; }
 .has-strip .page__main { padding-bottom: calc(var(--strip-h) + 14vh); }
 .has-chalk .chalk-text mjx-container { color: rgb(var(--ink) / 0.96); } /* maths in a chalk title: the chalk texture can't reach SVG */

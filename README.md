@@ -25,7 +25,7 @@ double-click blocks the fonts.
 | Home page text, links, section texts, the comment box | `index.html` |
 | About page (blank for now) | `about/index.html` |
 | Blogs: title and the list of stories (the boxes are made by `tools/publish/build.py`) | `blogs/index.html` |
-| Blogs list: the background of words and gear (particles in a box) and the explorer strip at the bottom | `js/scenes/gearbox.js`, `js/lib/strip.js` |
+| Blogs list: the background of names (Himalayan peaks and routes, glaciers, India's parks and sanctuaries: particles in a box) and the explorer strip at the bottom | `js/scenes/gearbox.js`, `js/lib/strip.js` |
 | Simulations: the list of collections and their numbered cards | `simulations/index.html` |
 | A simulation page (one folder each), e.g. the discrete-time logistic model | `simulations/population-dynamics/discrete-logistic/index.html` |
 | A simulation's maths and controls (one file per simulation) | `js/sims/`, e.g. `js/sims/logistic.js` (tested by `node tools/test-logistic.mjs`) |
@@ -48,7 +48,7 @@ double-click blocks the fonts.
 | Colours, fonts, sizes, where each section's text sits | `css/site.css` (tokens at the top) |
 | The scroll / dust / calm-zone / page-change engine | `js/engine/engine.js` (settings in `CFG`) |
 | The six home-page scenes | `js/scenes/home.js`, `simulations.js`, `elementary.js`, `lab.js`, `blog.js`, `feedback.js` |
-| Page backgrounds: drifting pure maths (Elementary Mathematics), snow on grass (posts and chapters) | `js/scenes/pure.js`, `js/scenes/snowfield.js` |
+| Page backgrounds: drifting pure maths (Elementary Mathematics), snow on grass (chapters), mountains over a sea of clouds with an eagle, faint snow and the grass (blog posts) | `js/scenes/pure.js`, `js/scenes/snowfield.js`, `js/scenes/summit.js` |
 | Falling chalk snow (Feedback, Comments, chapters) | `js/lib/snowfall.js` |
 | Animals (hare, wolf, deer, tiger, leopard, owl, ibex, snow leopard, eye) | `js/lib/creatures.js` |
 | The explorer (stick figure with glasses and backpack) | `js/lib/explorer.js` |
@@ -84,9 +84,13 @@ Every file starts with a comment that explains what it does and has a
   your Drive folder `WildQuant website/Blog` or `…/Elementary Mathematics`, or
   upload it to `content/blog/` or `content/maths/` on github.com. It gets its
   page and its box on the list by itself. All of it: `content/README.md`.
-- **The Blogs background and strip:** the words, peaks, routes and gear are
-  the lists at the top of `js/scenes/gearbox.js`; the explorer's activities are
-  `ACTS` in `js/lib/strip.js`.
+- **The Blogs background and strip:** the peaks, routes, glaciers, parks and
+  words are the lists at the top of `js/scenes/gearbox.js`; the explorer's
+  activities are `ACTS` in `js/lib/strip.js` (the wall's height, how concave it
+  is and the lake's length are in `WALL`).
+- **The blog posts' background:** `js/scenes/summit.js` (the mountains, the
+  eagle, how faint the snow is). Posts are made from
+  `tools/publish/templates/post.html`, which loads it.
 - **Add a simulation:**
   1. Copy a simulation folder to a new folder and write the page:
      `simulations/population-dynamics/discrete-logistic/` for a map, or one of
@@ -157,9 +161,10 @@ build one from scratch, it needs all of these:
 4. **`data-calm` on the text blocks**, so the drawings fade behind them.
 5. **A background (optional):** add `data-scene="…"` to `<body>` and load the
    scene's script after `engine.js` and before `site.js`. `pure` (faint drifting maths, also needs
-   `../js/data/pure.js` first) and `snowfield` (snow on grass, also needs
-   `../js/lib/snowfall.js` first) are made for pages. Without a scene the page
-   shows the plain blackboard.
+   `../js/data/pure.js` first), `snowfield` (snow on grass, also needs
+   `../js/lib/snowfall.js` first) and `summit` (mountains, an eagle, snow and
+   grass; also needs `snowfall.js`, `explorer.js` and `snowfield.js` first) are
+   made for pages. Without a scene the page shows the plain blackboard.
 
 Paths are relative to the page's folder: `../` from a page one folder deep
 (like `about/`), `../../` from two folders deep (like a chapter), `../../../`

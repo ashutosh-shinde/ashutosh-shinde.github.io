@@ -32,7 +32,7 @@ Needs pandoc (3.9 in GitHub Actions), node with MathJax 3.2.2 in tools/publish/n
 pdftocairo (PDF figures in LaTeX files).
 HOW TO EDIT: SECTIONS (folders, pages, texts), MAX_PHOTO (photo size), the templates in templates/.
 """
-import argparse, base64, copy, datetime as dt, hashlib, html, io, json, os, re, shutil, subprocess, sys, tempfile, unicodedata
+import argparse, base64, copy, datetime as dt, hashlib, html, io, json, os, re, shutil, subprocess, sys, tempfile, unicodedata, zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
@@ -54,6 +54,15 @@ SECTIONS = [
 FORMATS = {".md": "markdown", ".markdown": "markdown", ".txt": "markdown", ".rmd": "rmd", ".qmd": "rmd",
            ".docx": "docx", ".odt": "odt", ".tex": "latex", ".html": "html", ".htm": "html"}
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".heic", ".heif", ".tif", ".tiff", ".bmp", ".pdf"}
+# files that look like a post but can't become one: what to do instead (they are reported, so they are never skipped
+# without a word)
+CANT = {".pages": "an Apple Pages file: in Pages use File → Export To → Word, and upload the .docx (or write the post as a Google Doc)",
+        ".doc": "an old Word file: open it in Word or Google Docs and save it as .docx",
+        ".rtf": "a Rich Text file: open it in Word or Google Docs and save it as .docx",
+        ".key": "a Keynote file: slides can't become a page", ".numbers": "a Numbers file: a spreadsheet can't become a page",
+        ".ppt": "a PowerPoint file: slides can't become a page", ".pptx": "a PowerPoint file: slides can't become a page",
+        ".xls": "an Excel file: a spreadsheet can't become a page", ".xlsx": "an Excel file: a spreadsheet can't become a page",
+        ".gdoc": "a Google Drive shortcut, not the document: put the Doc itself in the folder (or use the Drive sync)"}
 KEYS = {"title": "title", "date": "date", "category": "category", "categories": "category", "tag": "category",
         "tags": "category", "abstract": "abstract", "summary": "abstract", "description": "abstract",
         "excerpt": "abstract", "slug": "slug", "draft": "draft", "chapter": "chapter", "cover": "cover", "image": "cover"}
@@ -314,6 +323,14 @@ def read_source(path, fmt, where, tmp):
         data = (lines + "\n" + text).encode("utf-8")
         return json.loads(run(args + ["-f", "markdown+tex_math_single_backslash", "-"], data)), base, extra
     if fmt in ("docx", "odt"):
+        try:
+            names = set(zipfile.ZipFile(path).namelist())
+        except zipfile.BadZipFile:
+            raise ValueError(f"not a real .{fmt} file (only its name ends in .{fmt}): save it again as Word (.docx) from Word or Google Docs")
+        if "Index/Document.iwa" in names:
+            raise ValueError("this is an Apple Pages file renamed to .docx: in Pages use File → Export To → Word, and upload that .docx")
+        if ("word/document.xml" if fmt == "docx" else "content.xml") not in names:
+            raise ValueError(f"not a real .{fmt} file (only its name ends in .{fmt}): save it again as Word (.docx) from Word or Google Docs")
         # a Google Doc (or Word file): its maths may be LaTeX typed as plain text ($…$, $$…$$, \(…\)) or
         # equations made with the Docs equation tool; both come out as maths by going through HTML once.
         # The document's own metadata (Title / Subtitle styles) comes from a direct read.
@@ -739,10 +756,18 @@ def build_section(sec, check):
     for root, dirs, fs in os.walk(src_dir):
         dirs[:] = sorted(x for x in dirs if not x.startswith((".", "_")))
         for f in sorted(fs):
-            if f.startswith((".", "_", "~$")) or f.lower().startswith("readme"):
+            if f.startswith((".", "_", "~$")):
                 continue
-            if os.path.splitext(f)[1].lower() in FORMATS:
+            ext, rel = os.path.splitext(f)[1].lower(), os.path.relpath(os.path.join(root, f), REPO)
+            if f.lower().startswith("readme"): # (notes for the folder: a post needs a name of its own)
+                if ext in FORMATS:
+                    warn(rel, "is not published: a file named README is taken for notes. Give the post a name of its own "
+                         "(for example kedarkantha.md); a note that should stay unpublished can start with _", True)
+                continue
+            if ext in FORMATS:
                 files.append(os.path.join(root, f))
+            elif ext in CANT:
+                warn(rel, "can't become a page: it is " + CANT[ext], True)
     docs, kept = [], []
     for path in files:
         rel = os.path.relpath(path, REPO)

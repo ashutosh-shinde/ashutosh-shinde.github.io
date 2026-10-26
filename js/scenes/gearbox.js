@@ -1,18 +1,20 @@
 /* =============================================================================
    Gear box — "particles in a box"                                (Blogs list)
    -----------------------------------------------------------------------------
-   Faint chalk tags drift over the board like gas particles in a box: peaks
-   with their heights, routes at Badami and famous routes of the world with
-   their grades, climbing and trekking numbers, gear drawn in chalk, headline
-   snippets and words from the field. They move at a steady, unhurried speed,
-   bounce off the edges of the box and off each other (elastic collisions:
-   they touch but never overlap), and after a while each one fades away while
-   a new one slides in from an edge of the box. The box is the screen above
-   the explorer strip. The page text's calm zones fade the tags that pass
-   behind it.
-   HOW TO EDIT: the word lists (PEAKS, ROUTES, NUMBERS, HEADLINES, STORY,
-   NAMES, GEAR), MIX (how often each kind comes), SPEED, DENSITY (how many),
-   ALPHA (how faint), LIFE (how long a tag stays).
+   Faint chalk tags drift over the board like gas particles in a box: peaks of
+   the Himalaya (and a few of the world) with their heights, Himalayan routes
+   with the year they were first climbed, routes at Badami and famous routes
+   of the world with their grades, glaciers, India's national parks, tiger
+   reserves and wildlife sanctuaries, climbing numbers, headline snippets and
+   words from the field. (The name is older: the box once held gear sketches.)
+   They move at a steady, unhurried speed, bounce off the edges of the box and
+   off each other (elastic collisions: they touch but never overlap), and
+   after a while each one fades away while a new one slides in from an edge
+   of the box. The box is the screen above the explorer strip. The page
+   text's calm zones fade the tags that pass behind it.
+   HOW TO EDIT: the word lists (PEAKS, ROUTES, GLACIERS, PARKS, NUMBERS,
+   HEADLINES, STORY, NAMES), MIX (how often each kind comes), SPEED, DENSITY
+   (how many), ALPHA (how faint), LIFE (how long a tag stays).
    ============================================================================= */
 (function (G) {
   "use strict";
@@ -21,13 +23,37 @@
   const INK = "246,244,236";
 
   /* ---------------------------------------------------------------- words */
+  // heights as given by Wikipedia's lists (highest mountains on Earth; peaks of Uttarakhand; mountains of Nepal
+  // and India); a peak without a reliable height shows its region instead
   const PEAKS = [["Everest", "8849 m"], ["K2", "8611 m"], ["Kangchenjunga", "8586 m"], ["Lhotse", "8516 m"], ["Makalu", "8485 m"],
     ["Cho Oyu", "8188 m"], ["Dhaulagiri", "8167 m"], ["Manaslu", "8163 m"], ["Nanga Parbat", "8126 m"], ["Annapurna", "8091 m"],
     ["Nanda Devi", "7816 m"], ["Kamet", "7756 m"], ["Saser Kangri", "7672 m"], ["Nun", "7135 m"], ["Trisul", "7120 m"],
     ["Kun", "7077 m"], ["Satopanth", "7075 m"], ["Kedarnath", "6940 m"], ["Changabang", "6864 m"], ["Ama Dablam", "6812 m"],
     ["Shivling", "6543 m"], ["Stok Kangri", "6153 m"], ["Hanuman Tibba", "5982 m"], ["Friendship Peak", "5289 m"],
     ["Aconcagua", "6961 m"], ["Denali", "6190 m"], ["Kilimanjaro", "5895 m"], ["Elbrus", "5642 m"], ["Mont Blanc", "4806 m"],
-    ["Matterhorn", "4478 m"], ["Eiger", "3967 m"], ["Fitz Roy", "3405 m"], ["Cerro Torre", "3128 m"], ["Kalsubai", "1646 m"]];
+    ["Matterhorn", "4478 m"], ["Eiger", "3967 m"], ["Fitz Roy", "3405 m"], ["Cerro Torre", "3128 m"], ["Kalsubai", "1646 m"],
+    // more of the Himalaya: Nepal, Tibet, Bhutan
+    ["Shishapangma", "8027 m"], ["Gyachung Kang", "7952 m"], ["Annapurna II", "7937 m"], ["Himalchuli", "7893 m"], ["Nuptse", "7864 m"],
+    ["Jannu", "7711 m"], ["Gurla Mandhata", "7694 m"], ["Gangkhar Puensum", "7570 m"], ["Annapurna III", "7555 m"], ["Kula Kangri", "7538 m"],
+    ["Annapurna IV", "7525 m"], ["Jongsong", "7462 m"], ["Gangapurna", "7455 m"], ["Ganesh I", "7422 m"], ["Churen Himal", "7385 m"],
+    ["Chamlang", "7321 m"], ["Chomolhari", "7326 m"], ["Putha Hiunchuli", "7246 m"], ["Langtang Lirung", "7227 m"], ["Annapurna South", "7219 m"],
+    ["Langtang Ri", "7205 m"], ["Gurja Himal", "7193 m"], ["Pumori", "7161 m"], ["Tilicho Peak", "7134 m"], ["Gauri Sankar", "7134 m"],
+    ["Api", "7132 m"], ["Baruntse", "7129 m"], ["Ganesh II", "7118 m"], ["Machapuchare", "6993 m"], ["Dorje Lakpa", "6966 m"],
+    ["Tukuche", "6920 m"], ["Kanjiroba", "6883 m"], ["Kangtega", "6782 m"], ["Thamserku", "6623 m"], ["Taboche", "6542 m"],
+    ["Mera Peak", "6476 m"], ["Hiunchuli", "6441 m"], ["Cholatse", "6440 m"], ["Langshisa Ri", "6412 m"], ["Kyajo Ri", "6151 m"],
+    ["Pisang Peak", "6091 m"], ["Dhampus Peak", "6012 m"], ["Naya Kanga", "5863 m"], ["Island Peak", "Imja Tse · Khumbu"],
+    ["Lobuche East", "Khumbu"], ["Nilgiri", "Annapurna"], ["Menlungtse", "Rolwaling"], ["Saipal", "Far-west Nepal"],
+    ["Namcha Barwa", "7782 m"], ["Gyala Peri", "7294 m"],
+    // the Indian Himalaya: Garhwal, Kumaon, Sikkim, Arunachal, Himachal, Ladakh
+    ["Nanda Devi East", "7434 m"], ["Kabru North", "7412 m"], ["Abi Gamin", "7355 m"], ["Talung", "7349 m"], ["Mana Peak", "7272 m"],
+    ["Mukut Parbat", "7242 m"], ["Hardeol", "7151 m"], ["Chaukhamba", "7138 m"], ["Pauhunri", "7128 m"], ["Dunagiri", "7066 m"],
+    ["Kangto", "7060 m"], ["Nyegyi Kansang", "7047 m"], ["Rishi Pahar", "6992 m"], ["Kalanka", "6931 m"], ["Thalay Sagar", "6904 m"],
+    ["Panchchuli II", "6903 m"], ["Nanda Kot", "6861 m"], ["Bhagirathi I", "6856 m"], ["Kedar Dome", "6831 m"], ["Janhukut", "6805 m"],
+    ["Gangotri I", "6672 m"], ["Meru", "6660 m"], ["Jaonli", "6632 m"], ["Kharchakund", "6612 m"], ["Nilkantha", "6596 m"],
+    ["Bhagirathi II", "6512 m"], ["Sudarshan Parbat", "6507 m"], ["Bhagirathi III", "6454 m"], ["Bandarpunch", "6316 m"],
+    ["Nanda Ghunti", "6309 m"], ["Swargarohini", "6252 m"], ["Mandani Parbat", "6193 m"], ["Srikanta", "6133 m"],
+    ["Siniolchu", "Sikkim"], ["Kangchengyao", "Sikkim"], ["Pandim", "Sikkim"], ["Indrasan", "Kullu"], ["Deo Tibba", "Kullu"],
+    ["Mulkila", "Lahaul"], ["Menthosa", "Lahaul"], ["Kinnaur Kailash", "Kinnaur"], ["Reo Purgyil", "Kinnaur"], ["Kang Yatse", "Markha · Ladakh"]];
   const ROUTES = [ // Badami (grades from the Bangalore Climbing Initiatives guide; Sloper and Top Tree from theCrag
     // and 27crags), then famous routes and boulders of the world
     ["Ganesha", "Badami · 8b+"], ["Samsara", "Badami · 8a"], ["Badami Killer", "Badami · 8a"], ["Export Reject", "Badami · 7b+"],
@@ -40,61 +66,80 @@
     ["Midnight Lightning", "Yosemite · V8"], ["To Bolt or Not to Be", "Smith Rock · 5.14a"], ["Moonlight Buttress", "Zion · 5.12d"],
     ["Cobra Crack", "Squamish · 5.14b"], ["The Indian Face", "Clogwyn Du’r Arddu · E9 6c"], ["Gaia", "Black Rocks · E8 6c"],
     ["Cenotaph Corner", "Dinas Cromlech · E1 5c"], ["Burden of Dreams", "Lappnor · 9A"], ["The Mandala", "Buttermilks · V12"],
-    ["Supercrack", "Indian Creek · 5.10"]];
-  const NUMBERS = ["8848.86 m", "6b+", "WI4", "M6", "5.12a", "Font 7A", "V10", "E5 6b", "A2", "−22 °C", "22 kN", "9.8 mm", "60 m",
-    "70°", "Camp II", "4:00 am", "π = 3.14159…", "e = 2.71828…", "√2 = 1.41421…", "φ = 1.61803…"];
+    ["Supercrack", "Indian Creek · 5.10"],
+    // the Himalaya: routes with the year they were first climbed, and the landmarks of the Everest routes
+    ["South Col", "Everest · 1953"], ["North Ridge", "Everest · 1960"], ["Hornbein Couloir", "Everest · 1963"],
+    ["Southwest Face", "Everest · 1975"], ["Japanese Couloir", "Everest · 1980"], ["Kangshung Face", "Everest · 1983"],
+    ["Norton Couloir", "Everest"], ["Khumbu Icefall", "Everest"], ["Western Cwm", "Everest"], ["Lhotse Face", "Everest"],
+    ["Yellow Band", "Everest"], ["Geneva Spur", "Everest"], ["Hillary Step", "Everest"], ["Second Step", "Everest"],
+    ["Rakhiot Route", "Nanga Parbat · 1953"], ["Diamir Face", "Nanga Parbat · 1962"], ["Rupal Face", "Nanga Parbat · 1970"],
+    ["Mazeno Ridge", "Nanga Parbat · 2012"], ["North Face", "Annapurna · 1950"], ["South Face", "Annapurna · 1970"],
+    ["Yalung Face", "Kangchenjunga · 1955"], ["West Pillar", "Makalu · 1971"], ["South Face", "Lhotse · 1990"],
+    ["Northeast Ridge", "Dhaulagiri · 1960"], ["Northwest Ridge", "Cho Oyu · 1954"], ["Northeast Face", "Manaslu · 1956"],
+    ["South Ridge", "Nanda Devi · 1936"], ["West Wall", "Changabang · 1976"], ["Shark’s Fin", "Meru · 2011"],
+    ["East Pillar", "Shivling · 1981"], ["North Face", "Jannu · 2004"], ["Southwest Ridge", "Ama Dablam · 1961"],
+    ["North Face", "Cholatse"]];
+  const GLACIERS = [["Gangotri Glacier", "Uttarakhand"], ["Chaturangi Glacier", "Uttarakhand"], ["Raktavarn Glacier", "Uttarakhand"],
+    ["Satopanth Glacier", "Uttarakhand"], ["Bhagirath Kharak Glacier", "Uttarakhand"], ["Chorabari Glacier", "Uttarakhand"],
+    ["Dokriani Glacier", "Uttarakhand"], ["Khatling Glacier", "Uttarakhand"], ["Pindari Glacier", "Uttarakhand"], ["Kafni Glacier", "Uttarakhand"],
+    ["Sunderdhunga Glacier", "Uttarakhand"], ["Milam Glacier", "Uttarakhand"], ["Ralam Glacier", "Uttarakhand"],
+    ["Panchachuli Glacier", "Uttarakhand"], ["Zemu Glacier", "Sikkim"], ["Rathong Glacier", "Sikkim"], ["Talung Glacier", "Sikkim"],
+    ["Bara Shigri Glacier", "Himachal"], ["Chhota Shigri Glacier", "Himachal"], ["Drang-Drung Glacier", "Zanskar"],
+    ["Parkachik Glacier", "Ladakh"], ["Machoi Glacier", "Ladakh"], ["Kolahoi Glacier", "Kashmir"], ["Thajiwas Glacier", "Kashmir"],
+    ["Siachen Glacier", "Karakoram"], ["Rimo Glacier", "Karakoram"], ["Baltoro Glacier", "Karakoram"], ["Biafo Glacier", "Karakoram"],
+    ["Hispar Glacier", "Karakoram"], ["Khumbu Glacier", "Nepal"], ["Ngozumpa Glacier", "Nepal"], ["Imja Glacier", "Nepal"],
+    ["Barun Glacier", "Nepal"], ["Langtang Glacier", "Nepal"], ["Lirung Glacier", "Nepal"], ["Yalung Glacier", "Nepal"],
+    ["Kangchenjunga Glacier", "Nepal"], ["Rongbuk Glacier", "Tibet"], ["Kangshung Glacier", "Tibet"]];
+  const NP = "National Park", TR = "Tiger Reserve", WLS = "Wildlife Sanctuary", BS = "Bird Sanctuary";
+  const PARKS = [
+    ["Jim Corbett", NP, "Uttarakhand"], ["Rajaji", NP, "Uttarakhand"], ["Valley of Flowers", NP, "Uttarakhand"], ["Nanda Devi", NP, "Uttarakhand"],
+    ["Gangotri", NP, "Uttarakhand"], ["Govind", NP, "Uttarakhand"], ["Askot", WLS, "Uttarakhand"], ["Kedarnath", WLS, "Uttarakhand"],
+    ["Binsar", WLS, "Uttarakhand"], ["Great Himalayan", NP, "Himachal"], ["Pin Valley", NP, "Himachal"], ["Khirganga", NP, "Himachal"],
+    ["Kibber", WLS, "Himachal"], ["Hemis", NP, "Ladakh"], ["Changthang", WLS, "Ladakh"], ["Karakoram", WLS, "Ladakh"],
+    ["Dachigam", NP, "Kashmir"], ["Kishtwar", NP, "Jammu & Kashmir"], ["Khangchendzonga", NP, "Sikkim"], ["Singalila", NP, "West Bengal"],
+    ["Neora Valley", NP, "West Bengal"], ["Sundarbans", NP, "West Bengal"], ["Jaldapara", NP, "West Bengal"], ["Gorumara", NP, "West Bengal"],
+    ["Buxa", TR, "West Bengal"], ["Mahananda", WLS, "West Bengal"], ["Kaziranga", NP, "Assam"], ["Manas", NP, "Assam"], ["Nameri", NP, "Assam"],
+    ["Orang", NP, "Assam"], ["Dibru-Saikhowa", NP, "Assam"], ["Pobitora", WLS, "Assam"], ["Namdapha", NP, "Arunachal"], ["Mouling", NP, "Arunachal"],
+    ["Pakke", TR, "Arunachal"], ["Eaglenest", WLS, "Arunachal"], ["Keibul Lamjao", NP, "Manipur"], ["Nokrek", NP, "Meghalaya"],
+    ["Balphakram", NP, "Meghalaya"], ["Phawngpui", NP, "Mizoram"], ["Murlen", NP, "Mizoram"], ["Dampa", TR, "Mizoram"], ["Ntangki", NP, "Nagaland"],
+    ["Kanha", NP, "Madhya Pradesh"], ["Bandhavgarh", NP, "Madhya Pradesh"], ["Pench", NP, "Madhya Pradesh"], ["Satpura", NP, "Madhya Pradesh"],
+    ["Panna", NP, "Madhya Pradesh"], ["Kuno", NP, "Madhya Pradesh"], ["Madhav", NP, "Madhya Pradesh"], ["Ranthambore", NP, "Rajasthan"],
+    ["Sariska", TR, "Rajasthan"], ["Keoladeo", NP, "Rajasthan"], ["Desert", NP, "Rajasthan"], ["Kumbhalgarh", WLS, "Rajasthan"],
+    ["Mount Abu", WLS, "Rajasthan"], ["Tal Chhapar", "Sanctuary", "Rajasthan"], ["National Chambal", "Sanctuary", "Chambal"],
+    ["Gir", NP, "Gujarat"], ["Velavadar", "Blackbuck " + NP, "Gujarat"], ["Gulf of Kutch", "Marine " + NP, "Gujarat"],
+    ["Little Rann of Kutch", "Wild Ass Sanctuary", "Gujarat"], ["Tadoba-Andhari", TR, "Maharashtra"], ["Sanjay Gandhi", NP, "Maharashtra"],
+    ["Chandoli", NP, "Maharashtra"], ["Navegaon", NP, "Maharashtra"], ["Gugamal", NP, "Maharashtra"], ["Melghat", TR, "Maharashtra"],
+    ["Kalsubai Harishchandragad", WLS, "Maharashtra"], ["Bhimashankar", WLS, "Maharashtra"], ["Koyna", WLS, "Maharashtra"],
+    ["Radhanagari", WLS, "Maharashtra"], ["Tamhini", WLS, "Maharashtra"], ["Nagzira", WLS, "Maharashtra"], ["Umred-Karhandla", WLS, "Maharashtra"],
+    ["Bor", TR, "Maharashtra"], ["Mollem", NP, "Goa"], ["Cotigao", WLS, "Goa"], ["Bandipur", NP, "Karnataka"], ["Nagarhole", NP, "Karnataka"],
+    ["Kudremukh", NP, "Karnataka"], ["Bannerghatta", NP, "Karnataka"], ["Bhadra", TR, "Karnataka"], ["Dandeli", WLS, "Karnataka"],
+    ["BR Hills", TR, "Karnataka"], ["Ranganathittu", BS, "Karnataka"], ["Mudumalai", NP, "Tamil Nadu"], ["Mukurthi", NP, "Tamil Nadu"],
+    ["Anamalai", TR, "Tamil Nadu"], ["Kalakad-Mundanthurai", TR, "Tamil Nadu"], ["Sathyamangalam", TR, "Tamil Nadu"],
+    ["Point Calimere", WLS, "Tamil Nadu"], ["Vedanthangal", BS, "Tamil Nadu"], ["Periyar", TR, "Kerala"], ["Silent Valley", NP, "Kerala"],
+    ["Eravikulam", NP, "Kerala"], ["Parambikulam", TR, "Kerala"], ["Wayanad", WLS, "Kerala"], ["Chinnar", WLS, "Kerala"], ["Thattekad", BS, "Kerala"],
+    ["Nagarjunasagar-Srisailam", TR, "Andhra Pradesh"], ["Papikonda", NP, "Andhra Pradesh"], ["Amrabad", TR, "Telangana"], ["Kawal", TR, "Telangana"],
+    ["Similipal", NP, "Odisha"], ["Bhitarkanika", NP, "Odisha"], ["Satkosia", TR, "Odisha"], ["Chilika", "Nalabana " + BS, "Odisha"],
+    ["Kanger Valley", NP, "Chhattisgarh"], ["Indravati", NP, "Chhattisgarh"], ["Achanakmar", TR, "Chhattisgarh"], ["Betla", NP, "Jharkhand"],
+    ["Valmiki", TR, "Bihar"], ["Dudhwa", NP, "Uttar Pradesh"], ["Pilibhit", TR, "Uttar Pradesh"], ["Sultanpur", NP, "Haryana"], ["Kalesar", NP, "Haryana"],
+    ["Campbell Bay", NP, "Nicobar"], ["Mahatma Gandhi Marine", NP, "Andamans"], ["Saddle Peak", NP, "Andamans"],
+  ].map(([name, kind, where]) => [name, kind + " · " + where]);
+  const NUMBERS = ["8848.86 m", "6b+", "WI4", "M6", "5.12a", "Font 7A", "V10", "E5 6b", "A2", "−22 °C", "70°", "Camp II", "4:00 am",
+    "π = 3.14159…", "e = 2.71828…", "√2 = 1.41421…", "φ = 1.61803…"];
   const HEADLINES = ["Tiger escaped", "Leopard sighted", "Leopard rescued", "Camera trap", "Radio-collared", "Elephant corridor",
     "Cheetah returns", "Avalanche warning", "Whiteout", "Summit push", "Weather window", "Rescue op", "Pugmarks found",
     "Straying tiger", "Tranquilised", "Conflict zone"];
   const STORY = ["Boma capture", "Translocation", "Prey base", "Dark Knight", "Carrying capacity", "Home range", "Dispersal",
     "Mark–recapture", "Source–sink", "Kill site", "Scat survey", "Line transect", "GPS fix", "Buffer zone"];
-  const NAMES = ["Decathlon", "The North Face", "Summit of the Gods"];
-  const GEAR = ["ice axe", "carabiner", "crampons", "boots", "harness", "chalk bag", "climbing shoes", "helmet", "rope",
-    "quickdraw", "cam", "headlamp", "tent", "trekking pole", "ice screw"];
-  const MIX = { gear: 0.30, peak: 0.22, route: 0.20, number: 0.10, headline: 0.08, story: 0.07, name: 0.03 };
+  const NAMES = ["Summit of the Gods"];
+  const MIX = { peak: 0.25, route: 0.2, park: 0.18, glacier: 0.13, number: 0.08, headline: 0.07, story: 0.06, name: 0.03 };
+  const LISTS = { peak: PEAKS, route: ROUTES, glacier: GLACIERS, park: PARKS, number: NUMBERS, headline: HEADLINES, story: STORY, name: NAMES };
 
   const SPEED = [20, 34];          // px/s (reference size), each tag picks one
   const DENSITY = 1 / 52000;       // tags per px² of box
   const MAX_TAGS = 26;
-  const ALPHA = { text: 0.36, gear: 0.42 };
+  const ALPHA = 0.36;              // how bright a tag is at most
   const LIFE = [20, 40];           // s a tag stays before it fades away
   const FADE = 1.6;                // s to fade in / out
-
-  /* ---------------------------------------------------------------- gear, drawn in chalk
-     Each sketch is drawn in a 64 × 64 box (y down) with plain canvas paths.  */
-  const SK = {
-    "ice axe"(c) { c.moveTo(24, 60); c.lineTo(38, 10); c.moveTo(38, 10); c.quadraticCurveTo(50, 12, 58, 22); c.moveTo(38, 10); c.lineTo(26, 6); c.lineTo(25, 10);
-      c.moveTo(24, 60); c.lineTo(22, 64); c.moveTo(27, 47); c.lineTo(31, 48); },
-    carabiner(c) { c.moveTo(24, 8); c.bezierCurveTo(40, 2, 52, 10, 48, 26); c.lineTo(42, 52); c.bezierCurveTo(38, 62, 22, 62, 20, 50); c.lineTo(18, 34);
-      c.moveTo(24, 8); c.bezierCurveTo(16, 10, 14, 18, 16, 24); c.moveTo(18, 34); c.lineTo(17, 28); c.moveTo(19, 36); c.lineTo(23, 37); },
-    crampons(c) { c.moveTo(6, 28); c.lineTo(52, 28); c.quadraticCurveTo(60, 28, 60, 34);
-      for (let x = 10; x <= 50; x += 8) { c.moveTo(x, 28); c.lineTo(x + 2, 40); c.lineTo(x + 4, 28); }
-      c.moveTo(56, 31); c.lineTo(64, 36); c.moveTo(56, 34); c.lineTo(63, 40); c.moveTo(14, 28); c.quadraticCurveTo(26, 12, 44, 28); },
-    boots(c) { c.moveTo(14, 6); c.lineTo(34, 6); c.lineTo(36, 30); c.quadraticCurveTo(56, 34, 60, 46); c.lineTo(60, 52); c.lineTo(10, 52); c.lineTo(10, 44); c.lineTo(14, 6);
-      c.moveTo(10, 56); c.lineTo(60, 56); for (let y = 12; y <= 28; y += 8) { c.moveTo(30, y); c.lineTo(36, y + 2); } },
-    harness(c) { c.ellipse(32, 18, 22, 8, 0, 0, TAU); c.moveTo(32, 26); c.lineTo(32, 36);
-      c.moveTo(29, 41); c.ellipse(20, 41, 9, 13, 0.25, 0, TAU); c.moveTo(53, 41); c.ellipse(44, 41, 9, 13, -0.25, 0, TAU); c.moveTo(28, 36); c.ellipse(32, 36, 4, 3, 0, 0, TAU); },
-    "chalk bag"(c) { c.moveTo(16, 16); c.lineTo(18, 54); c.quadraticCurveTo(32, 60, 46, 54); c.lineTo(48, 16); c.ellipse(32, 16, 16, 4, 0, 0, TAU);
-      c.moveTo(48, 22); c.lineTo(54, 20); c.lineTo(54, 30); c.moveTo(26, 13); c.lineTo(22, 4); c.moveTo(38, 13); c.lineTo(42, 4); },
-    "climbing shoes"(c) { c.moveTo(6, 30); c.quadraticCurveTo(8, 14, 22, 14); c.lineTo(40, 18); c.quadraticCurveTo(54, 24, 62, 40); c.quadraticCurveTo(50, 44, 30, 42);
-      c.quadraticCurveTo(14, 44, 6, 40); c.closePath(); c.moveTo(20, 16); c.lineTo(28, 30); c.moveTo(30, 17); c.lineTo(38, 31); c.moveTo(8, 44); c.quadraticCurveTo(36, 50, 60, 44); },
-    helmet(c) { c.moveTo(8, 42); c.bezierCurveTo(8, 10, 56, 10, 56, 42); c.lineTo(8, 42); c.moveTo(4, 46); c.lineTo(60, 46); c.moveTo(24, 22); c.lineTo(28, 16); c.moveTo(36, 16); c.lineTo(40, 22);
-      c.moveTo(14, 46); c.quadraticCurveTo(20, 58, 32, 58); c.quadraticCurveTo(44, 58, 50, 46); },
-    rope(c) { for (let i = 0; i < 4; i++) c.ellipse(32, 32 + i * 2, 24 - i * 2.5, 14 - i * 1.2, 0, 0, TAU); c.moveTo(52, 40); c.quadraticCurveTo(60, 52, 54, 62); c.moveTo(14, 42); c.quadraticCurveTo(6, 54, 12, 62); },
-    quickdraw(c) { c.ellipse(22, 14, 8, 11, 0.15, 0, TAU); c.moveTo(48, 50); c.ellipse(42, 50, 8, 11, 0.15, 0, TAU);
-      c.moveTo(24, 24); c.lineTo(38, 40); c.moveTo(30, 22); c.lineTo(44, 38); c.moveTo(24, 24); c.lineTo(30, 22); c.moveTo(38, 40); c.lineTo(44, 38); },
-    cam(c) { c.moveTo(32, 62); c.lineTo(32, 24); c.moveTo(22, 46); c.lineTo(42, 46); c.moveTo(32, 62); c.ellipse(32, 58, 6, 4, 0, 0, TAU);
-      c.moveTo(32, 24); c.arc(24, 18, 9, 0.2, 3.6); c.moveTo(32, 24); c.arc(40, 18, 9, -0.46, 2.94, true); },
-    headlamp(c) { c.ellipse(26, 34, 20, 14, 0, 0, TAU); c.moveTo(40, 26); c.lineTo(52, 24); c.lineTo(52, 42); c.lineTo(40, 40);
-      c.moveTo(56, 26); c.lineTo(63, 20); c.moveTo(57, 33); c.lineTo(64, 33); c.moveTo(56, 40); c.lineTo(63, 46); },
-    tent(c) { c.moveTo(6, 54); c.lineTo(32, 10); c.lineTo(58, 54); c.closePath(); c.moveTo(32, 10); c.lineTo(32, 6); c.moveTo(26, 54); c.lineTo(32, 32); c.lineTo(38, 54);
-      c.moveTo(6, 54); c.lineTo(0, 60); c.moveTo(58, 54); c.lineTo(64, 60); },
-    "trekking pole"(c) { c.moveTo(18, 4); c.lineTo(46, 62); c.moveTo(14, 2); c.lineTo(22, 6); c.lineTo(26, 14); c.moveTo(19, 8); c.bezierCurveTo(6, 10, 6, 22, 16, 20);
-      c.moveTo(34, 38); c.lineTo(38, 36); c.moveTo(37, 52); c.ellipse(41, 52, 8, 3, 0.45, 0, TAU); },
-    "ice screw"(c) { c.moveTo(10, 28); c.lineTo(52, 28); c.lineTo(52, 36); c.lineTo(10, 36); c.closePath();
-      for (let x = 14; x < 50; x += 6) { c.moveTo(x, 28); c.lineTo(x + 3, 36); } c.moveTo(52, 26); c.lineTo(60, 22); c.lineTo(62, 32); c.lineTo(56, 40); c.lineTo(52, 38);
-      c.moveTo(56, 40); c.lineTo(58, 52); c.lineTo(50, 54); },
-  };
 
   /* ---------------------------------------------------------------- the scene */
   (G.WQ.scenes = G.WQ.scenes || {}).gearbox = function (env0) {
@@ -105,15 +150,23 @@
 
     // a deck per kind: every item comes once before any comes again
     function draw1(kind) {
-      const src = { gear: GEAR, peak: PEAKS, route: ROUTES, number: NUMBERS, headline: HEADLINES, story: STORY, name: NAMES }[kind];
+      const src = LISTS[kind];
       let d = decks[kind];
       if (!d || !d.length) { d = decks[kind] = src.map((_, i) => i); for (let i = d.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [d[i], d[j]] = [d[j], d[i]]; } }
       return src[d.pop()];
     }
+    // a kind and an item that is not on the board just now (no name shows twice at once)
+    const keyOf = (item) => (Array.isArray(item) ? item.join("|") : item);
+    function pickFresh() {
+      const shown = new Set(tags.map((tg) => keyOf(tg.item)));
+      let kind = pickKind(), item = draw1(kind);
+      for (let i = 0; i < 8 && shown.has(keyOf(item)); i++) { kind = pickKind(); item = draw1(kind); }
+      return [kind, item];
+    }
     function pickKind() {
       let r = rnd(), s = 0;
       for (const kd of kinds) { s += MIX[kd]; if (r <= s) return kd; }
-      return "word";
+      return "peak";
     }
     // the tag's picture, drawn once into its own canvas (chalk grain included)
     function sprite(kind, item) {
@@ -123,20 +176,7 @@
       const serif = "'WQ Serif', 'Latin Modern Roman', Georgia, serif", sans = "'WQ Sans', Inter, system-ui, sans-serif";
       const meas = document.createElement("canvas").getContext("2d");
       let w, h, paint;
-      if (kind === "gear") {
-        const s = 46 * k, fs = 10.5 * k;
-        meas.font = `500 ${fs}px ${sans}`; const lw = meas.measureText(item.toUpperCase()).width + item.length * 0.12 * fs;
-        w = Math.max(s, lw) + 2 * pad; h = s + fs * 1.9 + 2 * pad;
-        paint = (c) => {
-          c.save(); c.translate((w - s) / 2, pad); c.scale(s / 64, s / 64);
-          c.beginPath(); SK[item](c); c.lineJoin = c.lineCap = "round";
-          c.strokeStyle = `rgba(${INK},0.25)`; c.lineWidth = 64 / s * 3.6 * k; c.stroke();
-          c.strokeStyle = `rgba(${INK},0.95)`; c.lineWidth = 64 / s * 1.5 * k; c.stroke(); c.restore();
-          c.font = `500 ${fs}px ${sans}`; c.fillStyle = `rgba(${INK},0.8)`; c.textAlign = "center"; c.textBaseline = "alphabetic";
-          if ("letterSpacing" in c) c.letterSpacing = `${0.12 * fs}px`;
-          c.fillText(item.toUpperCase(), w / 2, h - pad - fs * 0.25);
-        };
-      } else if (kind === "peak" || kind === "route") {
+      if (Array.isArray(item)) { // two lines: a name, and under it (in small capitals) its height, place or kind
         const [main, sub] = item, f1 = (kind === "peak" ? 19 : 17) * k, f2 = 10.5 * k;
         meas.font = `italic 400 ${f1}px ${serif}`; const w1 = meas.measureText(main).width;
         meas.font = `500 ${f2}px ${sans}`; const w2 = meas.measureText(sub.toUpperCase()).width + sub.length * 0.12 * f2;
@@ -168,7 +208,7 @@
     function makeTag(kind, item) {
       const sp = sprite(kind, item), sp0 = lerp(SPEED[0], SPEED[1], rnd()) * k;
       return { kind, item, sp, w: sp.w, h: sp.h, x: 0, y: 0, vx: 0, vy: 0, v0: sp0, age: 0, life: lerp(LIFE[0], LIFE[1], rnd()),
-        state: "enter", a: 0, solid: false, ph: rnd() * TAU, base: kind === "gear" ? ALPHA.gear : ALPHA.text };
+        state: "enter", a: 0, solid: false, ph: rnd() * TAU, base: ALPHA };
     }
     const overlaps = (a, b, m = 0) => a.x < b.x + b.w + m && b.x < a.x + a.w + m && a.y < b.y + b.h + m && b.y < a.y + a.h + m;
     function target() { return Math.max(4, Math.min(MAX_TAGS, Math.round((BOX.x1 - BOX.x0) * (BOX.y1 - BOX.y0) * DENSITY))); }
@@ -177,7 +217,7 @@
     // 3 left), at a spot where it has room to come in; wide word tags come through the top or the bottom.
     // Returns false when no edge has room just now (the next try comes a moment later).
     function spawn() {
-      const kind = pickKind(), item = draw1(kind), tg = makeTag(kind, item), bw = BOX.x1 - BOX.x0, bh = BOX.y1 - BOX.y0;
+      const [kind, item] = pickFresh(), tg = makeTag(kind, item), bw = BOX.x1 - BOX.x0, bh = BOX.y1 - BOX.y0;
       if (tg.w > bw - 8 || tg.h > bh - 8) return false;
       for (let tries = 0; tries < 14; tries++) {
         const e = tg.w > 1.6 * tg.h ? (rnd() < 0.5 ? 0 : 2) : (rnd() * 4) | 0;
@@ -198,7 +238,7 @@
       tags = [];
       const n = target(), bw = BOX.x1 - BOX.x0, bh = BOX.y1 - BOX.y0;
       for (let i = 0, tries = 0; i < n && tries < n * 60; tries++) {
-        const kind = pickKind(), tg = makeTag(kind, draw1(kind));
+        const [kind, item] = pickFresh(), tg = makeTag(kind, item);
         if (tg.w > bw - 8 || tg.h > bh - 8) continue;
         tg.x = BOX.x0 + 4 + rnd() * (bw - tg.w - 8); tg.y = BOX.y0 + 4 + rnd() * (bh - tg.h - 8);
         if (tags.some((o) => overlaps(tg, o, 10 * k))) continue;
@@ -312,8 +352,8 @@
       stats() { const s = { enter: 0, live: 0, leave: 0, target: target() }; for (const tg of tags) s[tg.state]++; return s; },
       points(out, n) { // for the page change: points spread over the tags on screen
         const p = PTS.begin(out, n), vis = tags.filter((tg) => tg.a > 0.3).slice(0, 14);
-        vis.forEach((tg, i) => p.scatter("gear" + i, 0.85 / Math.max(1, vis.length), tg.x, tg.y, tg.x + tg.w, tg.y + tg.h));
-        p.scatter("gear-air", 0.15, 0, 0, W, H).end();
+        vis.forEach((tg, i) => p.scatter("tag" + i, 0.85 / Math.max(1, vis.length), tg.x, tg.y, tg.x + tg.w, tg.y + tg.h));
+        p.scatter("tag-air", 0.15, 0, 0, W, H).end();
       },
     };
   };

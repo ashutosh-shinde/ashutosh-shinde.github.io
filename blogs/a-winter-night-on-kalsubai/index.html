@@ -43,18 +43,21 @@
   <script defer src="../../js/lib/core.js"></script>
   <script defer src="../../js/lib/chalk.js"></script>
   <script defer src="../../js/lib/snowfall.js"></script>
+  <script defer src="../../js/lib/explorer.js"></script>
   <script defer src="../../js/engine/engine.js"></script>
   <script defer src="../../js/scenes/snowfield.js"></script>
+  <script defer src="../../js/scenes/summit.js"></script>
   <script defer src="../../js/site.js"></script>
 </head>
-<body class="page page--article page--post" data-scene="snowfield">
+<body class="page page--article page--post" data-scene="summit">
+  <!-- the board: still mountains over a sea of clouds, an eagle now and then, faint snow, grass (js/scenes/summit.js) -->
   <!-- MADE BY tools/publish/build.py from content/blog/A winter night on Kalsubai.docx: edit that file (or the template
        tools/publish/templates/post.html), not this page. It is rewritten on every publish. -->
   <canvas id="board-tex" aria-hidden="true"></canvas>
   <canvas id="board-fx" aria-hidden="true"></canvas>
   <a class="back" href="../" data-collapse data-back="#a-winter-night-on-kalsubai"><span aria-hidden="true">←</span> Blogs</a>
   <main class="page__main">
-    <article class="article post" data-calm>
+    <article class="article post" data-calm="0.8"><!-- (0.8: the mountains stay faintly visible behind the text) -->
       <header class="article__head">
         <p class="article__kicker">Trekking</p>
         <h1 class="page__title article__title"><span class="chalk-text">A winter night on Kalsubai</span></h1>
