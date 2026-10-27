@@ -2,19 +2,6 @@
  "note": "made by tools/publish/build.py: do not edit",
  "posts": [
   {
-   "src": "content/blog/A winter night on Kalsubai.docx",
-   "slug": "a-winter-night-on-kalsubai",
-   "title": "A winter night on Kalsubai",
-   "date": "2026-01-18",
-   "category": "Trekking",
-   "abstract": "The highest point of Maharashtra by headtorch, a night of wind at the summit temple, and a sunrise that made every frozen finger worth it. (A demo story, written in Google Docs, to show how a post looks.)",
-   "url": "blogs/a-winter-night-on-kalsubai/",
-   "image": "blogs/a-winter-night-on-kalsubai/img/photo-1-b44e179f4e.jpg",
-   "chapter": null,
-   "draft": false,
-   "card": "      <li>\n        <a class=\"post-card\" id=\"a-winter-night-on-kalsubai\" href=\"a-winter-night-on-kalsubai/\" data-collapse>\n          <span class=\"post-card__meta\"><span class=\"post-card__cat\">Trekking</span> · <time datetime=\"2026-01-18\">January 18, 2026</time></span>\n          <span class=\"post-card__title\">A winter night on Kalsubai</span>\n          <span class=\"post-card__abstract\">The highest point of Maharashtra by headtorch, a night of wind at the summit temple, and a sunrise that made every frozen finger worth it. (A demo story, written in Google Docs, to show how a post looks.)</span>\n          <span class=\"post-card__go\">Read <span aria-hidden=\"true\">→</span></span>\n        </a>\n      </li>"
-  },
-  {
    "src": "content/blog/amk/index.md",
    "slug": "amk",
    "title": "test trek",
