@@ -4,15 +4,15 @@
   {
    "src": "content/blog/amk/index.md",
    "slug": "amk",
-   "title": "test trek",
+   "title": "Test File",
    "date": "2021-08-21",
-   "category": "Trekking",
+   "category": "Check",
    "abstract": "Push past you limits.",
    "url": "blogs/amk/",
    "image": "blogs/amk/img/pic-0544f1c622.png",
    "chapter": null,
    "draft": false,
-   "card": "      <li>\n        <a class=\"post-card\" id=\"amk\" href=\"amk/\" data-collapse>\n          <span class=\"post-card__meta\"><span class=\"post-card__cat\">Trekking</span> · <time datetime=\"2021-08-21\">August 21, 2021</time></span>\n          <span class=\"post-card__title\">test trek</span>\n          <span class=\"post-card__abstract\">Push past you limits.</span>\n          <span class=\"post-card__go\">Read <span aria-hidden=\"true\">→</span></span>\n        </a>\n      </li>"
+   "card": "      <li>\n        <a class=\"post-card\" id=\"amk\" href=\"amk/\" data-collapse>\n          <span class=\"post-card__meta\"><span class=\"post-card__cat\">Check</span> · <time datetime=\"2021-08-21\">August 21, 2021</time></span>\n          <span class=\"post-card__title\">Test File</span>\n          <span class=\"post-card__abstract\">Push past you limits.</span>\n          <span class=\"post-card__go\">Read <span aria-hidden=\"true\">→</span></span>\n        </a>\n      </li>"
   }
  ]
 }
