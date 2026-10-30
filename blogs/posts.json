@@ -2,6 +2,19 @@
  "note": "made by tools/publish/build.py: do not edit",
  "posts": [
   {
+   "src": "content/blog/Naive Thoughts on AI.md",
+   "slug": "naive-thoughts-on-ai",
+   "title": "Time trajectory of my opinions on AI",
+   "date": "2026-10-30",
+   "category": "",
+   "abstract": "30/10/11 : > Two possibilities: > 1. AI enters a computationally irreducible world and forges mathematical proofs; those proofs will be very difficult for us to understand. > 2. We have pushed AI past a level where …",
+   "url": "blogs/naive-thoughts-on-ai/",
+   "image": null,
+   "chapter": null,
+   "draft": false,
+   "card": "      <li>\n        <a class=\"post-card\" id=\"naive-thoughts-on-ai\" href=\"naive-thoughts-on-ai/\" data-collapse>\n          <span class=\"post-card__meta\"><time datetime=\"2026-10-30\">October 30, 2026</time></span>\n          <span class=\"post-card__title\">Time trajectory of my opinions on AI</span>\n          <span class=\"post-card__abstract\">30/10/11 : &gt; Two possibilities: &gt; 1. AI enters a computationally irreducible world and forges mathematical proofs; those proofs will be very difficult for us to understand. &gt; 2. We have pushed AI past a level where …</span>\n          <span class=\"post-card__go\">Read <span aria-hidden=\"true\">→</span></span>\n        </a>\n      </li>"
+  },
+  {
    "src": "content/blog/amk/index.md",
    "slug": "amk",
    "title": "Test File",
