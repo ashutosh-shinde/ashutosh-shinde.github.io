@@ -8,9 +8,8 @@
        orbits     predator–prey orbits around their equilibrium (Lotka–Volterra)
        terminal   R and Python typed into a console
        telemetry  a tracked animal's radio fixes appearing over a contour map
-   • In the field: the numbers count up the first time they come into view.
    Everything waits while it is off screen. Reduced motion: still sketches, no
-   rolling or counting; the cards still turn over.
+   rolling; the cards still turn over.
    HOW TO EDIT: a card's skills are the <li>s on its back in about/index.html;
    its sketch is its data-sketch. Timings in ROLL and in each sketch below.
    ============================================================================= */
@@ -209,30 +208,6 @@
     fonts.then(() => { if (!on) still(); });
   }
 
-  /* ---------------------------------------------------------------- in the field: the numbers count up */
-  function tally() {
-    const box = document.querySelector(".tally");
-    if (!box || reduced()) return;
-    const nums = [...box.querySelectorAll(".tally__n[data-count]")];
-    const io = new IntersectionObserver((es) => {
-      if (!es.some((e) => e.isIntersecting)) return;
-      io.disconnect();
-      const t0 = performance.now();
-      nums.forEach((el) => { el.textContent = "0"; });
-      const tick = (now) => {
-        let more = false;
-        nums.forEach((el, i) => {
-          const n = +el.dataset.count, p = clamp((now - t0 - i * 120) / 1300, 0, 1), e = 1 - Math.pow(1 - p, 3);
-          el.textContent = Math.round(n * e) + (p >= 1 ? el.dataset.suffix || "" : "");
-          if (p < 1) more = true;
-        });
-        if (more) G.requestAnimationFrame(tick);
-      };
-      G.requestAnimationFrame(tick);
-    }, { threshold: 0.35 });
-    io.observe(box);
-  }
-
-  function start() { skills(); tally(); }
+  function start() { skills(); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })(window);

@@ -24,7 +24,7 @@ window.WQ_LIFE = {
     ["2005-06", 0.3],                // school (and the JEE years after it): quick
     ["2019-06", 1],                  // NISER
     ["2024-12", 1.4],
-    ["2025-05", 4.5],                // ResQ: a crowded year, drawn wide so every name has room
+    ["2025-05", 4.5],                // RESQ: a crowded year, drawn wide so every name has room
     ["2026-09", 1.6],
   ],
 
@@ -33,11 +33,11 @@ window.WQ_LIFE = {
     { id: "jp", box: "Jnana Prabodhini", title: "Jnana Prabodhini", what: "School", from: "2005-06", to: "2017-06",
       note: "School. Theatre and kabaddi both started here." },
     { id: "niser", box: "NISER Bhubaneswar", title: "National Institute of Science Education and Research, Bhubaneswar",
-      what: "Integrated M.Sc., Mathematics", from: "2019-06", to: "2024-06",
+      what: "Integrated BS-MS, Mathematics", from: "2019-06", to: "2024-06",
       note: "Five years of mathematics on the DISHA Fellowship, ending in a thesis on plus topology and Fourier uncertainty in finite abelian groups." },
     { id: "oneirix", box: "Oneirix", title: "Oneirix", what: "Optimisation intern", from: "2025-01", to: "2025-03",
       note: "Linear-programming models in Python for business operations and resource allocation." },
-    { id: "resq", box: "ResQ CT", title: "ResQ Charitable Trust, Pune", what: "Wildlife field technician", from: "2025-05", to: "2026-07",
+    { id: "resq", box: "RESQ CT", title: "RESQ Charitable Trust, Pune", what: "Wildlife field technician", from: "2025-05", to: "2026-07",
       note: "Captures, translocations, radio collaring and tracking across Maharashtra, Telangana and Andhra Pradesh. Trained in boma capture, chemical immobilisation and animal handling by the founders of Legacy Wildlife Services, South Africa." },
     { id: "iisc", box: "CES, IISc", title: "Centre for Ecological Sciences, Indian Institute of Science, Bengaluru", from: "2026-09",
       note: "Mathematical models of ecosystems." },
@@ -75,10 +75,11 @@ window.WQ_LIFE = {
   branches: [
     { what: "At NISER", rows: [1, 2], items: [
       { box: "Bird photography", from: "2020-01", run: 4 },
-      { box: "Topology", from: "2021-08", run: 3, note: "Plus topology became one half of the master's thesis." },
+      { box: "Separately open topology", title: "Partial Derivatives and Separately Open Topology", what: "Semester project at NISER", from: "2021-08", run: 3 },
+      { box: "Lp spaces", title: "Lp Spaces and Distribution Functions", what: "Semester project at NISER", from: "2022-08", run: 3 },
       { box: "Fourier analysis", title: "Fourier analysis on finite abelian groups", from: "2023-01", run: 3 },
       { box: "Ecology", from: "2023-08", run: 3 },
-      { box: "Uncertainty principles", from: "2023-10", run: 3, note: "Fourier uncertainty in finite abelian groups: the other half of the thesis." },
+      { box: "Uncertainty principles", from: "2023-10", run: 3, note: "Fourier uncertainty in finite abelian groups, part of the master's thesis." },
     ] },
     { what: "Ecosystems & Mathematical Modelling", rows: [2], into: "em", items: [
       { box: "Mathematical modelling", from: "2026-02", run: 0.7 },
@@ -87,7 +88,7 @@ window.WQ_LIFE = {
       { box: "Spatial tipping points", from: "2026-05", run: 0.7 },
       { box: "Nonlinear dynamics", from: "2026-06", run: 0.7 },
     ] },
-    { what: "ResQ CT", rows: [-1, -2, 1, 2], items: [
+    { what: "RESQ CT", rows: [-1, -2, 1, 2], items: [
       { box: "Snakes", from: "2025-06" },
       { box: "Kites", from: "2025-07" },
       { box: "Crows", from: "2025-07" },
@@ -95,15 +96,15 @@ window.WQ_LIFE = {
       { box: "Civets", from: "2025-08" },
       { box: "Eagle owls", from: "2025-09" },
       { box: "Ambajogai blackbuck", title: "Blackbuck translocation, Ambajogai", from: "2025-10", run: 1.2,
-        note: "Led the move of 50 blackbuck from zoos to the Ambajogai grasslands." },
+        note: "Blackbuck moved from zoos to the grasslands of Ambajogai to re-establish a population." },
       { box: "Junnar leopards", title: "Leopards of Junnar", from: "2025-11", run: 1.2,
-        note: "More than ten leopard captures and relocations in Junnar, a hotspot of human–leopard conflict. Individual leopards told apart by their rosettes in camera-trap and drone footage." },
+        note: "Leopards monitored, captured, rescued and released in Junnar, a hotspot of human–leopard conflict; individuals told apart by their rosettes in camera-trap and drone footage." },
       { box: "Jackals", from: "2025-12", note: "Watched in human-dominated landscapes." },
       { box: "Hyenas", from: "2025-12", note: "Radio-collared during capture operations." },
       { box: "Melghat crocodiles", title: "Crocodile translocation, Melghat", from: "2026-01", run: 1.2,
-        note: "Nine crocodiles moved to Melghat Tiger Reserve." },
+        note: "Crocodiles translocated to Melghat Tiger Reserve." },
       { box: "Deer · STR", title: "Prey-base improvement: deer, Sahyadri Tiger Reserve", from: "2026-02", run: 1.2,
-        note: "Co-led the boma capture and translocation of 300 deer (200 sambar, 100 spotted deer) to Sahyadri Tiger Reserve, building a prey base for tigers." },
+        note: "Sambar and spotted deer captured in bomas and moved to Sahyadri Tiger Reserve to build up its prey base." },
       { box: "Rajahmundry tiger", title: "Tiger operation, Rajahmundry", from: "2026-03", run: 1.2,
         note: "One of three dispersing tigers tracked for more than three months across Maharashtra, Telangana and Andhra Pradesh by radio telemetry, thermal drone and on foot; its path mapped in QGIS." },
       { box: "Siddipet tiger", title: "Dispersing tiger, Siddipet", from: "2026-04", run: 1.2,
