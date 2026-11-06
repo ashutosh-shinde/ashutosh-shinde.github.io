@@ -8,6 +8,7 @@
        orbits     predator–prey orbits around their equilibrium (Lotka–Volterra)
        terminal   R and Python typed into a console
        telemetry  a tracked animal's radio fixes appearing over a contour map
+       ascent     a route climbing a mountain face to the summit, then a flag
    Everything waits while it is off screen. Reduced motion: still sketches, no
    rolling; the cards still turn over.
    HOW TO EDIT: a card's skills are the <li>s on its back in about/index.html;
@@ -101,7 +102,7 @@
     },
     // a console: R and Python typed line by line, the oldest scrolling away
     terminal(c, w, h, t, still) {
-      const fs = w < 200 ? 10.5 : 11.5, lh = Math.round(fs * 1.55), rows = Math.max(2, Math.floor((h - 6) / lh)), cps = 22;
+      const longest = Math.max(...CODE.map(([p, q]) => p.length + q.length)), fs = Math.min(11.5, Math.max(8.5, (w - 10) / (longest * 0.61))), lh = Math.round(fs * 1.6), rows = Math.max(2, Math.floor((h - 6) / lh)), cps = 22;
       const dur = CODE.map(([p, s]) => s.length / cps + 0.6), T = dur.reduce((a, b) => a + b, 0);
       const tt = still ? T * 1000 - 0.3 : t, cyc = Math.floor(tt / T); let r = tt - cyc * T, i = 0;
       while (i < CODE.length - 1 && r >= dur[i]) { r -= dur[i]; i++; }
@@ -143,6 +144,34 @@
       }
       c.font = `italic 400 11.5px ${SERIF}`; c.fillStyle = ink(0.5); c.textAlign = "center"; c.textBaseline = "alphabetic";
       c.fillText("N", w - 10, 12); line(c, [[w - 10, 16], [w - 10, 30]], 0.4, 1, false);
+    },
+    // a climb: a dashed route zig-zags up the face, the climber at its head; at the top, a flag
+    ascent(c, w, h0, t, still) {
+      const h = Math.min(h0, w * 0.95), c0 = c; c.save(); c.translate(0, h0 - h);                 // keep the peak broad on narrow cards
+      const base = h - 4, top = [w * 0.6, Math.max(20, h * 0.14)];
+      line(c, [[0, h * 0.82], [w * 0.12, h * 0.68], [w * 0.22, h * 0.78], [w * 0.3, h * 0.7]], 0.16, 1, false);   // a far ridge
+      line(c, [[0, base], [w * 0.16, h * 0.64], [w * 0.27, h * 0.72], [w * 0.43, h * 0.38], top, [w * 0.7, h * 0.36], [w * 0.8, h * 0.46], [w * 0.9, h * 0.32], [w, h * 0.5]], 0.8, 1.5, true);
+      line(c, [[top[0] - w * 0.08, top[1] + h * 0.15], [top[0] - w * 0.035, top[1] + h * 0.1], [top[0], top[1] + h * 0.16], [top[0] + w * 0.04, top[1] + h * 0.11], [top[0] + w * 0.075, top[1] + h * 0.14]], 0.35, 1, false);   // snow
+      const route = [[w * 0.36, base - 2], [w * 0.47, h * 0.8], [w * 0.4, h * 0.68], [w * 0.52, h * 0.58], [w * 0.46, h * 0.47], [w * 0.56, h * 0.37], [w * 0.53, h * 0.27], top];
+      const cyc = 7.5, tt = still ? 6 : t % cyc, p = still ? 1 : smooth(tt / 5), fade = still ? 1 : 1 - smooth((tt - (cyc - 0.4)) / 0.4);
+      let left = p * route.slice(1).reduce((L, q, i) => L + Math.hypot(q[0] - route[i][0], q[1] - route[i][1]), 0), head = route[0];
+      const walked = [route[0]];
+      for (let i = 1; i < route.length && left > 0; i++) {
+        const d = Math.hypot(route[i][0] - route[i - 1][0], route[i][1] - route[i - 1][1]), u = Math.min(1, left / d);
+        head = [route[i - 1][0] + (route[i][0] - route[i - 1][0]) * u, route[i - 1][1] + (route[i][1] - route[i - 1][1]) * u];
+        walked.push(head); left -= d;
+      }
+      c.save(); c.setLineDash([3, 4]); c.strokeStyle = ink(0.72 * fade); c.lineWidth = 1.2; c.beginPath();
+      walked.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); c.restore();
+      const [hx, hy] = head, g = c.createRadialGradient(hx, hy, 0, hx, hy, 8);
+      g.addColorStop(0, ink(0.55 * fade)); g.addColorStop(1, ink(0)); c.fillStyle = g; c.fillRect(hx - 8, hy - 8, 16, 16);
+      c.fillStyle = ink(0.98 * fade); c.beginPath(); c.arc(hx, hy, 2.4, 0, 7); c.fill();
+      if (p >= 1) {
+        const a = still ? 1 : smooth((tt - 5) / 0.5) * fade;
+        line(c, [[top[0], top[1]], [top[0], top[1] - 14]], 0.9 * a, 1.2, false);
+        c.fillStyle = ink(0.85 * a); c.beginPath(); c.moveTo(top[0], top[1] - 14); c.lineTo(top[0] + 10, top[1] - 11); c.lineTo(top[0], top[1] - 8); c.closePath(); c.fill();
+      }
+      c0.restore();
     },
   };
 

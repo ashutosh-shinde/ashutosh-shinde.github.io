@@ -46,7 +46,6 @@
     return y + (m - 1) / 12 + ((day || (r % 4) * 7 + 4) - 0.5) / 365.25;
   }
   const photoYear = (d) => { const { y, m } = parts(d); return m ? y + (m - 0.5) / 12 : y + 0.5; };
-  const years = (it) => { const a = parts(it.from).y; if (!it.to) return "since " + a; const b = parts(it.to).y; return a === b ? String(a) : a + " – " + b; };
   const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   // how strongly a line was the priority at time t (0…1)
   function prio(spec, id) {
@@ -574,8 +573,8 @@
   const cardWhen = $("llCardWhen"), cardTitle = $("llCardTitle"), cardNote = $("llCardNote");
   let cardOpen = false, selected = null, cardItem = null, shown = null, cardSide = "above";
 
-  // only the main line's cards carry dates, as years; the others are placed by feel, not to the month
-  const tagOf = (it) => [it.kind === "main" ? years(it) : "", it.what || ""].filter(Boolean).join(" · ");
+  // a card shows the line's name; a tag (what), a note and photos only when about/life.js gives them
+  const tagOf = (it) => it.what || "";
   function pickPhoto(it, fresh) {
     const ph = it.photos || [];
     if (!ph.length) return null;
@@ -697,7 +696,7 @@
     ol.textContent = "";
     for (const it of [...ITEMS, ...MARKS].sort((a, b) => a.t0 - b.t0)) {
       const li = document.createElement("li"), bt = document.createElement("button");
-      bt.type = "button"; bt.textContent = it.title + (it.kind === "main" ? " · " + years(it) : "");
+      bt.type = "button"; bt.textContent = it.title;
       bt.addEventListener("click", () => {
         interrupt();
         const waits = it.kind === "main" ? (it.sZ == null ? sNow : it.sZ) : it.kind === "mark" ? it.sA + 30 : it.stop;
