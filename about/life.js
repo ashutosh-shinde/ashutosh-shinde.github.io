@@ -34,7 +34,7 @@ window.WQ_LIFE = {
   main: [
     { id: "jp", box: "Jnana Prabodhini", title: "Jnana Prabodhini", from: "2005-06", to: "2017-06" },
     { id: "niser", box: "NISER Bhubaneswar", title: "National Institute of Science Education and Research, Bhubaneswar", from: "2019-06", to: "2024-06" },
-    { id: "oneirix", box: "Oneirix", title: "Oneirix", from: "2025-01", to: "2025-03" },
+    { id: "intern", box: "Optimization Intern", title: "Optimization Intern", from: "2025-01", to: "2025-03" },
     { id: "resq", box: "RESQ CT", title: "RESQ Charitable Trust, Pune", from: "2025-05", to: "2026-07" },
     { id: "iisc", box: "CES, IISc", title: "Centre for Ecological Sciences, Indian Institute of Science, Bengaluru", from: "2026-09" },
   ],
