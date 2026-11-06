@@ -1,0 +1,225 @@
+/* =============================================================================
+   about.css — the About page (about/index.html). Loaded after site.css (uses
+   its tokens: --ink, --line, --serif, --sans, --caps, --radius, --gutter).
+   1. top: title, name, photo, links      5. thesis
+   2. sections, honours                    6. projects
+   3. my time series (card, photo viewer)  7. skill cards
+   4. in the field (numbers)               8. the end of the page
+   HOW TO EDIT: sizes in each part. The words are in about/index.html.
+   ============================================================================= */
+
+/* ---------------------------------------------------------------- 1. top */
+.page--about [hidden] { display: none !important; }              /* the card, its photo and the viewer stay shut until opened */
+.page--about .page__main { padding-bottom: 10vh; }
+.about-top, .about-sec, .about-end { width: min(64rem, 100%); }
+.about-top__title { margin-top: clamp(72px, 13vh, 150px); }
+/* the links sit top-right, as on the home page (written as names) */
+.about__links { z-index: 3; }
+
+.me {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: clamp(22px, 5vw, 72px);
+  align-items: start; margin-top: clamp(26px, 4.5vh, 44px);
+}
+.me > * { grid-column: 1; }
+.me__name { margin: 0; font-size: clamp(30px, 1.8vw + 20px, 48px); line-height: 1.1; text-shadow: none; }
+.me__photo {
+  grid-column: 2; grid-row: 1 / span 4; align-self: center; position: relative; margin: 0;
+  width: clamp(156px, 15vw + 40px, 228px); aspect-ratio: 1; max-width: 100%; border-radius: 50%; overflow: hidden;
+  background: radial-gradient(circle at 50% 42%, rgb(var(--ink) / 0.13), rgb(var(--ink) / 0.03) 58%, rgb(var(--ink) / 0) 72%), #121616;
+  /* two chalk rings, a little board between them, and a soft shadow */
+  box-shadow: 0 0 0 1.5px rgb(var(--ink) / 0.62), 0 0 0 7px rgb(13 15 15 / 0.92), 0 0 0 8px rgb(var(--ink) / 0.2), 0 22px 60px rgb(0 0 0 / 0.55);
+}
+.me__photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.me__lead { margin-top: 14px; max-width: 36rem; font-family: var(--serif); font-size: clamp(18px, 0.5vw + 15.5px, 21.5px); line-height: 1.55; color: var(--ink-2); text-wrap: pretty; }
+.me__label { margin-top: 22px; font: 600 11.5px/1 var(--sans); letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); }
+.me__interests { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; max-width: 40rem; }
+.me__interests li { padding: 6px 13px; border: 1px dashed rgb(var(--ink) / 0.45); border-radius: 999px; font: 500 13.5px/1.35 var(--sans); color: var(--ink-1); background: rgb(13 15 15 / 0.5); }
+
+@media (max-width: 640px) {
+  .me { align-items: center; row-gap: 0; }
+  .me > :not(.me__photo):not(.me__name) { grid-column: 1 / -1; }
+  .me__photo { grid-row: 1; width: 92px; box-shadow: 0 0 0 1.5px rgb(var(--ink) / 0.62), 0 0 0 5px rgb(13 15 15 / 0.92), 0 0 0 6px rgb(var(--ink) / 0.2), 0 12px 30px rgb(0 0 0 / 0.5); }
+}
+/* narrow phones: the links come down into the page, below the back link */
+@media (max-width: 480px) {
+  .about__links { position: static; justify-content: flex-start; margin: 46px 0 0 -10px; }
+  .about-top__title { margin-top: 18px; }
+}
+
+/* ---------------------------------------------------------------- 2. sections, honours */
+.about-sec { margin-top: clamp(66px, 12vh, 124px); scroll-margin-top: 80px; }
+.about-sec__title { font-size: clamp(28px, 1.9vw + 17px, 44px); }
+.about-sec__intro { margin-top: 10px; max-width: 40rem; color: var(--ink-3); text-wrap: pretty; }
+
+.honours { list-style: none; margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 16px; }
+.honour {
+  position: relative; min-height: 128px; padding: 20px 88px 20px 22px;
+  border: 1px solid var(--line); border-radius: var(--radius); background: rgb(10 12 12 / 0.72);
+}
+.honour__kind { margin: 0; font: 500 11.5px/1.35 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+.honour__title { margin: 8px 0 0; font: 700 clamp(19px, 0.5vw + 16px, 22px)/1.25 var(--serif); color: var(--ink-1); }
+.honour__by { margin-top: 6px; font-size: 14.5px; line-height: 1.45; color: var(--ink-2); }
+/* a chalk stamp, pressed in at a slant */
+.honour__stamp {
+  position: absolute; top: 18px; right: 16px; width: 58px; height: 58px; border-radius: 50%;
+  display: grid; place-content: center; justify-items: center; gap: 1px;
+  border: 1.5px solid rgb(var(--ink) / 0.72); outline: 1px dashed rgb(var(--ink) / 0.32); outline-offset: 4px;
+  transform: rotate(-11deg); color: var(--ink-1);
+}
+.honour__stamp b { font: 700 25px/1 var(--serif); }
+.honour__stamp small { font: 600 8.5px/1 var(--sans); letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-2); }
+.has-chalk .honour__stamp b, .has-chalk .tally__n {
+  color: transparent; background-image: var(--chalk); background-size: 240px 240px;
+  -webkit-background-clip: text; background-clip: text;
+}
+
+/* ---------------------------------------------------------------- 3. my time series */
+.lifeline { position: relative; }
+.lifeline__frame {
+  position: relative; height: 300px; margin-top: 24px;
+  border: 1px solid rgb(var(--ink) / 0.24); border-radius: var(--radius); overflow: hidden; background: #0d0f0f;
+  box-shadow: 0 22px 60px rgb(0 0 0 / 0.45);
+  touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.lifeline__frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#llInk { cursor: grab; touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
+#llInk.is-dragging { cursor: grabbing; }
+#llInk:focus { outline: none; }
+.lifeline__frame:has(#llInk:focus-visible) { outline: 2px solid rgb(var(--ink) / 0.85); outline-offset: 3px; }
+.lifeline__hint { margin: 12px 0 0; text-align: center; font: 400 12.5px/1.4 var(--sans); letter-spacing: 0.03em; color: var(--ink-3); }
+
+/* the card that opens above (or below) the board when a name is tapped */
+.ll-card {
+  position: absolute; z-index: 6; left: 0; top: 0; width: min(310px, calc(100% - 16px));
+  padding: 12px 14px 14px; border: 1px solid rgb(var(--ink) / 0.45); border-radius: var(--radius);
+  background: #141818; box-shadow: 0 18px 44px rgb(0 0 0 / 0.6);
+}
+.ll-card__photo {
+  display: block; width: 100%; max-width: 100%; aspect-ratio: 16 / 10; margin: 0 0 10px; padding: 0;
+  border: 0; border-radius: 6px; overflow: hidden; background: #0a0c0c; cursor: zoom-in;
+}
+.ll-card__photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ll-card__when { margin: 0; padding-right: 28px; font: 500 10.5px/1.4 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.ll-card__title { margin: 4px 30px 0 0; font: 700 17px/1.28 var(--serif); color: var(--ink-1); text-wrap: balance; }
+.ll-card__when[hidden] + .ll-card__title { margin-top: 0; }
+.ll-card__note { margin: 7px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.ll-card__close {
+  position: absolute; top: 5px; right: 5px; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--ink-2); font: 400 21px/1 var(--sans); cursor: pointer;
+}
+.ll-card__close:hover { color: var(--ink-1); }
+.ll-card__tip {
+  position: absolute; width: 12px; height: 12px; background: #141818;
+  border: solid rgb(var(--ink) / 0.45); border-width: 0 1px 1px 0; transform: rotate(45deg);
+}
+.ll-card.is-above .ll-card__tip { bottom: -7px; }
+.ll-card.is-below .ll-card__tip { top: -7px; transform: rotate(225deg); }
+
+/* every line as a plain list: hidden until a keyboard reaches it */
+.lifeline__list { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.lifeline__list:focus-within { position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; margin-top: 20px; }
+.lifeline__list p { margin: 0 0 6px; font: 600 11px/1 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+.lifeline__list ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+.lifeline__list button { all: unset; cursor: pointer; font: 400 14px/1.6 var(--sans); color: var(--ink-2); }
+.lifeline__list button:focus-visible { outline: 2px solid rgb(var(--ink) / 0.85); outline-offset: 2px; color: var(--ink-1); }
+
+/* a card's photo, full screen */
+.ll-viewer {
+  position: fixed; inset: 0; z-index: 50; display: grid; grid-template-rows: 1fr auto; background: rgb(6 7 7 / 0.96);
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+.ll-viewer__stage { position: relative; overflow: hidden; display: grid; place-items: center; min-height: 0; touch-action: none; }
+.ll-viewer__stage img { max-width: 94%; max-height: 94%; transform-origin: 50% 50%; will-change: transform; user-select: none; -webkit-user-drag: none; cursor: zoom-in; }
+.ll-viewer__cap { margin: 0; padding: 10px 16px 16px; text-align: center; font-size: 13.5px; color: var(--ink-2); }
+.ll-viewer__close {
+  position: absolute; top: calc(10px + env(safe-area-inset-top, 0px)); right: calc(10px + env(safe-area-inset-right, 0px));
+  width: 42px; height: 42px; border: 1px solid rgb(var(--ink) / 0.3); border-radius: 50%;
+  background: rgb(13 15 15 / 0.75); color: var(--ink-1); font: 400 22px/1 var(--sans); cursor: pointer;
+}
+
+/* ---------------------------------------------------------------- 4. in the field */
+.tally { list-style: none; margin: 26px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: 22px 18px; }
+.tally li { padding-top: 14px; border-top: 1px solid rgb(var(--ink) / 0.32); }
+.tally__n { display: block; font: 700 clamp(46px, 2.6vw + 30px, 70px)/1 var(--serif); color: var(--ink-1); font-variant-numeric: tabular-nums; }
+.tally__what { display: block; margin-top: 8px; font: 600 12px/1.2 var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-1); }
+.tally__how { display: block; margin-top: 6px; font-size: 14px; line-height: 1.45; color: var(--ink-3); text-wrap: pretty; }
+
+/* ---------------------------------------------------------------- 5. thesis */
+.thesis {
+  position: relative; margin-top: 24px; padding: clamp(24px, 3.2vw, 40px);
+  display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: clamp(22px, 4vw, 52px); align-items: center;
+  border: 1px solid rgb(var(--ink) / 0.5); border-radius: var(--radius);
+  background: radial-gradient(140% 120% at 0% 0%, rgb(var(--ink) / 0.06), rgb(var(--ink) / 0) 55%), rgb(10 12 12 / 0.8);
+}
+.thesis::before { /* a second, dashed frame inside: the look of a certificate */
+  content: ""; position: absolute; inset: 7px; border: 1px dashed rgb(var(--ink) / 0.2); border-radius: calc(var(--radius) - 4px); pointer-events: none;
+}
+.thesis__kind { margin: 0; font: 500 11.5px/1.5 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+.thesis__title { margin: 12px 0 0; font: italic 400 clamp(23px, 1.3vw + 17px, 34px)/1.3 var(--serif); color: var(--ink-1); text-wrap: balance; }
+.thesis__by { margin-top: 12px; font-family: var(--caps); letter-spacing: 0.06em; color: var(--ink-3); }
+.thesis__math { margin: 0; padding-left: clamp(18px, 3vw, 40px); border-left: 1px solid rgb(var(--ink) / 0.18); color: var(--ink-1); }
+.thesis__formula { font-size: clamp(17px, 0.7vw + 13.5px, 22px); overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+.thesis__math figcaption { margin-top: 10px; font: italic 400 15.5px/1.5 var(--serif); color: var(--ink-3); }
+@media (max-width: 760px) {
+  .thesis { grid-template-columns: minmax(0, 1fr); }
+  .thesis__math { padding: 18px 0 0; border-left: 0; border-top: 1px solid rgb(var(--ink) / 0.18); }
+}
+mjx-container[jax="SVG"] { direction: ltr; position: relative; }
+mjx-container[jax="SVG"] > svg { overflow: visible; min-height: 1px; min-width: 1px; }
+mjx-assistive-mml { position: absolute !important; top: 0; left: 0; clip: rect(1px, 1px, 1px, 1px); padding: 1px 0 0 0 !important; border: 0 !important; display: block !important; width: auto !important; overflow: hidden !important; user-select: none; }
+
+/* ---------------------------------------------------------------- 6. projects */
+.projects { list-style: none; margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14.5rem), 1fr)); gap: 14px; }
+.proj {
+  height: 100%; display: flex; flex-direction: column; gap: 9px; padding: 18px 20px 18px;
+  border: 1px solid var(--line); border-radius: var(--radius); background: rgb(10 12 12 / 0.7); color: var(--ink-2); text-decoration: none;
+  transition: background-color .2s, border-color .2s, transform .2s;
+}
+a.proj:hover { background: rgb(var(--ink) / 0.06); border-color: rgb(var(--ink) / 0.72); transform: translateY(-2px); }
+.proj__tag { align-self: flex-start; padding: 3px 10px; border: 1px dashed rgb(var(--ink) / 0.5); border-radius: 999px; font: 500 11px/1.35 var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); }
+.proj__title { font: 700 clamp(18.5px, 0.4vw + 16px, 21px)/1.25 var(--serif); color: var(--ink-1); }
+.proj__line { font-size: 14.5px; line-height: 1.5; }
+.proj__go { margin-top: auto; padding-top: 4px; font: 600 13px/1 var(--sans); letter-spacing: 0.04em; color: var(--ink-1); }
+.proj__go span { display: inline-block; transition: transform .25s; }
+a.proj:hover .proj__go span { transform: translateX(3px); }
+.proj__go--quiet { font-weight: 500; color: var(--ink-3); }
+
+/* ---------------------------------------------------------------- 7. skill cards
+   A card turns over when tapped (js/about.js). On the front: a chalk sketch that draws itself and its
+   skills rolling past one by one; on the back: all of them. */
+.skills { list-style: none; margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.skill { position: relative; height: 330px; perspective: 1100px; }
+.skill__inner { position: relative; height: 100%; transform-style: preserve-3d; transition: transform .75s cubic-bezier(.3, .7, .2, 1); }
+.skill.is-flipped .skill__inner { transform: rotateY(180deg); }
+.skill__face {
+  position: absolute; inset: 0; display: flex; flex-direction: column; padding: 18px 18px 16px;
+  border: 1px solid rgb(var(--ink) / 0.42); border-radius: 14px;
+  background: radial-gradient(120% 80% at 20% 0%, rgb(var(--ink) / 0.07), rgb(var(--ink) / 0) 60%), #111515;
+  box-shadow: inset 0 0 0 5px #0f1212, inset 0 0 0 6px rgb(var(--ink) / 0.1), 0 18px 44px rgb(0 0 0 / 0.42);
+  -webkit-backface-visibility: hidden; backface-visibility: hidden;
+}
+.skill__back { transform: rotateY(180deg); }
+.skill__kind { margin: 0; font: 700 23px/1.15 var(--serif); color: var(--ink-1); }
+.skill__sketch { display: block; flex: 1 1 auto; width: 100%; min-height: 0; margin: 12px 0 10px; }
+.skill__roll { margin: 0; height: 22px; overflow: hidden; font: 500 15px/22px var(--sans); color: var(--ink-1); }
+.skill__roll span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.skill__count { margin: 4px 0 0; font: 500 11px/1.3 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+.skill__list { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 7px; }
+.skill__list li { padding: 5px 11px; border: 1px solid rgb(var(--ink) / 0.32); border-radius: 999px; background: rgb(var(--ink) / 0.05); font: 500 13.5px/1.3 var(--sans); color: var(--ink-1); }
+.skill__flip { position: absolute; inset: 0; z-index: 2; margin: 0; padding: 0; border: 0; border-radius: 14px; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.skill__flip:focus-visible { outline: 2px solid rgb(var(--ink) / 0.85); outline-offset: 3px; }
+
+@media (max-width: 1020px) { .skills { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* phones: the cards sit in a row you swipe through */
+@media (max-width: 560px) {
+  .skills { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+    margin-inline: calc(-1 * var(--gutter)); padding: 4px var(--gutter) 16px; scroll-padding-inline: var(--gutter); }
+  .skills::-webkit-scrollbar { display: none; }
+  .skill { flex: 0 0 80%; height: 316px; scroll-snap-align: start; }
+}
+
+/* ---------------------------------------------------------------- 8. the end of the page */
+.about-end { margin-top: clamp(70px, 14vh, 130px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 24px; padding-top: 24px; border-top: 1px solid rgb(var(--ink) / 0.18); }
+.about-end p { margin: 0; }
+.about-end__line { font-family: var(--serif); font-size: clamp(18px, 0.5vw + 15px, 21px); color: var(--ink-2); }
+.about-end__line a { color: var(--ink-1); text-underline-offset: 4px; }

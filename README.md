@@ -23,7 +23,8 @@ double-click blocks the fonts.
 | What | File |
 |---|---|
 | Home page text, links, section texts, the comment box | `index.html` |
-| About page (blank for now) | `about/index.html` |
+| About page: the words, photo, honours, field numbers, thesis, projects, skill cards | `about/index.html` + `css/about.css`; the skill cards' sketches and the counting numbers: `js/about.js` |
+| About page: **My time series** (every line, its dates, rows, card notes and photos) | `about/life.js` (how to edit is at its top; card photos go in `about/photos/`); the drawing: `js/lib/lifeline.js` |
 | Blogs: title and the list of stories (the boxes are made by `tools/publish/build.py`) | `blogs/index.html` |
 | Blogs list: the background of names (Himalayan peaks and routes, glaciers, India's parks and sanctuaries: particles in a box) and the explorer strip at the bottom | `js/scenes/gearbox.js`, `js/lib/strip.js` |
 | Simulations: the list of collections and their numbered cards | `simulations/index.html` |
